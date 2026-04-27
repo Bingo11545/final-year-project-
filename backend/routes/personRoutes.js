@@ -2,24 +2,17 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const MissingPerson = require('../models/MissingPerson');
+const StoredFile = require('../models/StoredFile');
 const multer = require('multer');
 const path = require('path');
 const axios = require('axios');
-const fs = require('fs');
 const FormData = require('form-data');
 const sendEmail = require('../utils/sendEmail');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 
 // Multer Configuration
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function(req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
     storage: storage,
@@ -193,12 +186,12 @@ router.post('/', [auth(), upload.single('image')], async (req, res) => {
 
         // 2. Handle Image & AI Processing
         if (req.file) {
-            const imagePath = req.file.path.replace('\\', '/'); 
-            newPerson.images.push({ url: imagePath });
-
             try {
                 const formData = new FormData();
-                formData.append('image', fs.createReadStream(req.file.path));
+                formData.append('image', req.file.buffer, {
+                    filename: req.file.originalname || `image${path.extname(req.file.originalname || '.jpg')}`,
+                    contentType: req.file.mimetype
+                });
 
                 const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/generate-embedding`, formData, {
                      headers: { ...formData.getHeaders() }
@@ -218,8 +211,6 @@ router.post('/', [auth(), upload.single('image')], async (req, res) => {
                              const sim = cosineSimilarity(newPerson.faceEmbeddings, other.faceEmbeddings);
                              if (sim > 0.90) { // High threshold for "Identity"
                                  // It's likely the same person
-                                 // Reject and cleanup
-                                 fs.unlink(req.file.path, (err) => { if (err) console.error(err); }); 
                                  return res.status(400).json({ msg: 'This person is already listed as missing. Please update the existing record or report a sighting.' });
                              }
                         }
@@ -229,6 +220,17 @@ router.post('/', [auth(), upload.single('image')], async (req, res) => {
                 console.error("AI Service Error:", aiError.message);
                 // Continue without embedding if AI fails
             }
+
+            const storedImage = await StoredFile.create({
+                originalName: req.file.originalname,
+                contentType: req.file.mimetype,
+                size: req.file.size,
+                data: req.file.buffer,
+                uploadedBy: req.user.id,
+                purpose: 'person-image'
+            });
+
+            newPerson.images.push({ url: `api/files/${storedImage._id}` });
         }
 
         await newPerson.save();

@@ -68,9 +68,11 @@ connectDB();
 const authRoutes = require('./routes/authRoutes');
 const personRoutes = require('./routes/personRoutes');
 const tipRoutes = require('./routes/tipRoutes'); // New
+const fileRoutes = require('./routes/fileRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/people', personRoutes);
 app.use('/api/tips', tipRoutes); // New
+app.use('/api/files', fileRoutes);
 
 app.get('/', (req, res) => {
     res.send('Missing Person Finder API is running...');

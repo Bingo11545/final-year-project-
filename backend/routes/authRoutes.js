@@ -5,20 +5,14 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const StoredFile = require('../models/StoredFile');
 const sendEmail = require('../utils/sendEmail');
 const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 
 // Multer Configuration for Documents
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function(req, file, cb) {
-        cb(null, 'doc-' + Date.now() + path.extname(file.originalname));
-    }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
     storage: storage,
@@ -54,7 +48,15 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
         });
 
         if (req.file) {
-            user.verificationDocument = req.file.path.replace('\\', '/');
+            const storedDoc = await StoredFile.create({
+                originalName: req.file.originalname,
+                contentType: req.file.mimetype,
+                size: req.file.size,
+                data: req.file.buffer,
+                purpose: 'verification-doc'
+            });
+
+            user.verificationDocument = `api/files/${storedDoc._id}`;
         }
 
         if (role === 'law_enforcement' || role === 'authorized_org') {
