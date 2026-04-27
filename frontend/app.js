@@ -10,12 +10,12 @@ const API_URL = `${BACKEND_ORIGIN}/api`;
 const IMG_URL_BASE = `${BACKEND_ORIGIN}/`;
 
 const PUBLIC_PATHS_FOR_GUEST = new Set([
-    'index.html',
-    'login.html',
-    'register.html',
-    'forgot_password.html',
-    'reset_password.html',
-    'user/case.html'
+    'index',
+    'login',
+    'register',
+    'forgot_password',
+    'reset_password',
+    'user/case'
 ]);
 
 // --- Auth Utils ---
@@ -151,10 +151,13 @@ function checkAuth() {
 function enforceGuestAccess() {
     if (isLoggedIn()) return;
 
-    const path = decodeURIComponent(window.location.pathname || '/').replace(/^\/+/, '');
-    const currentPath = path || 'index.html';
+    const path = decodeURIComponent(window.location.pathname || '/').replace(/^\/+|\/+$/g, '');
+    const currentPath = path || 'index';
+    const canonicalPath = currentPath.endsWith('.html')
+        ? currentPath.slice(0, -5)
+        : currentPath;
 
-    if (!PUBLIC_PATHS_FOR_GUEST.has(currentPath)) {
+    if (!PUBLIC_PATHS_FOR_GUEST.has(canonicalPath)) {
         window.location.href = '/login.html';
     }
 }
