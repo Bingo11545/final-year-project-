@@ -65,7 +65,16 @@ async function apiCall(endpoint, method = 'GET', body = null, isFormData = false
     }
 
     const res = await fetch(`${API_URL}${endpoint}`, config);
-    const data = await res.json();
+    const raw = await res.text();
+    let data = {};
+
+    if (raw) {
+        try {
+            data = JSON.parse(raw);
+        } catch (e) {
+            data = { msg: raw };
+        }
+    }
     
     if (!res.ok) {
         throw new Error(data.msg || data.error || 'API Error');

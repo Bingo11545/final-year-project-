@@ -100,7 +100,7 @@ router.get('/notifications', auth(), async (req, res) => {
     return res.json(notifications);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -114,7 +114,7 @@ router.get('/pending', auth(), async (req, res) => {
     return res.json(people);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -129,7 +129,7 @@ router.get('/police/all', auth(), async (req, res) => {
     return res.json(people);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -143,7 +143,7 @@ router.get('/', async (req, res) => {
     return res.json(people);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -154,7 +154,7 @@ router.get('/:id', async (req, res) => {
     return res.json(person);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -306,7 +306,7 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
     return res.json({ msg: 'Report submitted', person: newPerson, potentialMatches: matches });
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error ' + err.message);
+    return res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 });
 
@@ -345,7 +345,7 @@ router.put('/:id', auth(), async (req, res) => {
     return res.json(updated);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -360,7 +360,7 @@ router.put('/:id/approve', auth(), async (req, res) => {
     return res.json(updated);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
@@ -375,7 +375,7 @@ router.put('/:id/status', auth(), async (req, res) => {
     return res.json(updated);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Server Error');
+    return res.status(500).json({ msg: 'Server Error' });
   }
 });
 
