@@ -61,6 +61,16 @@ def _cosine_similarity(vec_a, vec_b):
 def health():
     return jsonify({"status": "AI Service Operational"})
 
+
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({
+        "service": "AI Service",
+        "status": "ok",
+        "health": "/health",
+        "endpoints": ["/generate-embedding", "/validate-face", "/validate-id", "/verify"]
+    })
+
 @app.route('/generate-embedding', methods=['POST'])
 def generate_embedding():
     if 'image' not in request.files:
