@@ -884,10 +884,7 @@
                 }
 
                 localStorage.setItem('token', data.token);
-                const assignedRole = getUserRole();
-                window.location.href = assignedRole === 'admin'
-                    ? '/system_admin/index.html'
-                    : (assignedRole === 'law_enforcement' ? '/police_admin/index.html' : '/user/index.html');
+                window.location.href = data.redirectPath || '/user/dashboard.html';
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.style.display = 'block';

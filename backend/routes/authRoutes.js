@@ -11,6 +11,12 @@ const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 
+function getRedirectPath(role) {
+    if (role === 'admin') return '/system_admin/index.html';
+    if (role === 'law_enforcement') return '/police_admin/dashboard.html';
+    return '/user/dashboard.html';
+}
+
 // Multer Configuration for Documents
 const storage = multer.memoryStorage();
 
@@ -107,7 +113,11 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token });
+            res.json({
+                token,
+                role: user.role,
+                redirectPath: getRedirectPath(user.role)
+            });
         });
     } catch (err) {
         console.error(err.message);
@@ -155,7 +165,11 @@ router.post('/login', async (req, res) => {
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, role: user.role });
+            res.json({
+                token,
+                role: user.role,
+                redirectPath: getRedirectPath(user.role)
+            });
         });
     } catch (err) {
         console.error(err.message);

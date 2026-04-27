@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Report Missing Person — Find Missing Person</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+    <style>
+        /* ── Report Page Specific Styles ── */
+        .report-wrapper {
+            min-height: 100vh;
+            background: var(--bg-base);
+            padding-bottom: 5rem;
+        }
+
+        /* Hero */
+        .report-hero {
+            background: linear-gradient(135deg, #060d1f 0%, #0d1a35 50%, #091428 100%);
+            padding: 4rem 0 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] .report-hero {
+            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+        }
+
+        .report-hero::before {
+            content: '';
+            position: absolute;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(239,68,68,0.12) 0%, transparent 70%);
+            top: -150px; right: -80px;
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .report-hero::after {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%);
+            bottom: -50px; left: 5%;
+            border-radius: 50%;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .report-hero-content {
+            position: relative; z-index: 2;
+        }
+
+        .report-hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(239,68,68,0.18);
+            border: 1px solid rgba(239,68,68,0.35);
+            color: #fca5a5;
+            padding: 7px 18px; border-radius: 50px;
+            font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1.25rem;
+            animation: pulseBadge 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseBadge {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+            50% { box-shadow: 0 0 15px 5px rgba(239,68,68,0.15); }
+        }
+
+        [data-theme="light"] .report-hero-badge {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.4);
+            color: #ffffff;
+        }
+
+        .report-hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800; color: #ffffff;
+            margin-bottom: 0.9rem; letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+
+        .report-hero p {
+            color: rgba(255,255,255,0.80);
+            font-size: 1.05rem; max-width: 600px; line-height: 1.75;
+        }
+
+        [data-theme="light"] .report-hero p {
+            color: rgba(255,255,255,0.90);
+        }
+
+        /* Progress steps */
+        .form-progress {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin: 0 0 2rem 0;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active {
+            color: var(--accent-teal);
+            background: rgba(14,165,233,0.08);
+        }
+
+        [data-theme="light"] .progress-step.active {
+            color: #0369a1;
+            background: rgba(3,105,161,0.08);
+        }
+
+        .progress-step .step-num {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .progress-step.active .step-num {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .progress-connector {
+            width: 24px; height: 2px;
+            background: var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        /* Police Banner */
+        .police-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(30,64,175,0.15), rgba(14,165,233,0.08));
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 14px;
+            padding: 16px 22px;
+            margin-bottom: 1.75rem;
+            align-items: center; gap: 14px;
+            color: var(--accent-teal);
+            font-weight: 600; font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .police-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+        }
+
+        .police-banner i { font-size: 1.3rem; }
+
+        [data-theme="light"] .police-banner {
+            background: rgba(29,78,216,0.06);
+            border-color: rgba(29,78,216,0.2);
+            color: #1d4ed8;
+        }
+
+        /* Form Card */
+        .report-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.25rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        [data-theme="light"] .report-card {
+            background: #ffffff;
+            border-color: rgba(0,0,0,0.07);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+        }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .report-card.card-blue::before { background: linear-gradient(90deg, #3b82f6, #0ea5e9); }
+        .report-card.card-amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .report-card.card-purple::before { background: linear-gradient(90deg, #7c3aed, #6d28d9); }
+        .report-card.card-green::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .report-card.card-red::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .report-card.card-indigo::before { background: linear-gradient(90deg, #1d4ed8, #0369a1); }
+
+        .report-card-header {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 2rem; padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        [data-theme="light"] .report-card-header { border-color: rgba(0,0,0,0.07); }
+
+        .step-badge {
+            width: 46px; height: 46px; flex-shrink: 0;
+            border-radius: 14px; display: flex;
+            align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1rem; color: white;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .step-badge.blue { background: linear-gradient(135deg, #3b82f6, #0ea5e9); box-shadow: 0 6px 16px rgba(59,130,246,0.3); }
+        .step-badge.amber { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 6px 16px rgba(245,158,11,0.3); }
+        .step-badge.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); box-shadow: 0 6px 16px rgba(124,58,237,0.3); }
+        .step-badge.green { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 6px 16px rgba(34,197,94,0.3); }
+        .step-badge.red { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 6px 16px rgba(239,68,68,0.3); }
+        .step-badge.indigo { background: linear-gradient(135deg, #1d4ed8, #0369a1); box-shadow: 0 6px 16px rgba(29,78,216,0.3); }
+
+        .report-card-header h3 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem; font-weight: 700;
+            color: var(--text-primary); margin: 0;
+        }
+
+        [data-theme="light"] .report-card-header h3 { color: #0f172a; }
+
+        .report-card-header p {
+            font-size: 0.8rem; color: var(--text-secondary);
+            margin: 4px 0 0;
+        }
+
+        [data-theme="light"] .report-card-header p { color: #374151; }
+
+        /* Legal check */
+        .legal-card {
+            background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(251,191,36,0.03));
+            border: 1px solid rgba(245,158,11,0.22);
+            border-radius: 20px;
+            padding: 2.25rem; margin-bottom: 1.5rem;
+        }
+
+        [data-theme="light"] .legal-card {
+            background: rgba(245,158,11,0.04);
+            border-color: rgba(245,158,11,0.18);
+        }
+
+        .legal-check-label {
+            display: flex; align-items: flex-start; gap: 15px;
+            cursor: pointer; padding: 16px 20px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px; transition: var(--transition);
+        }
+
+        [data-theme="light"] .legal-check-label {
+            background: #f8fafc; border-color: #d1d5db;
+        }
+
+        .legal-check-label:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.06);
+        }
+
+        .legal-check-label input[type="checkbox"] {
+            width: 20px; height: 20px; flex-shrink: 0;
+            accent-color: var(--accent-blue);
+            cursor: pointer; margin-top: 2px;
+        }
+
+        .legal-check-label span {
+            font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65;
+        }
+
+        [data-theme="light"] .legal-check-label span { color: #374151; }
+
+        .legal-check-label span strong { color: var(--accent-amber); }
+        [data-theme="light"] .legal-check-label span strong { color: #b45309; }
+
+        /* Form fields */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+
+        .form-group-modern { margin-bottom: 1.25rem; }
+
+        .form-group-modern label {
+            display: block; font-size: 0.72rem; font-weight: 700;
+            color: var(--text-secondary); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.07em;
+        }
+
+        [data-theme="light"] .form-group-modern label { color: #374151 !important; }
+
+        .form-group-modern label .req { color: #ef4444; margin-left: 3px; }
+
+        /* File upload zone */
+        .upload-zone {
+            border: 2px dashed var(--border-subtle);
+            border-radius: 16px; padding: 3rem 2rem;
+            text-align: center; cursor: pointer;
+            transition: var(--transition); position: relative;
+            background: rgba(255,255,255,0.02);
+        }
+
+        [data-theme="light"] .upload-zone {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.05);
+            transform: scale(1.005);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+
+        .upload-zone-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+            border: 2px solid rgba(239,68,68,0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .upload-zone i { font-size: 1.6rem; color: #ef4444; }
+        .upload-zone p { color: var(--text-primary); font-size: 0.95rem; margin: 0.25rem 0 0.5rem; font-weight: 600; }
+        .upload-zone small { color: var(--text-muted); font-size: 0.8rem; }
+
+        [data-theme="light"] .upload-zone p { color: #0f172a; }
+        [data-theme="light"] .upload-zone small { color: #6b7280; }
+
+        /* AI validation */
+        #photo-preview-container {
+            display: none; margin-top: 1.25rem; position: relative;
+        }
+
+        #photo-preview-img {
+            width: 100%; max-height: 280px; object-fit: cover;
+            border-radius: 14px; border: 2px solid var(--border-subtle);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        [data-theme="light"] #photo-preview-img {
+            border-color: #d1d5db;
+        }
+
+        .ai-validation-status {
+            display: flex; align-items: center; gap: 10px;
+            margin-top: 1rem; padding: 12px 16px;
+            border-radius: 10px; font-size: 0.875rem; font-weight: 600;
+        }
+
+        .ai-status-checking {
+            background: rgba(59,130,246,0.10);
+            border: 1px solid rgba(59,130,246,0.22);
+            color: var(--accent-teal);
+        }
+
+        [data-theme="light"] .ai-status-checking { color: #0369a1; }
+
+        .ai-status-valid {
+            background: rgba(34,197,94,0.10);
+            border: 1px solid rgba(34,197,94,0.2);
+            color: #4ade80;
+        }
+
+        [data-theme="light"] .ai-status-valid { color: #15803d; background: rgba(21,128,61,0.06); border-color: rgba(21,128,61,0.2); }
+
+        .ai-status-invalid {
+            background: rgba(239,68,68,0.10);
+            border: 1px solid rgba(239,68,68,0.22);
+            color: #f87171;
+        }
+
+        [data-theme="light"] .ai-status-invalid { color: #dc2626; background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.2); }
+
+        /* Submit area */
+        .submit-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.5rem; text-align: center;
+            position: relative; overflow: hidden;
+        }
+
+        .submit-area::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+        }
+
+        [data-theme="light"] .submit-area { background: #fff; border-color: rgba(0,0,0,0.07); box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+
+        .submit-area p { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; line-height: 1.6; }
+        [data-theme="light"] .submit-area p { color: #374151; }
+
+        .btn-submit-report {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 48px; font-size: 1rem; font-weight: 700;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white; border: none; border-radius: 14px;
+            cursor: pointer; transition: var(--transition);
+            box-shadow: 0 6px 24px rgba(239,68,68,0.4);
+            font-family: var(--font-body); width: 100%;
+            justify-content: center; letter-spacing: 0.03em;
+            position: relative; overflow: hidden;
+        }
+
+        .btn-submit-report::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+
+        .btn-submit-report:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 35px rgba(239,68,68,0.55);
+        }
+
+        .btn-submit-report:hover::before { opacity: 1; }
+
+        .btn-submit-report:disabled {
+            opacity: 0.6; cursor: not-allowed; transform: none;
+        }
+
+        /* Section intro card floats up from translated hero */
+        .form-container {
+            max-width: 860px;
+            margin: -3rem auto 0;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .form-intro-banner {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        [data-theme="light"] .form-intro-banner {
+            background: #fff;
+            border-color: rgba(0,0,0,0.07);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+
+        .form-intro-banner .intro-icon {
+            width: 52px; height: 52px; flex-shrink: 0;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; color: white;
+            box-shadow: 0 6px 16px rgba(239,68,68,0.3);
+        }
+
+        .form-intro-banner p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        [data-theme="light"] .form-intro-banner p { color: #374151; }
+        .form-intro-banner strong { color: var(--text-primary); }
+        [data-theme="light"] .form-intro-banner strong { color: #0f172a; }
+
+        /* AI Info box */
+        .ai-info-box {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: rgba(59,130,246,0.06);
+            border: 1px solid rgba(59,130,246,0.15);
+            border-radius: 10px; padding: 12px 14px;
+            margin-top: 1rem; font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+        [data-theme="light"] .ai-info-box { color: #374151; background: rgba(29,78,216,0.04); border-color: rgba(29,78,216,0.12); }
+        .ai-info-box i { color: var(--accent-blue); margin-top: 2px; flex-shrink: 0; }
+    </style>
+</head>
+<body class="report-wrapper">
+    <nav>
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i></div>
+            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+                Find Missing <span class="highlight">Person</span>
+            </a>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+                <i class="fas fa-sun"></i>
+            </button>
+            <select id="languageSelector" onchange="changeLanguage(this.value)" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
+            <div id="nav-right"></div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="report-hero">
+        <div class="container">
+            <div class="report-hero-content">
+                <div class="report-hero-badge">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Official Report Portal</span>
+                </div>
+                <h1>Report a <span style="background:linear-gradient(135deg,#fca5a5,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Missing Person</span></h1>
+                <p>Submit an official case to the National Registry. All reports are verified and cross-referenced with our AI matching system. Accuracy ensures faster reunification.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-container">
+
+        <!-- Intro Banner -->
+        <div class="form-intro-banner">
+            <div class="intro-icon"><i class="fas fa-clipboard-list"></i></div>
+            <p>
+                <strong>Complete all required fields carefully.</strong> Accurate information significantly increases the chances of finding a missing person. All submitted data is encrypted and handled in accordance with Ethiopian Federal Police regulations.
+            </p>
+        </div>
+
+        <!-- Police Banner -->
+        <div id="police-banner" style="display:none;" class="police-banner">
+            <i class="fas fa-shield-alt"></i>
+            <div>
+                <strong>Law Enforcement Mode Active</strong>
+                <span style="font-weight:400; margin-left:8px; font-size:0.85rem; opacity:0.9;">This report will be automatically approved and published to the national registry.</span>
+            </div>
+        </div>
+
+        <form id="reportForm">
+
+            <!-- STEP 1: LEGAL CERTIFICATION -->
+            <div class="legal-card">
+                <div class="report-card-header" style="margin-bottom:1rem; padding-bottom:1rem;">
+                    <div class="step-badge amber">
+                        <i class="fas fa-gavel" style="font-size:0.9rem;"></i>
+                    </div>
+                    <div>
+                        <h3 data-key="report_step1">Step 1: Legal Requirement</h3>
+                        <p>Mandatory per Proclamation No. 720/2011 — Federal Police Act</p>
+                    </div>
+                </div>
+                <label class="legal-check-label">
+                    <input type="checkbox" id="legalCheck" required>
+                    <span>I certify that I have already filed a report with the <strong>Ethiopian Federal Police</strong> or regional authority, and I am submitting this case for the National Digital Registry.</span>
+                </label>
+            </div>
+
+            <div id="mainForm" style="display:none;">
+
+                <!-- STEP 2: POLICE RECORD (Law Enforcement Only) -->
+                <div id="step-police-record" class="report-card card-indigo" style="display:none;">
+                    <div class="report-card-header">
+                        <div class="step-badge indigo">2</div>
+                        <div>
+                            <h3 data-key="report_step2">Step 2: Police Record Data</h3>
+                            <p>Official case file information — Law Enforcement use only</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-modern">
+                            <label>Police Station / District <span class="req">*</span></label>
+                            <input type="text" id="policeDistrict" placeholder="e.g. Bole Sub-City Woreda 03">
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Case File Number (CFN) <span class="req">*</span></label>
+                            <input type="text" id="policeCaseNumber" placeholder="e.g. 10/254/2016">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: LOCATION -->
+                <div class="report-card card-blue">
+                    <div class="report-card-header">
+                        <div class="step-badge blue">3</div>
+                        <div>
+                            <h3 data-key="report_step3">Step 3: Last Known Location</h3>
+                            <p>Administrative region and precise location details</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-modern">
+                            <label>Region (Kilil) <span class="req">*</span></label>
+                            <select id="regionInput">
+                                <option value="">Select Region</option>
+                                <option>Addis Ababa</option>
+                                <option>Afar</option>
+                                <option>Amhara</option>
+                                <option>Benishangul-Gumuz</option>
+                                <option>Central Ethiopia</option>
+                                <option>Dire Dawa</option>
+                                <option>Gambela</option>
+                                <option>Harari</option>
+                                <option>Oromia</option>
+                                <option>Sidama</option>
+                                <option>Somali</option>
+                                <option>South Ethiopia</option>
+                                <option>South West Ethiopia</option>
+                                <option>Tigray</option>
+                            </select>
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Zone / City Administration <span class="req">*</span></label>
+                            <input type="text" id="city" placeholder="e.g. North Shewa or Adama" required>
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Woreda (District)</label>
+                            <input type="text" id="woredaInput" placeholder="District Name">
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Kebele (Ward)</label>
+                            <input type="text" id="kebeleInput" placeholder="Kebele 01">
+                        </div>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Specific Location Details</label>
+                        <input type="text" id="lastSeenLocation" placeholder="Street name, landmark, house number">
+                    </div>
+                </div>
+
+                <!-- STEP 4: SUBJECT IDENTIFICATION -->
+                <div class="report-card card-blue">
+                    <div class="report-card-header">
+                        <div class="step-badge blue">4</div>
+                        <div>
+                            <h3 data-key="report_step4">Step 4: Subject Identification</h3>
+                            <p>Core information about the missing individual</p>
+                        </div>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Full Legal Name (First–Middle–Last) <span class="req">*</span></label>
+                        <input type="text" id="fullName" style="text-transform: uppercase;" placeholder="FULL NAME IN CAPS" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-modern">
+                            <label>Classification <span class="req">*</span></label>
+                            <select id="classification" required>
+                                <option value="Endangered">Endangered</option>
+                                <option value="Involuntary">Involuntary (Abduction)</option>
+                                <option value="Disability">Disability (Mental/Physical)</option>
+                                <option value="Juvenile">Juvenile</option>
+                                <option value="Catastrophe">Catastrophe</option>
+                                <option value="Other" selected>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Date Last Seen <span class="req">*</span></label>
+                            <input type="date" id="lastSeenDate" required>
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Age</label>
+                            <input type="number" id="age" placeholder="e.g. 25" min="0" max="120">
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Gender</label>
+                            <select id="gender">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 5: PHYSICAL CHARACTERISTICS -->
+                <div class="report-card card-purple">
+                    <div class="report-card-header">
+                        <div class="step-badge purple">5</div>
+                        <div>
+                            <h3>Step 5: Physical Characteristics</h3>
+                            <p>Describe physical attributes to aid identification</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-modern">
+                            <label>Height (cm)</label>
+                            <input type="number" id="height" placeholder="e.g. 175">
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="weight" placeholder="e.g. 70">
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Eye Color</label>
+                            <select id="eyeColor">
+                                <option value="Unknown">Unknown</option>
+                                <option value="Black">Black</option>
+                                <option value="Brown">Brown</option>
+                                <option value="Blue">Blue</option>
+                                <option value="Green">Green</option>
+                                <option value="Hazel">Hazel</option>
+                                <option value="Grey">Grey</option>
+                            </select>
+                        </div>
+                        <div class="form-group-modern">
+                            <label>Hair Color</label>
+                            <select id="hairColor">
+                                <option value="Unknown">Unknown</option>
+                                <option value="Black">Black</option>
+                                <option value="Brown">Brown</option>
+                                <option value="Blonde">Blonde</option>
+                                <option value="Red">Red</option>
+                                <option value="Grey">Grey</option>
+                                <option value="White">White</option>
+                                <option value="Bald">Bald</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Distinguishing Marks</label>
+                        <textarea id="distinguishingMarks" rows="2" placeholder="Scars, tattoos, birthmarks, piercings, deformities..."></textarea>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Circumstances &amp; Clothing</label>
+                        <textarea id="description" rows="3" placeholder="Description of clothing worn, circumstances of disappearance..."></textarea>
+                    </div>
+                </div>
+
+                <!-- STEP 6: VEHICLE & SOCIAL MEDIA -->
+                <div class="report-card card-green">
+                    <div class="report-card-header">
+                        <div class="step-badge green">6</div>
+                        <div>
+                            <h3 data-key="report_step5">Step 6: Vehicle &amp; Social Media</h3>
+                            <p>Additional context that may aid the investigation</p>
+                        </div>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Vehicle Information (if applicable)</label>
+                        <textarea id="vehicleInformation" rows="2" placeholder="Make, Model, Color, License Plate Number..."></textarea>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Social Media Accounts</label>
+                        <textarea id="socialMediaAccounts" rows="2" placeholder="Facebook URL, Instagram Handle, Twitter, etc..."></textarea>
+                    </div>
+                </div>
+
+                <!-- STEP 7: BIOMETRIC PHOTO -->
+                <div class="report-card card-red">
+                    <div class="report-card-header">
+                        <div class="step-badge red">7</div>
+                        <div>
+                            <h3 data-key="report_step6">Step 7: Biometric Photo</h3>
+                            <p>Upload a clear, high-resolution facial photo — AI validated for identity matching</p>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone" id="photo-upload-zone">
+                        <input type="file" id="image" accept="image/*" required onchange="handlePhotoUpload(event)">
+                        <div class="upload-zone-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <p><strong>Click or drag to upload photo</strong></p>
+                        <small>Must show a clear human face · JPG, PNG, WEBP · Max 10MB</small>
+                    </div>
+
+                    <!-- Preview -->
+                    <div id="photo-preview-container">
+                        <img id="photo-preview-img" src="" alt="Preview">
+                        <div id="ai-validation-status" class="ai-validation-status ai-status-checking">
+                            <div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>
+                            <span id="ai-status-text">AI is verifying the photo contains a human face...</span>
+                        </div>
+                    </div>
+
+                    <div class="ai-info-box">
+                        <i class="fas fa-microchip"></i>
+                        <span>Our AI system generates a 128-dimensional facial embedding for cross-referencing against the national registry. Only photos containing a clearly visible human face are accepted.</span>
+                    </div>
+                </div>
+
+                <!-- STEP 8: REPORTER INFO -->
+                <div class="report-card card-indigo">
+                    <div class="report-card-header">
+                        <div class="step-badge indigo">8</div>
+                        <div>
+                            <h3 data-key="report_step7">Step 8: Reporter Information</h3>
+                            <p>Your contact details for case follow-up (kept confidential)</p>
+                        </div>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Contact Phone <span class="req">*</span></label>
+                        <div style="position:relative;">
+                            <i class="fas fa-phone" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none;"></i>
+                            <input type="text" id="contactPhone" required placeholder="+251 9XX XXX XXXX" style="padding-left:40px;">
+                        </div>
+                    </div>
+                    <label class="legal-check-label" style="margin-top:0.5rem;">
+                        <input type="checkbox" id="isAnonymous">
+                        <span>Request Anonymity — my contact information will be withheld pending police approval.</span>
+                    </label>
+                </div>
+
+                <input type="hidden" id="status" value="Missing">
+
+                <!-- SUBMIT -->
+                <div class="submit-area">
+                    <p>
+                        <i class="fas fa-lock" style="color:var(--accent-blue);margin-right:6px;"></i>
+                        Your report is encrypted and securely submitted to the Ethiopian Federal Police National Registry. All data is handled under strict confidentiality protocols.
+                    </p>
+                    <button type="submit" class="btn-submit-report" id="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Submit to National Registry</span>
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        updateNav();
+
+        // Legal Check Interaction
+        const legalCheck = document.getElementById('legalCheck');
+        const mainForm = document.getElementById('mainForm');
+
+        legalCheck.addEventListener('change', function () {
+            mainForm.style.display = this.checked ? 'block' : 'none';
+            if (this.checked) {
+                mainForm.style.animation = 'fadeIn 0.4s ease';
+            }
+        });
+
+        // Police Role Logic
+        const userRole = typeof getUserRole === 'function' ? getUserRole() : null;
+        const isPolice = (userRole === 'law_enforcement' || userRole === 'admin');
+
+        const policeStep = document.getElementById('step-police-record');
+        const policeDistrictInput = document.getElementById('policeDistrict');
+        const policeCaseInput = document.getElementById('policeCaseNumber');
+
+        if (isPolice) {
+            policeStep.style.display = 'block';
+            policeDistrictInput.required = true;
+            policeCaseInput.required = true;
+
+            const banner = document.getElementById('police-banner');
+            if (banner) banner.style.display = 'flex';
+
+            legalCheck.checked = true;
+            legalCheck.dispatchEvent(new Event('change'));
+        } else {
+            policeStep.style.display = 'none';
+            policeDistrictInput.required = false;
+            policeCaseInput.required = false;
+        }
+
+        // ── AI Photo Validation (STRICT — no fallback) ──
+        let photoValidated = false;
+
+        async function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload a valid image file (JPG, PNG, WEBP).');
+                event.target.value = '';
+                return;
+            }
+
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10MB. Please upload a smaller image.');
+                event.target.value = '';
+                return;
+            }
+
+            const previewContainer = document.getElementById('photo-preview-container');
+            const previewImg = document.getElementById('photo-preview-img');
+            const statusDiv = document.getElementById('ai-validation-status');
+
+            const reader = new FileReader();
+            reader.onload = (e) => { previewImg.src = e.target.result; };
+            reader.readAsDataURL(file);
+
+            previewContainer.style.display = 'block';
+            statusDiv.className = 'ai-validation-status ai-status-checking';
+            statusDiv.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>AI is verifying the photo contains a human face...</span>`;
+            photoValidated = false;
+
+            try {
+                await validateFaceImage(file, statusDiv);
+            } catch (err) {
+                setValidationStatus(statusDiv, false, 'Validation error. Please upload a clear face photo.');
+                photoValidated = false;
+            }
+        }
+
+        async function validateFaceImage(file, statusEl) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`${AI_URL}/validate-face`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.is_human_face) {
+                        setValidationStatus(statusEl, true, `✓ Human face verified — AI confidence: ${Math.round(result.confidence * 100)}%`);
+                        photoValidated = true;
+                    } else {
+                        setValidationStatus(statusEl, false, '✗ No human face detected. The uploaded image must contain a clear, visible human face. Please try again with a proper photo of the missing person.');
+                        photoValidated = false;
+                        document.getElementById('image').value = '';
+                        setTimeout(() => {
+                            document.getElementById('photo-preview-container').style.display = 'none';
+                        }, 5000);
+                    }
+                } else {
+                    // AI service returned an error (strict: reject)
+                    setValidationStatus(statusEl, false, '✗ AI verification service error. Please try again or contact support if the issue persists.');
+                    photoValidated = false;
+                    document.getElementById('image').value = '';
+                }
+            } catch (networkErr) {
+                // Service unreachable — STRICT: reject submission
+                setValidationStatus(statusEl, false, '✗ AI verification service is currently unavailable. Please try again in a few moments. A valid human face photo is required.');
+                photoValidated = false;
+                document.getElementById('image').value = '';
+            }
+        }
+
+        function setValidationStatus(el, isValid, message) {
+            el.className = 'ai-validation-status ' + (isValid ? 'ai-status-valid' : 'ai-status-invalid');
+            el.innerHTML = `<i class="fas ${isValid ? 'fa-check-circle' : 'fa-times-circle'}"></i><span>${message}</span>`;
+        }
+
+        // Drag & Drop
+        const zone = document.getElementById('photo-upload-zone');
+        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files[0]) {
+                document.getElementById('image').files = files;
+                handlePhotoUpload({ target: { files } });
+            }
+        });
+
+        // Form Submission
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!legalCheck.checked) {
+                alert('You must certify the police report requirement.');
+                return;
+            }
+
+            const imgInput = document.getElementById('image');
+            if (!imgInput.files[0]) {
+                alert('Please upload a biometric photo of the missing person.');
+                return;
+            }
+
+            if (!photoValidated) {
+                alert('The uploaded photo has not been verified by AI. Please upload a clear facial photograph of the missing person and wait for AI verification.');
+                return;
+            }
+
+            const btn = document.getElementById('submit-btn');
+            btn.innerHTML = `<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div><span>Encrypting &amp; Submitting...</span>`;
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('fullName', document.getElementById('fullName').value);
+            formData.append('age', document.getElementById('age').value);
+            formData.append('gender', document.getElementById('gender').value);
+            formData.append('classification', document.getElementById('classification').value);
+            formData.append('height', document.getElementById('height').value);
+            formData.append('weight', document.getElementById('weight').value);
+            formData.append('eyeColor', document.getElementById('eyeColor').value);
+            formData.append('hairColor', document.getElementById('hairColor').value);
+            formData.append('distinguishingMarks', document.getElementById('distinguishingMarks').value);
+            formData.append('policeDistrict', document.getElementById('policeDistrict').value);
+            formData.append('policeCaseNumber', document.getElementById('policeCaseNumber').value);
+            formData.append('isPoliceReported', 'true');
+
+            const region = document.getElementById('regionInput').value;
+            const zone_val = document.getElementById('city').value;
+            const woreda = document.getElementById('woredaInput').value;
+            const kebele = document.getElementById('kebeleInput').value;
+            const specificLoc = document.getElementById('lastSeenLocation').value;
+
+            formData.append('city', zone_val);
+            const fullLocationString = `${specificLoc}, Kebele ${kebele}, Woreda ${woreda}, ${zone_val}, ${region}`;
+            formData.append('lastSeenLocation', fullLocationString);
+            formData.append('lastSeenDate', document.getElementById('lastSeenDate').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('vehicleInformation', document.getElementById('vehicleInformation').value);
+            formData.append('socialMediaAccounts', document.getElementById('socialMediaAccounts').value);
+            formData.append('status', 'Missing');
+            formData.append('contactPhone', document.getElementById('contactPhone').value);
+
+            if (document.getElementById('isAnonymous').checked) {
+                formData.append('isAnonymous', 'true');
+            }
+
+            if (imgInput.files[0]) {
+                formData.append('image', imgInput.files[0]);
+            }
+
+            try {
+                await apiCall('/people', 'POST', formData, true);
+                alert('Case Successfully Registered with National Registry! Reference ID generated.');
+                window.location.href = 'index.html';
+            } catch (err) {
+                console.error(err);
+                alert('Submission Error: ' + err.message);
+                btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>Submit to National Registry</span>`;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -81,7 +81,8 @@ function updateNav() {
         const role = getUserRole();
         const dashboardLink = role === 'admin'
             ? '/system_admin/index.html'
-            : (role === 'law_enforcement' ? '/police_admin/index.html' : '/user/index.html');
+            : (role === 'law_enforcement' ? '/police_admin/dashboard.html' : '/user/dashboard.html');
+        const reportLink = role === 'public_user' ? '/user/report.html' : '/report.html';
         
         navRight.innerHTML = `
             <a href="${dashboardLink}" title="Dashboard" data-key="dashboard">Dashboard</a>
@@ -89,7 +90,7 @@ function updateNav() {
             <a href="#" id="notif-btn" onclick="toggleNotif()" style="position:relative;">
                 🔔 <span id="notif-count" style="display:none; background:red; color:white; border-radius:50%; padding:2px 5px; font-size:0.6rem; position:absolute; top:-5px; right:-5px;">0</span>
             </a>
-            <a href="/report.html" data-key="nav_report">Report/Upload</a>
+            <a href="${reportLink}" data-key="nav_report">Report/Upload</a>
             <a href="#" onclick="logout()" data-key="logout">Logout</a>
             <!-- Notification Dropdown -->
             <div id="notif-dropdown" style="display:none; position:absolute; right:120px; top:50px; background:white; color:black; border:1px solid #ddd; width:300px; max-height:300px; overflow-y:auto; z-index:1000; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
@@ -100,6 +101,7 @@ function updateNav() {
         checkNotifications();
     } else {
         navRight.innerHTML = `
+            <a href="/login.html" data-key="login_title">Login</a>
             <a href="/register.html" data-key="register">Register</a>
         `;
     }

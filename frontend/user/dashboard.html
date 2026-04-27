@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find Missing Person Dashboard — Browse and manage active missing persons cases.">
+    <base href="/">
+    <title>Dashboard — Find Missing Person</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i>
+            </div>
+            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+                Find Missing <span class="highlight">Person</span>
+            </a>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle day/night mode">
+                <i class="fas fa-sun"></i>
+            </button>
+            <select id="languageSelector" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
+            <div id="nav-right"></div>
+        </div>
+    </nav>
+
+    <!-- DASHBOARD CONTENT -->
+    <div class="container">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h1 class="dashboard-title">
+                        <span class="dot" style="width:10px; height:10px; background:var(--accent-red); border-radius:50%; box-shadow:0 0 10px var(--accent-red); display:inline-block; animation:pulse 2s infinite; margin-right:10px; vertical-align:middle;"></span>
+                        <span data-key="section_active">Active Cases</span>
+                    </h1>
+                    <p class="dashboard-subtitle">Live national registry — updated in real time</p>
+                </div>
+                <a href="report.html" class="btn btn-danger btn-sm" id="btn-new-report">
+                    <i class="fas fa-plus"></i>
+                    <span data-key="nav_report">Report / Upload</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div style="display:flex; align-items:center; gap:8px; color:var(--text-secondary); flex-shrink:0;">
+                <i class="fas fa-filter" style="color:var(--accent-blue); font-size:0.9rem;"></i>
+                <span style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Filters</span>
+            </div>
+            <div style="width:1px; height:30px; background:var(--border-subtle); flex-shrink:0;"></div>
+
+            <div style="position:relative; flex:2; min-width:180px;">
+                <i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent-blue); font-size:0.8rem; pointer-events:none;"></i>
+                <input
+                    type="text"
+                    id="search"
+                    data-placeholder-key="search_placeholder"
+                    placeholder="Search name..."
+                    onkeyup="loadPeople()"
+                    style="padding-left:36px;"
+                >
+            </div>
+
+            <select id="filterStatus" onchange="loadPeople()" style="flex:1; min-width:160px; max-width:220px;">
+                <option value="" data-key="status_all">All Statuses</option>
+                <option value="Missing" data-key="status_missing">Missing</option>
+                <option value="Found" data-key="status_found">Found</option>
+            </select>
+
+            <button onclick="loadPeople()" class="btn btn-sm" style="flex-shrink:0; padding:9px 20px;">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+
+        <!-- Cases Grid -->
+        <div id="listContainer" style="margin-bottom:4rem;">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <span data-key="loading">Loading cases...</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom" style="border-top:none; padding-top:0;">
+                <p>&copy; 2026 Find Missing Person — EFP Missing Persons System. All Rights Reserved.</p>
+                <div class="emergency-badge">
+                    <i class="fas fa-phone-alt"></i>
+                    <span><span data-key="footer_emergency">Emergency</span>: 991</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        updateNav();
+        checkAuth();
+
+        // Language init
+        const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+        const selector = document.getElementById('languageSelector');
+        if (selector) {
+            selector.value = savedLang;
+            selector.onchange = (e) => changeLanguage(e.target.value);
+        }
+        changeLanguage(savedLang);
+
+        async function loadPeople() {
+            const status = document.getElementById('filterStatus').value;
+            const search = document.getElementById('search').value;
+            let url = `/people?`;
+            if (status) url += `status=${status}&`;
+            if (search) url += `name=${encodeURIComponent(search)}`;
+
+            const container = document.getElementById('listContainer');
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const t = translations[lang] || translations['en'];
+
+            container.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>${t.loading || 'Loading...'}</span></div>`;
+
+            try {
+                const people = await apiCall(url);
+                container.innerHTML = '';
+
+                if (people.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:5rem; color:var(--text-secondary);">
+                            <i class="fas fa-search" style="font-size:2.5rem; color:var(--text-muted); display:block; margin-bottom:1rem;"></i>
+                            <p style="font-size:1.05rem;">${t.no_records || 'No records found.'}</p>
+                        </div>`;
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'grid-container';
+
+                people.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'person-card';
+                    const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
+
+                    const statusText = t[`status_${p.status ? p.status.toLowerCase() : ''}`] || p.status || '';
+                    const genderText = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';
+                    const badgeClass = p.status === 'Found' ? 'status-Found' : 'status-Missing';
+
+                    const classTag = p.classification
+                        ? `<span class="classification-tag">${p.classification}</span>`
+                        : '';
+                    const caseBar = p.policeCaseNumber
+                        ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> Case ${p.policeCaseNumber}</div>`
+                        : '';
+
+                    card.innerHTML = `
+                        ${caseBar}
+                        <img src="${imgUrl}" alt="${p.fullName}"
+                            onerror="this.src='https://via.placeholder.com/260x220/131c35/4a5568?text=No+Photo'">
+                        <div class="info">
+                            <h3>${p.fullName}</h3>
+                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                                <span class="status-badge ${badgeClass}">${statusText}</span>
+                                ${classTag}
+                            </div>
+                            <div class="card-meta">
+                                <span>
+                                    <i class="fas fa-birthday-cake" style="color:var(--accent-blue); font-size:0.7rem; margin-right:5px;"></i>
+                                    <strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull;
+                                    <strong>${t.gender_label || 'Gender'}:</strong> ${genderText}
+                                </span>
+                                <span>
+                                    <i class="fas fa-map-marker-alt" style="color:var(--accent-red); font-size:0.7rem; margin-right:5px;"></i>
+                                    <strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.lastSeenLocation || 'Unknown'}
+                                </span>
+                                <span>
+                                    <i class="fas fa-calendar-alt" style="color:var(--text-muted); font-size:0.7rem; margin-right:5px;"></i>
+                                    ${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : 'N/A'}
+                                </span>
+                            </div>
+                            <div class="card-actions">
+                                <a href="case.html?id=${p._id}"
+                                    style="background:rgba(255,255,255,0.06); color:var(--text-primary); border:1px solid var(--border-subtle); border-radius:8px; display:flex; align-items:center; justify-content:center; gap:5px;">
+                                    <i class="fas fa-user" style="font-size:0.7rem;"></i>
+                                    ${t.btn_view_case || 'View'}
+                                </a>
+                                <a href="case.html?id=${p._id}&action=report"
+                                    style="background:linear-gradient(135deg,var(--accent-green),#15803d); color:white; border:none; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:5px;">
+                                    <i class="fas fa-check" style="font-size:0.7rem;"></i>
+                                    ${t.btn_found || 'Found!'}
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+
+            } catch (err) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:3rem; color:#f87171;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
+                        <p>Error loading data. Please try again.</p>
+                    </div>`;
+            }
+        }
+
+        loadPeople();
+    </script>
+</body>
+</html>
