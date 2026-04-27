@@ -5,7 +5,7 @@
 ### 1. Prerequisites
 - Node.js installed
 - Python 3.8+ installed
-- MongoDB connection string (Already configured in backend/.env)
+- Firebase project + Admin service account credentials
 
 ### 2. Backend Setup
 Navigate to the `backend` folder and install dependencies:
@@ -51,7 +51,7 @@ However, for better experience (and preventing CORS issues sometimes), use a sim
 - **Dashboard**: View all cases, filter by status.
 
 ## Notes
-- Images are stored locally in `backend/uploads` to simulate cloud storage.
+- Images are stored in Firebase Realtime Database as base64 file payloads.
 - The AI matching uses a simple cosine similarity check against stored embeddings.
 
 ## Production Deployment Guide
@@ -78,9 +78,14 @@ Checklist:
 Deploy `backend` as a Render Web Service.
 
 Required environment variables:
-- `MONGO_URI`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_DATABASE_URL`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_CLIENT_EMAIL`
+- `FIREBASE_PRIVATE_KEY`
 - `JWT_SECRET`
 - `AI_SERVICE_URL` (URL of your AI service, no trailing slash)
+- `FRONTEND_URL`
 
 After deploy, copy your Render URL (for example `https://missing-person-backend.onrender.com`).
 

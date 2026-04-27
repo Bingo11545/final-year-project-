@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
@@ -30,37 +29,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Database Connection
-const connectDB = async () => {
-    try {
-        console.log('Attempting to connect to MongoDB Atlas...');
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000 // fail fast in 5 seconds
-        });
-        console.log('MongoDB Connected (Atlas)');
-    } catch (err) {
-        console.error('MongoDB Connection Error:', err.message);
-        console.log('Falling back to local in-memory MongoDB mapping...');
-        
-        try {
-            const { MongoMemoryServer } = require('mongodb-memory-server');
-            const mongoServer = await MongoMemoryServer.create();
-            const uri = mongoServer.getUri();
-            
-            await mongoose.connect(uri, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true
-            });
-            console.log('MongoDB Connected (In-Memory Fallback Active)');
-        } catch (fallbackErr) {
-            console.error('Failed to start in-memory fallback:', fallbackErr);
-        }
-    }
-};
-
-connectDB();
+// Initializes Firebase Admin via service module env vars.
+require('./services/firebaseStore');
 
 // Routes
 const authRoutes = require('./routes/authRoutes');

@@ -7,10 +7,20 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: MONGO_URI
-        sync: false # User will need to enter this in Render Dashboard
+      - key: FIREBASE_PROJECT_ID
+        value: finalyearprojectdata-80bc9
+      - key: FIREBASE_DATABASE_URL
+        value: https://finalyearprojectdata-80bc9-default-rtdb.firebaseio.com
+      - key: FIREBASE_STORAGE_BUCKET
+        value: finalyearprojectdata-80bc9.firebasestorage.app
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false # Set Firebase Admin service-account client_email in Render Dashboard
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false # Set Firebase Admin service-account private_key in Render Dashboard
       - key: JWT_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        value: https://missingpersonfinder.netlify.app
       - key: AI_SERVICE_URL
         fromService:
           type: web
