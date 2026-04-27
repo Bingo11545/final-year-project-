@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
     <title>Case Profile - EFP Missing Persons</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -72,7 +73,7 @@
                 <option value="om">Oromo</option>
                 <option value="ti">Tigrinya</option>
              </select>
-            <a href="index.html" class="btn" style="background:transparent; border:1px solid #fff;" data-key="btn_back_home">Back to Home</a>
+            <a href="/index.html" class="btn" style="background:transparent; border:1px solid #fff;" data-key="btn_back_home">Back to Home</a>
         </div>
     </nav>
 
@@ -210,7 +211,7 @@
         async function loadCase() {
             if (!personId) {
                 alert('No case ID provided');
-                window.location.href = 'index.html';
+                window.location.href = '/index.html';
                 return;
             }
 
@@ -229,7 +230,9 @@
                 const lang = localStorage.getItem('preferredLanguage') || 'en';
                 const t = translations[lang] || translations['en'];
                 
-                document.getElementById('p-image').src = IMG_URL_BASE + (p.images && p.images[0] ? p.images[0].url : 'uploads/default.jpg');
+                document.getElementById('p-image').src = p.images && p.images[0]
+                    ? IMG_URL_BASE + p.images[0].url
+                    : 'https://via.placeholder.com/300x300/131c35/4a5568?text=No+Photo';
                 document.getElementById('p-name').textContent = p.fullName;
                 document.getElementById('p-age').textContent = p.age || 'N/A';
                 document.getElementById('p-gender').textContent = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';

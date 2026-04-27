@@ -14,7 +14,8 @@ const PUBLIC_PATHS_FOR_GUEST = new Set([
     'login.html',
     'register.html',
     'forgot_password.html',
-    'reset_password.html'
+    'reset_password.html',
+    'user/case.html'
 ]);
 
 // --- Auth Utils ---

@@ -813,7 +813,7 @@
                             <button class="pd-btn pd-btn-info" onclick="updateTipStatus('${t._id}','Reviewed')">
                                 <i class="fas fa-eye"></i> Mark Reviewed
                             </button>
-                            <a href="case.html?id=${t.person ? t.person._id : ''}" class="pd-btn pd-btn-view">
+                            <a href="/user/case.html?id=${t.person ? t.person._id : ''}" class="pd-btn pd-btn-view">
                                 <i class="fas fa-external-link-alt"></i> View Case
                             </a>
                         </div>
@@ -876,7 +876,7 @@
                             <button class="pd-btn pd-btn-approve" onclick="approveCase('${p._id}')">
                                 <i class="fas fa-check"></i> Approve
                             </button>
-                            <a href="case.html?id=${p._id}" class="pd-btn pd-btn-view">
+                            <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
                                 <i class="fas fa-eye"></i> View Full
                             </a>
                         </div>
@@ -925,7 +925,7 @@
                                 <button class="pd-btn pd-btn-find" onclick="updateStatus('${p._id}','Found')">
                                     <i class="fas fa-user-check"></i> Mark Found
                                 </button>
-                                <a href="case.html?id=${p._id}" class="pd-btn pd-btn-view">
+                                <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
                                     <i class="fas fa-external-link-alt"></i> View/Edit
                                 </a>
                             </div>
@@ -952,7 +952,7 @@
                                 <button class="pd-btn" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);" onclick="updateStatus('${p._id}','Missing')">
                                     <i class="fas fa-undo"></i> Revert
                                 </button>
-                                <a href="case.html?id=${p._id}" class="pd-btn pd-btn-view">
+                                <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
                                     <i class="fas fa-eye"></i> View
                                 </a>
                             </div>
