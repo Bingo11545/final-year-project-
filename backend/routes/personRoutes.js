@@ -12,13 +12,34 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5000000 },
   fileFilter: function fileFilter(req, file, cb) {
-    const filetypes = /jpeg|jpg|png/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    if (mimetype && extname) return cb(null, true);
-    cb(new Error('Error: Images Only!'));
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const allowedExt = ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.jfif'];
+    const allowedMime = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+      'image/bmp',
+      'image/x-ms-bmp',
+      'image/pjpeg'
+    ];
+
+    if (allowedMime.includes((file.mimetype || '').toLowerCase()) || allowedExt.includes(ext)) {
+      return cb(null, true);
+    }
+
+    return cb(new Error('Unsupported image format. Use JPG, PNG, WEBP, BMP, or JFIF.'));
   }
 });
+
+function handleImageUpload(req, res, next) {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ msg: err.message || 'Invalid image upload.' });
+    }
+    return next();
+  });
+}
 
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
@@ -137,7 +158,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', [auth(), upload.single('image')], async (req, res) => {
+router.post('/', [auth(), handleImageUpload], async (req, res) => {
   try {
     const {
       fullName,
