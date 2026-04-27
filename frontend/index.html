@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find Missing Person — National Missing Persons Identification System powered by AI. Report and search for missing persons across Ethiopia.">
+    <title>Find Missing Person — National Missing Persons System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+</head>
+<body>
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i></div>
+            <span>Find Missing <span class="highlight">Person</span></span>
+        </div>
+
+        <div class="nav-links"></div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle day/night mode">
+                <i class="fas fa-sun"></i>
+            </button>
+            <select id="languageSelector" onchange="changeLanguage(this.value)" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
+            <div id="nav-right"></div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span style="width:6px;height:6px;background:var(--accent-green);border-radius:50%;display:inline-block;"></span>
+                    <span>Ethiopian Federal Police Commission</span>
+                </div>
+                <h1 data-key="title">National Missing Persons <span class="gradient-text">Identification System</span></h1>
+                <p class="subtitle" data-key="tagline">Modernizing investigations with Artificial Intelligence — a unified platform for reporting, searching, and finding missing individuals across Ethiopia.</p>
+                <div class="hero-actions">
+                    <a href="report.html" class="btn btn-danger" id="btn-report-hero">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span data-key="btn_report">Report Missing Person</span>
+                    </a>
+                    <a href="#feed-section" class="btn btn-secondary" id="btn-search-hero">
+                        <i class="fas fa-search"></i>
+                        <span data-key="btn_search">Search Database</span>
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="stat-active">—</span>
+                        <span class="stat-label" data-key="stat_active_label">Active Cases</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="stat-found">—</span>
+                        <span class="stat-label" data-key="stat_found_label">Persons Found</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">AI</span>
+                        <span class="stat-label" data-key="stat_ai_label">Powered Matching</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="container">
+        <div class="search-container">
+            <h2><i class="fas fa-search" style="color:var(--accent-blue); margin-right:10px;"></i><span data-key="search_title">Search National Registry</span></h2>
+            <div class="search-row">
+                <div class="search-group" style="flex:2; min-width:200px;">
+                    <label data-key="search_name">Name / ID</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="searchName" placeholder="Search by full name or ID..." data-placeholder-key="search_name_ph">
+                    </div>
+                </div>
+                <div class="search-group">
+                    <label>Gender / ጾታ</label>
+                    <select id="searchGender">
+                        <option value="">Any / ሁሉም</option>
+                        <option value="Male">Male / ወንድ</option>
+                        <option value="Female">Female / ሴት</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label data-key="search_age">Age / እድሜ</label>
+                    <input type="number" id="searchMinAge" placeholder="Age..." min="0" max="120">
+                </div>
+            </div>
+            <div class="search-row">
+                <div class="search-group" style="flex:2;">
+                    <label data-key="search_region">Region / ክልል</label>
+                    <select id="searchRegion">
+                        <option value="">All Regions / ሁሉም ክልሎች</option>
+                        <option>Addis Ababa</option>
+                        <option>Afar</option>
+                        <option>Amhara</option>
+                        <option>Benishangul-Gumuz</option>
+                        <option>Central Ethiopia</option>
+                        <option>Dire Dawa</option>
+                        <option>Gambela</option>
+                        <option>Harari</option>
+                        <option>Oromia</option>
+                        <option>Sidama</option>
+                        <option>Somali</option>
+                        <option>South Ethiopia</option>
+                        <option>South West Ethiopia</option>
+                        <option>Tigray</option>
+                    </select>
+                </div>
+                <div class="search-group" style="flex:2;">
+                    <label data-key="search_city">City / ከተማ</label>
+                    <input type="text" id="searchCity" placeholder="City or zone...">
+                </div>
+                <div style="display:flex; align-items:flex-end; padding-bottom:0;">
+                    <button onclick="loadPublicFeed()" class="search-btn" id="search-submit-btn">
+                        <i class="fas fa-arrow-right"></i>
+                        <span data-key="btn_search">Search</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="container" style="margin-top:4rem;">
+        <div class="section-header">
+            <h2 style="font-family:var(--font-heading); font-size:1.5rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:12px; border:none; text-transform:none; padding:0; margin:0;">
+                <span style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">How It Works / እንዴት ይሰራል</span>
+            </h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-icon"><i class="fas fa-file-contract" style="color:white;"></i></div>
+                <h3 data-key="step1_title">1. File Police Report</h3>
+                <p data-key="step1_desc">Mandatory reporting to EFP or Local Police. Obtain official case number.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.3);">
+                    <i class="fas fa-id-card" style="color:white;"></i>
+                </div>
+                <h3 data-key="step2_title">2. Official Submission</h3>
+                <p data-key="step2_desc">Digitize case details for 'Declaration of Absence' legal processes.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 15px rgba(5,150,105,0.3);">
+                    <i class="fas fa-brain" style="color:white;"></i>
+                </div>
+                <h3 data-key="step3_title">3. AI Matching</h3>
+                <p data-key="step3_desc">Automated face recognition cross-referenced against the national sightings database.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <hr style="border:0; border-top:1px solid var(--border-subtle); margin:2rem 0;">
+    </div>
+
+    <!-- CASES FEED -->
+    <div class="container" id="feed-section" style="margin-bottom:2rem;">
+        <div class="section-header">
+            <h2 style="font-family:var(--font-heading); font-size:1.5rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:12px; border:none; text-transform:none; padding:0; margin:0;">
+                <span class="dot" style="width:10px;height:10px;background:var(--accent-red);border-radius:50%;box-shadow:0 0 10px var(--accent-red);display:inline-block;animation:pulse 2s infinite;"></span>
+                <span data-key="section_active">Active Investigations</span>
+            </h2>
+            <span style="font-size:0.8rem; color:var(--text-muted);">Live updates from EFP nationwide</span>
+        </div>
+        <div id="publicFeed" class="grid-container">
+            <div class="loading-indicator" style="grid-column:1/-1;">
+                <div class="spinner"></div>
+                <span>Accessing National Registry...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <div class="logo" style="margin-bottom:1rem;">
+                        <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.85rem;"></i></div>
+                        <span>Find Missing <span class="highlight">Person</span></span>
+                    </div>
+                    <p data-key="footer_desc">Ensuring peace and security through professional service and community partnership.</p>
+                    <div class="emergency-badge">
+                        <i class="fas fa-phone-alt"></i>
+                        <span><span data-key="footer_emergency">Emergency</span>: 991</span>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h5 data-key="footer_links">Quick Links</h5>
+                    <a href="report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Report a Case</a>
+                    <a href="#feed-section"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Search Database</a>
+                    <a href="login.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Authority Login</a>
+                </div>
+                <div class="footer-col">
+                    <h5 data-key="footer_efp">Ethiopian Federal Police</h5>
+                    <a href="#">Ministry of Peace</a>
+                    <a href="#">Ministry of Justice</a>
+                    <a href="#">Digital Ethiopia 2025</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Find Missing Person — EFP Missing Persons System. All Rights Reserved.</p>
+                <p style="color:var(--text-muted); font-size:0.75rem;">Authorized Use Only</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        updateNav();
+
+        // Load stats counts
+        async function loadStats() {
+            try {
+                const missing = await apiCall('/people?status=Missing');
+                const found = await apiCall('/people?status=Found');
+                document.getElementById('stat-active').textContent = missing.length || '0';
+                document.getElementById('stat-found').textContent = found.length || '0';
+            } catch(e) { /* silent fail */ }
+        }
+
+        async function loadPublicFeed() {
+            const container = document.getElementById('publicFeed');
+            container.innerHTML = `<div class="loading-indicator" style="grid-column:1/-1;"><div class="spinner"></div><span>Searching registry...</span></div>`;
+
+            const name = document.getElementById('searchName').value;
+            const region = document.getElementById('searchRegion').value;
+            const city = document.getElementById('searchCity').value;
+            const minAge = document.getElementById('searchMinAge').value;
+
+            let url = '/people?status=Missing';
+            if (name) url += `&name=${encodeURIComponent(name)}`;
+            if (city) url += `&city=${encodeURIComponent(city)}`;
+            if (minAge) url += `&minAge=${minAge}`;
+
+            try {
+                const people = await apiCall(url);
+                container.innerHTML = '';
+
+                if (people.length === 0) {
+                    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-secondary);">
+                        <i class="fas fa-search" style="font-size:2rem; color:var(--text-muted); margin-bottom:1rem; display:block;"></i>
+                        <p style="font-size:1rem;">No active cases matching your criteria found in national registry.</p>
+                    </div>`;
+                    return;
+                }
+
+                people.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'person-card';
+                    const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
+                    const caseBadge = p.policeCaseNumber ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> Case ${p.policeCaseNumber}</div>` : '';
+                    const classTag = p.classification ? `<span class="classification-tag">${p.classification}</span>` : '';
+
+                    card.innerHTML = `
+                        ${caseBadge}
+                        <img src="${imgUrl}" alt="${p.fullName}" onerror="this.src='https://via.placeholder.com/260x220/131c35/4a5568?text=No+Photo'">
+                        <div class="info">
+                            <h4>${p.fullName}</h4>
+                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                                <span class="status-badge status-Active">Missing</span>
+                                ${classTag}
+                            </div>
+                            <div class="card-meta">
+                                <span><i class="fas fa-birthday-cake" style="color:var(--accent-blue); font-size:0.7rem; margin-right:6px;"></i><strong>Age:</strong> ${p.age || 'N/A'} &bull; ${p.gender || 'N/A'}</span>
+                                <span><i class="fas fa-map-marker-alt" style="color:var(--accent-red); font-size:0.7rem; margin-right:6px;"></i><strong>Last Seen:</strong> ${p.city || p.lastSeenLocation || 'Unknown'}</span>
+                                <span><i class="fas fa-calendar" style="color:var(--text-muted); font-size:0.7rem; margin-right:6px;"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : 'Date unknown'}</span>
+                            </div>
+                            <div class="card-actions">
+                                <button onclick="window.location.href='case.html?id=${p._id}'"
+                                    style="background:rgba(255,255,255,0.06); color:var(--text-primary); border:1px solid var(--border-subtle);">
+                                    View Profile
+                                </button>
+                                <button onclick="window.location.href='case.html?id=${p._id}'"
+                                    style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); color:white; border:none;">
+                                    Send Tip
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#f87171;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
+                    <p>Secure connection failed. Please try again.</p>
+                </div>`;
+            }
+        }
+
+        loadPublicFeed();
+        loadStats();
+    </script>
+</body>
+</html>

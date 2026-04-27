@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Find Missing Person</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i></div>
+            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+                Find Missing <span class="highlight">Person</span>
+            </a>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle theme">
+                <i class="fas fa-sun"></i>
+            </button>
+            <select id="languageSelector" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
+        </div>
+    </nav>
+
+    <div class="auth-page-wrapper">
+        <div class="form-card">
+            <!-- Logo mark -->
+            <div style="text-align:center; margin-bottom:1.75rem;">
+                <div style="width:56px; height:56px; background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; box-shadow:0 0 25px var(--accent-blue-glow);">
+                    <i class="fas fa-lock" style="color:white; font-size:1.4rem;"></i>
+                </div>
+                <h2 data-key="login_title">Login</h2>
+                <p class="subtitle" style="color:var(--text-secondary); font-size:0.875rem; margin-top:4px;">Access the national registry system</p>
+            </div>
+
+            <div id="error-msg" style="display:none; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25); color:#f87171; padding:11px 15px; border-radius:8px; font-size:0.875rem; margin-bottom:1rem;"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label data-key="email">Email</label>
+                    <div style="position:relative;">
+                        <i class="fas fa-envelope" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        <input type="email" id="email" placeholder="your@email.com" required style="padding-left:38px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label data-key="password">Password</label>
+                    <div style="position:relative;">
+                        <i class="fas fa-key" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        <input type="password" id="password" placeholder="••••••••" required style="padding-left:38px;">
+                    </div>
+                </div>
+                <div style="text-align:right; margin-bottom:1.25rem; margin-top:-0.5rem;">
+                    <a href="forgot_password.html" style="font-size:0.8rem; color:var(--accent-teal); text-decoration:none;" data-key="forgot_password">Forgot Password?</a>
+                </div>
+                <button type="submit" id="submit-btn" class="btn" style="width:100%; justify-content:center;">
+                    <i class="fas fa-arrow-right-to-bracket"></i>
+                    <span data-key="login_title">Login</span>
+                </button>
+            </form>
+
+            <div class="form-link">
+                <span data-key="no_account">Don't have an account?</span>
+                <a href="register.html" data-key="register"> Register</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const errEl = document.getElementById('error-msg');
+            errEl.style.display = 'none';
+            btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Signing in...';
+            btn.disabled = true;
+
+            try {
+                const data = await apiCall('/auth/login', 'POST', {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                });
+                localStorage.setItem('token', data.token);
+                const role = getUserRole();
+                window.location.href = (role === 'law_enforcement' || role === 'admin')
+                    ? 'police_dashboard.html' : 'dashboard.html';
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+                btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> <span data-key="login_title">Login</span>';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

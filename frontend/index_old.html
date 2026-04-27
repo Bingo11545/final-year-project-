@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Missing Persons System - EFP</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i> EFP Missing Persons
+        </div>
+        <div style="display:flex; align-items:center;">
+             <!-- Language Switcher (Mock) -->
+             <select style="margin-right:20px; padding:5px; border:1px solid #ccc; font-size:0.8rem;">
+                <option>English</option>
+                <option>Amharic (አማርኛ)</option>
+                <option>Oromo (Afaan Oromoo)</option>
+                <option>Tigrinya (ትግርኛ)</option>
+                <option>Somali (Soomaaliga)</option>
+                <option>Afar (Qafaraf)</option>
+             </select>
+             <div id="nav-right"></div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+        <div class="container">
+            <h1>National Missing Persons Identification System</h1>
+            <p>Ethiopian Federal Police Commission</p>
+            <p style="font-size:1rem; margin-top:0;">Modernizing Investigations with Artificial Intelligence</p>
+            <div style="margin-top: 2rem;">
+                <a href="report.html" class="btn btn-danger"><i class="fas fa-exclamation-circle"></i> Report Missing Person</a>
+                <a href="#feed-section" class="btn btn-secondary" style="margin-left: 10px;">Search Database</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH BAR OVERLAY -->
+    <div class="container">
+        <div class="search-container">
+            <div style="flex:2;">
+                <label>Name / ID</label>
+                <input type="text" id="searchName" placeholder="Enter Name..." style="text-transform:uppercase;">
+            </div>
+            <div style="flex:1;">
+                <label>Region (Kilil)</label>
+                <select id="searchRegion">
+                    <option value="">All Regions</option>
+                    <option>Addis Ababa</option>
+                    <option>Afar</option>
+                    <option>Amhara</option>
+                    <option>Benishangul-Gumuz</option>
+                    <option>Central Ethiopia</option>
+                    <option>Dire Dawa</option>
+                    <option>Gambela</option>
+                    <option>Harari</option>
+                    <option>Oromia</option>
+                    <option>Sidama</option>
+                    <option>Somali</option>
+                    <option>South Ethiopia</option>
+                    <option>South West Ethiopia</option>
+                    <option>Tigray</option>
+                </select>
+            </div>
+            <div style="flex:1;">
+                <label>City / Zone</label>
+                <input type="text" id="searchCity" placeholder="City or Zone">
+            </div>
+            <div style="flex:0.5;">
+                <label>Age</label>
+                <input type="number" id="searchMinAge" placeholder="Min">
+            </div>
+            <button onclick="loadPublicFeed()" class="btn" style="height: 48px; border-radius:4px; width:60px;"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container" style="margin-top: 4rem;">
+        
+        <!-- HOW IT WORKS ICONS -->
+        <section style="text-align: center; margin-bottom: 5rem;">
+            <div style="display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                    <div style="color: var(--primary-color); margin-bottom:15px;"><i class="fas fa-file-contract fa-3x"></i></div>
+                    <h3 style="color:var(--text-color);">1. File Police Report</h3>
+                    <p style="color: #666; font-size:0.9rem;">Mandatory reporting to EFP or Local Police. Obtain case #.</p>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                    <div style="color: var(--primary-color); margin-bottom:15px;"><i class="fas fa-id-card fa-3x"></i></div>
+                    <h3 style="color:var(--text-color);">2. Official Submission</h3>
+                    <p style="color: #666; font-size:0.9rem;">Digitize case details used for "Declaration of Absence" legal processes.</p>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                    <div style="color: var(--primary-color); margin-bottom:15px;"><i class="fas fa-network-wired fa-3x"></i></div>
+                    <h3 style="color:var(--text-color);">3. AI Matching</h3>
+                    <p style="color: #666; font-size:0.9rem;">Automated face recognition against national sightings database.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr style="border: 0; border-top: 1px solid #ddd; margin-bottom: 4rem;">
+
+        <!-- RECENT CASES -->
+        <section id="feed-section">
+            <h2>Active Investigations</h2>
+            <div id="publicFeed" class="grid-container">
+                <div style="width:100%; text-align:center;">
+                    <i class="fas fa-spinner fa-spin"></i> Accessing Safe Database...
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div style="display:flex; justify-content:space-around; flex-wrap:wrap; text-align:left;">
+                <div style="max-width:300px;">
+                    <h4 style="color:white; border-bottom:1px solid #555; padding-bottom:10px;">Ethiopian Federal Police</h4>
+                    <p style="font-size:0.9rem;">Ensuring peace and security through professional service and community partnership.</p>
+                    <p><strong>Emergency:</strong> 991</p>
+                </div>
+                 <div style="max-width:300px;">
+                    <h4 style="color:white; border-bottom:1px solid #555; padding-bottom:10px;">Quick Links</h4>
+                    <p><a href="#">Ministry of Peace</a></p>
+                    <p><a href="#">Ministry of Justice</a></p>
+                    <p><a href="#">Digital Ethiopia 2025</a></p>
+                </div>
+            </div>
+            <br><br>
+            <p style="font-size:0.8rem; color:#888;">&copy; 2026 EFP Missing Persons System. All Rights Reserved. Authorized Use Only.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        updateNav();
+
+        async function loadPublicFeed() {
+            const container = document.getElementById('publicFeed');
+            container.innerHTML = '<div style="width:100%; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Accessing Safe Database...</div>';
+            
+            const name = document.getElementById('searchName').value;
+            const region = document.getElementById('searchRegion').value;
+            const city = document.getElementById('searchCity').value;
+            const minAge = document.getElementById('searchMinAge').value;
+            
+            let url = '/people?status=Missing';
+            if(name) url += `&name=${name}`;
+            if(city) url += `&city=${city}`; 
+            if(minAge) url += `&minAge=${minAge}`;
+
+            try {
+                const people = await apiCall(url); 
+                container.innerHTML = '';
+                
+                if (people.length === 0) {
+                    container.innerHTML = '<p>No active cases matching your criteria found in national registry.</p>';
+                    return;
+                }
+
+                people.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'person-card';
+                    card.style.display = 'flex';
+                    
+                    const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
+                    
+                    const caseBadge = p.policeCaseNumber ? 
+                        `<div style="background:#eee; color:#555; font-size:0.7rem; padding:4px; text-align:center; border-bottom:1px solid #ddd;">CASE #: ${p.policeCaseNumber}</div>` : '';
+
+                    card.innerHTML = `
+                        ${caseBadge}
+                        <img src="${imgUrl}" alt="${p.fullName}" onerror="this.src='https://via.placeholder.com/250x250?text=No+Photo'">
+                        <div class="info">
+                            <h4>${p.fullName}</h4>
+                            <div style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">
+                                <div><span style="font-weight:bold;">Age:</span> ${p.age || 'N/A'} | ${p.gender || 'N/A'}</div>
+                                <div><span style="font-weight:bold;">Location:</span> ${p.city || 'Unknown'}</div>
+                            </div>
+                            <span class="status-badge status-${p.status}">${p.status}</span>
+                            <div style="margin-top:10px;">
+                                <button onclick="window.location.href='report.html'" class="btn" style="width:100%; padding: 8px; font-size:0.8rem; background-color: var(--primary-color);">REPORT SIGHTING</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p style="color:red">Secure connection failed. Please try again.</p>';
+            }
+        }
+
+        loadPublicFeed();
+    </script>
+</body>
+</html>

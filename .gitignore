@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Uploads (local storage simulation - don't commit real data)
+backend/uploads/*
+!backend/uploads/.gitkeep

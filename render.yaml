@@ -1,0 +1,27 @@
+services:
+  # Backend Service (Node.js)
+  - type: web
+    name: missing-person-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false # User will need to enter this in Render Dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: missing-person-ai-service
+          property: url
+
+  # AI Service (Python)
+  - type: web
+    name: missing-person-ai-service
+    env: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    plan: free # Note: AI models might be heavy for free tier, but good for starting

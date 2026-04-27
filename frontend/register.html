@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — Find Missing Person</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+    <style>
+        .register-wrapper {
+            min-height: 100vh;
+            background: var(--bg-base);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .register-body {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+        }
+
+        /* Left panel */
+        .register-panel-left {
+            flex: 1;
+            background: linear-gradient(135deg, #060d1f 0%, #0d1a35 60%, #091428 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 3rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 100%;
+        }
+
+        [data-theme="light"] .register-panel-left {
+            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 60%, #2563eb 100%);
+        }
+
+        .register-panel-left::before {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+            top: -100px; right: -80px;
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .register-panel-left::after {
+            content: '';
+            position: absolute;
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(14,165,233,0.10) 0%, transparent 70%);
+            bottom: -30px; left: 5%;
+            border-radius: 50%;
+            animation: float 11s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .panel-content { position: relative; z-index: 2; }
+
+        .panel-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 3rem;
+        }
+
+        .panel-logo-icon {
+            width: 48px; height: 48px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+
+        .panel-logo-text span { color: #93c5fd; }
+
+        .panel-tagline {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 800;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 1.25rem;
+        }
+
+        .panel-desc {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+            line-height: 1.75;
+            margin-bottom: 2.5rem;
+            max-width: 380px;
+        }
+
+        .panel-features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .panel-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.9rem;
+        }
+
+        .panel-feature i {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 900px) {
+            .register-panel-left { display: none; }
+        }
+
+        /* Right panel */
+        .register-panel-right {
+            width: 520px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 2.5rem;
+            overflow-y: auto;
+            background: var(--bg-base);
+        }
+
+        @media (max-width: 900px) {
+            .register-panel-right {
+                width: 100%;
+                padding: 2rem 1.25rem;
+            }
+        }
+
+        .register-box {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        /* Mobile nav-like header */
+        .mobile-brand {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .mobile-brand { display: flex; }
+        }
+
+        .mobile-brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1rem;
+            box-shadow: 0 4px 14px var(--accent-blue-glow);
+        }
+
+        .mobile-brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .mobile-brand-name span { color: var(--accent-teal); }
+
+        /* Register header */
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .register-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+
+        [data-theme="light"] .register-header h1 { color: #0f172a; }
+
+        .register-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        [data-theme="light"] .register-header p { color: #374151; }
+
+        /* Role tabs */
+        .role-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        [data-theme="light"] .role-tabs {
+            background: #eef2f7;
+            border-color: rgba(0,0,0,0.08);
+        }
+
+        .role-tab-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 8px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-family: var(--font-body);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .role-tab-btn i { font-size: 1rem; margin-bottom: 2px; }
+
+        .role-tab-btn.active {
+            background: var(--bg-card);
+            color: var(--accent-teal);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        [data-theme="light"] .role-tab-btn.active {
+            background: #ffffff;
+            color: #0369a1;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        /* Form fields styled */
+        .rform-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .rform-group label {
+            display: block;
+            font-size: 0.73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+        }
+
+        [data-theme="light"] .rform-group label { color: #374151 !important; }
+
+        .input-with-icon { position: relative; }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 13px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .input-with-icon input {
+            padding-left: 38px;
+        }
+
+        /* Error message */
+        .reg-error {
+            display: none;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-left: 4px solid #ef4444;
+            color: #f87171;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        [data-theme="light"] .reg-error {
+            background: rgba(220,38,38,0.06);
+            color: #b91c1c;
+        }
+
+        /* ID Verification section */
+        .verify-section {
+            display: none;
+            margin-bottom: 1.1rem;
+        }
+
+        .verify-card {
+            background: linear-gradient(135deg, rgba(29,78,216,0.07), rgba(14,165,233,0.04));
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] .verify-card {
+            background: rgba(29,78,216,0.04);
+            border-color: rgba(29,78,216,0.15);
+        }
+
+        .verify-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+        }
+
+        .verify-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .verify-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.9rem;
+            box-shadow: 0 4px 12px var(--accent-blue-glow);
+            flex-shrink: 0;
+        }
+
+        .verify-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .verify-title { color: #0f172a; }
+
+        .verify-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        [data-theme="light"] .verify-subtitle { color: #374151; }
+
+        .verify-hint {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.65;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+        }
+
+        [data-theme="light"] .verify-hint {
+            color: #374151;
+            background: rgba(0,0,0,0.02);
+            border-color: rgba(0,0,0,0.07);
+        }
+
+        .verify-hint i { color: var(--accent-blue); margin-right: 5px; }
+        [data-theme="light"] .verify-hint i { color: #1d4ed8; }
+
+        .id-upload-zone {
+            border: 2px dashed var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.75rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.25s;
+            background: rgba(255,255,255,0.02);
+        }
+
+        [data-theme="light"] .id-upload-zone {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .id-upload-zone:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.04);
+        }
+
+        .id-upload-zone input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+
+        .id-upload-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(14,165,233,0.08));
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 0.75rem;
+        }
+
+        .id-upload-icon i { font-size: 1.3rem; color: var(--accent-teal); }
+
+        [data-theme="light"] .id-upload-icon i { color: #0369a1; }
+
+        .id-upload-zone .upload-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        [data-theme="light"] .id-upload-zone .upload-title { color: #0f172a; }
+
+        .id-upload-zone .upload-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        [data-theme="light"] .id-upload-zone .upload-sub { color: #6b7280; }
+
+        /* ID validation status */
+        .id-val-status {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .id-val-checking {
+            background: rgba(59,130,246,0.10);
+            border: 1px solid rgba(59,130,246,0.22);
+            color: var(--accent-teal);
+        }
+
+        [data-theme="light"] .id-val-checking { color: #0369a1; }
+
+        .id-val-valid {
+            background: rgba(34,197,94,0.10);
+            border: 1px solid rgba(34,197,94,0.2);
+            color: #4ade80;
+        }
+
+        [data-theme="light"] .id-val-valid { color: #15803d; background: rgba(21,128,61,0.06); border-color: rgba(21,128,61,0.2); }
+
+        .id-val-invalid {
+            background: rgba(239,68,68,0.10);
+            border: 1px solid rgba(239,68,68,0.22);
+            color: #f87171;
+        }
+
+        [data-theme="light"] .id-val-invalid { color: #dc2626; background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.2); }
+
+        /* Submit button */
+        .btn-register {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 6px 20px var(--accent-blue-glow);
+            letter-spacing: 0.02em;
+            margin-top: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-register::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px var(--accent-blue-glow);
+        }
+
+        .btn-register:hover::before { opacity: 1; }
+        .btn-register:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+        /* Login link */
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        [data-theme="light"] .login-link { color: #374151; }
+
+        .login-link a {
+            color: var(--accent-teal);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        [data-theme="light"] .login-link a { color: #0369a1; }
+        .login-link a:hover { text-decoration: underline; }
+
+        /* Org field */
+        .org-field { display: none; }
+
+        /* Divider */
+        .register-divider {
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 1.25rem 0;
+        }
+    </style>
+</head>
+<body class="register-wrapper">
+
+    <!-- Nav bar -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i></div>
+            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+                Find Missing <span class="highlight">Person</span>
+            </a>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme" aria-label="Toggle theme">
+                <i class="fas fa-sun"></i>
+            </button>
+            <select id="languageSelector" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
+        </div>
+    </nav>
+
+    <div class="register-body">
+
+        <!-- Left brand panel -->
+        <div class="register-panel-left">
+            <div class="panel-content">
+                <div class="panel-logo">
+                    <div class="panel-logo-icon"><i class="fas fa-search-location"></i></div>
+                    <div class="panel-logo-text">Find Missing <span>Person</span></div>
+                </div>
+
+                <div class="panel-tagline">Join Ethiopia's National Missing Person Registry</div>
+                <p class="panel-desc">
+                    Create your account to report missing persons, submit tips, and help reunite families across Ethiopia. Every report matters.
+                </p>
+
+                <div class="panel-features">
+                    <div class="panel-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure, encrypted data handling</span>
+                    </div>
+                    <div class="panel-feature">
+                        <i class="fas fa-robot"></i>
+                        <span>AI-powered facial recognition matching</span>
+                    </div>
+                    <div class="panel-feature">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Connected to national law enforcement</span>
+                    </div>
+                    <div class="panel-feature">
+                        <i class="fas fa-clock"></i>
+                        <span>24/7 real-time case updates</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right form panel -->
+        <div class="register-panel-right">
+            <div class="register-box">
+
+                <!-- Mobile brand -->
+                <div class="mobile-brand">
+                    <div class="mobile-brand-icon"><i class="fas fa-search-location"></i></div>
+                    <div class="mobile-brand-name">Find Missing <span>Person</span></div>
+                </div>
+
+                <div class="register-header">
+                    <h1>Create Account</h1>
+                    <p>Join the Find Missing Person system</p>
+                </div>
+
+                <!-- Role selector tabs -->
+                <div class="role-tabs" role="tablist">
+                    <button type="button" class="role-tab-btn active" id="tab-public" onclick="selectRole('public_user')" role="tab">
+                        <i class="fas fa-user"></i>
+                        Public
+                    </button>
+                    <button type="button" class="role-tab-btn" id="tab-law" onclick="selectRole('law_enforcement')" role="tab">
+                        <i class="fas fa-user-shield"></i>
+                        Police
+                    </button>
+                    <button type="button" class="role-tab-btn" id="tab-org" onclick="selectRole('authorized_org')" role="tab">
+                        <i class="fas fa-building"></i>
+                        Organization
+                    </button>
+                </div>
+
+                <!-- Error -->
+                <div id="error-msg" class="reg-error"></div>
+
+                <form id="registerForm">
+                    <input type="hidden" id="role" value="public_user">
+
+                    <!-- Full Name -->
+                    <div class="rform-group">
+                        <label>Full Name</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="username" placeholder="Your full name" required>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="rform-group">
+                        <label>Email Address</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="rform-group">
+                        <label>Password</label>
+                        <div class="input-with-icon" style="position:relative;">
+                            <i class="fas fa-key"></i>
+                            <input type="password" id="password" placeholder="Create a strong password" required id="password">
+                            <button type="button" onclick="togglePassword()" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" id="pwd-toggle">
+                                <i class="fas fa-eye" id="pwd-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Organization name (shown for org role) -->
+                    <div class="rform-group org-field" id="org-field">
+                        <label>Organization Name</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-building"></i>
+                            <input type="text" id="organizationName" placeholder="Full organization name">
+                        </div>
+                    </div>
+
+                    <!-- Role verification section -->
+                    <div class="verify-section" id="verify-section">
+                        <div class="verify-card">
+                            <div class="verify-header">
+                                <div class="verify-icon"><i class="fas fa-shield-alt"></i></div>
+                                <div>
+                                    <div class="verify-title">Role Verification Required</div>
+                                    <div class="verify-subtitle">Official ID document required to proceed</div>
+                                </div>
+                            </div>
+
+                            <div class="verify-hint" id="verify-hint">
+                                <i class="fas fa-info-circle"></i>
+                                Upload your <strong>official Law Enforcement ID card</strong> or police badge document. The AI will verify it is a valid government-issued identification document.
+                            </div>
+
+                            <!-- ID upload zone -->
+                            <div class="id-upload-zone" id="id-upload-zone">
+                                <input type="file" id="verificationDoc" accept=".pdf,.jpg,.jpeg,.png"
+                                       onchange="handleIdUpload(event)">
+                                <div class="id-upload-icon">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div class="upload-title">Click to upload ID document</div>
+                                <div class="upload-sub">JPG, PNG or PDF &nbsp;·&nbsp; Police ID / Authorization Letter</div>
+                            </div>
+
+                            <!-- AI status -->
+                            <div id="id-validation-status" class="id-val-status"></div>
+                        </div>
+                    </div>
+
+                    <div class="register-divider"></div>
+
+                    <button type="submit" id="submit-btn" class="btn-register">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create Account</span>
+                    </button>
+                </form>
+
+                <div class="login-link">
+                    Already have an account? <a href="login.html">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let idDocValidated = false;
+        let currentRole = 'public_user';
+
+        // Role tab switcher
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('role').value = role;
+
+            // Update tab active state
+            document.querySelectorAll('.role-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (role === 'public_user') document.getElementById('tab-public').classList.add('active');
+            if (role === 'law_enforcement') document.getElementById('tab-law').classList.add('active');
+            if (role === 'authorized_org') document.getElementById('tab-org').classList.add('active');
+
+            const verifySection = document.getElementById('verify-section');
+            const orgField = document.getElementById('org-field');
+            const hint = document.getElementById('verify-hint');
+
+            if (role === 'law_enforcement' || role === 'authorized_org') {
+                verifySection.style.display = 'block';
+                orgField.style.display = (role === 'authorized_org') ? 'block' : 'none';
+
+                if (role === 'law_enforcement') {
+                    hint.innerHTML = `<i class="fas fa-info-circle"></i>
+                        Upload your <strong>official Law Enforcement ID card</strong> or police badge / credential document. The image must clearly show a valid government-issued photo ID with your name and badge information.`;
+                } else {
+                    hint.innerHTML = `<i class="fas fa-info-circle"></i>
+                        Upload your organization's <strong>official authorization letter</strong> or government registration certificate. The document must be issued by an authorized Ethiopian government authority.`;
+                }
+
+                // Reset validation
+                idDocValidated = false;
+                const statusEl = document.getElementById('id-validation-status');
+                statusEl.style.display = 'none';
+                statusEl.className = 'id-val-status';
+                document.getElementById('verificationDoc').value = '';
+
+            } else {
+                verifySection.style.display = 'none';
+                orgField.style.display = 'none';
+                idDocValidated = false;
+            }
+        }
+
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            const eye = document.getElementById('pwd-eye');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                eye.className = 'fas fa-eye-slash';
+            } else {
+                pwd.type = 'password';
+                eye.className = 'fas fa-eye';
+            }
+        }
+
+        // ── AI ID Validation (STRICT — no fallback) ──
+        async function handleIdUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('id-validation-status');
+            statusDiv.className = 'id-val-status id-val-checking';
+            statusDiv.style.display = 'flex';
+            statusDiv.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>AI is verifying your ID document...</span>`;
+
+            idDocValidated = false;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch('http://localhost:5001/validate-id', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.is_valid_id) {
+                        setIdStatus(statusDiv, true, `✓ Valid ID document verified — ${result.document_type || 'Official government ID'} recognized`);
+                        idDocValidated = true;
+                    } else {
+                        setIdStatus(statusDiv, false, '✗ This does not appear to be a valid official ID document. Please upload your law enforcement ID card, police badge credential, or organization authorization letter.');
+                        idDocValidated = false;
+                        document.getElementById('verificationDoc').value = '';
+                    }
+                } else {
+                    // AI service returned error (STRICT: reject)
+                    setIdStatus(statusDiv, false, '✗ AI verification service encountered an error. Please try again. A valid official ID is required to register as Law Enforcement or Authorized Organization.');
+                    idDocValidated = false;
+                    document.getElementById('verificationDoc').value = '';
+                }
+            } catch (err) {
+                // Network unreachable — STRICT: reject
+                setIdStatus(statusDiv, false, '✗ AI verification service is currently unavailable. Please try again later. You cannot register as Law Enforcement or Authorized Organization without verified credentials.');
+                idDocValidated = false;
+                document.getElementById('verificationDoc').value = '';
+            }
+        }
+
+        function setIdStatus(el, isValid, message) {
+            el.className = 'id-val-status ' + (isValid ? 'id-val-valid' : 'id-val-invalid');
+            el.style.display = 'flex';
+            el.innerHTML = `<i class="fas ${isValid ? 'fa-check-circle' : 'fa-times-circle'}" style="flex-shrink:0;font-size:1rem;"></i><span>${message}</span>`;
+        }
+
+        // Form submit
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const errEl = document.getElementById('error-msg');
+            errEl.style.display = 'none';
+
+            const role = currentRole;
+            const needsVerification = (role === 'law_enforcement' || role === 'authorized_org');
+
+            if (needsVerification) {
+                const fileInput = document.getElementById('verificationDoc');
+                if (!fileInput.files[0]) {
+                    errEl.textContent = 'Please upload your official ID document or authorization letter to register as Law Enforcement or Authorized Organization.';
+                    errEl.style.display = 'block';
+                    return;
+                }
+                if (!idDocValidated) {
+                    errEl.textContent = 'Your uploaded document failed AI verification. Please upload a valid, visible official ID document or authorization letter.';
+                    errEl.style.display = 'block';
+                    return;
+                }
+            }
+
+            btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Creating account...';
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('username', document.getElementById('username').value);
+                formData.append('email', document.getElementById('email').value);
+                formData.append('password', document.getElementById('password').value);
+                formData.append('role', role);
+                formData.append('organizationName', document.getElementById('organizationName').value || '');
+
+                const fileInput = document.getElementById('verificationDoc');
+                if (fileInput.files[0]) formData.append('verificationDoc', fileInput.files[0]);
+
+                const res = await fetch(`${API_URL}/auth/register`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Registration failed');
+
+                localStorage.setItem('token', data.token);
+                const assignedRole = getUserRole();
+                window.location.href = (assignedRole === 'law_enforcement' || assignedRole === 'admin')
+                    ? 'police_dashboard.html' : 'dashboard.html';
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> <span>Create Account</span>';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

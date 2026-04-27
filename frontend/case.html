@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Profile - EFP Missing Persons</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-header {
+            background: #fff;
+            padding: 30px;
+            border-bottom: 3px solid var(--primary-color);
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .profile-img {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .profile-info {
+            flex: 1;
+        }
+        .profile-info h1 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 2.5rem;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .data-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .data-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9rem;
+            display: block;
+        }
+        .data-value {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .tip-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i> <span data-key="subtitle">EFP Missing Persons</span>
+        </div>
+        <div style="display:flex; align-items:center;">
+             <select id="languageSelector" style="margin-right: 1rem; padding: 0.5rem; border-radius: 5px;">
+                <option value="en">English</option>
+                <option value="am">Amharic</option>
+                <option value="om">Oromo</option>
+                <option value="ti">Tigrinya</option>
+             </select>
+            <a href="index.html" class="btn" style="background:transparent; border:1px solid #fff;" data-key="btn_back_home">Back to Home</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1000px; background: white; margin-top: 20px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div id="loading" style="padding:50px; text-align:center;">
+            <i class="fas fa-spinner fa-spin fa-3x"></i><br>Loading Case File...
+        </div>
+
+        <!-- Police Admin Panel -->
+        <div id="admin-edit-panel" style="display:none; background:#fff3cd; padding:15px; border:1px solid #ffeeba; margin-bottom:20px; border-radius:8px;">
+            <h3 style="color:#856404; margin-top:0;"><i class="fas fa-user-shield"></i> Police Administration</h3>
+            <p style="font-size:0.9rem; color:#856404;">You can edit official case details here before or after approval.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+                <div>
+                    <label style="display:block; font-weight:bold;">Classification</label>
+                    <select id="edit-classification" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                         <option value="Missing">Missing</option>
+                         <option value="Endangered">Endangered</option>
+                         <option value="Involuntary">Involuntary</option>
+                         <option value="Disability">Disability</option>
+                         <option value="Juvenile">Juvenile</option>
+                         <option value="Catastrophe">Catastrophe</option>
+                         <option value="Runaway">Runaway</option>
+                         <option value="Lost">Lost</option>
+                         <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-weight:bold;">Police District</label>
+                    <input type="text" id="edit-district" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div>
+                     <label style="display:block; font-weight:bold;">Case File Number</label>
+                    <input type="text" id="edit-cfn" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+            </div>
+            <div style="margin-top:15px; text-align:right;">
+                <button onclick="savePoliceData()" class="btn" style="background:#0645B1; color:white; border:none; padding:8px 20px; border-radius:4px;">Save Official Records</button>
+            </div>
+        </div>
+
+        <div id="caseContent" style="display:none;">
+            <div class="profile-header">
+                <img id="p-image" src="" alt="Missing Person" class="profile-img">
+                <div class="profile-info">
+                    <span class="status-badge" id="p-status"></span>
+                    <h1 id="p-name"></h1>
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <span class="data-label" data-key="classification_label">Classification</span>
+                            <span class="data-value" id="p-classification" style="color:var(--danger-color); font-weight:bold;"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="age_label">Age</span>
+                            <span class="data-value" id="p-age"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="gender_label">Gender</span>
+                            <span class="data-value" id="p-gender"></span>
+                        </div>
+                         <div class="data-item">
+                            <span class="data-label" data-key="height_label">Height</span>
+                            <span class="data-value" id="p-height"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="weight_label">Weight</span>
+                            <span class="data-value" id="p-weight"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="eye_color_label">Eye Color</span>
+                            <span class="data-value" id="p-eyes"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="hair_color_label">Hair Color</span>
+                            <span class="data-value" id="p-hair"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="race_label">Race / Ethnicity</span>
+                            <span class="data-value" id="p-race"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="date_label">Last Seen Date</span>
+                            <span class="data-value" id="p-date"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="last_seen_label">Location</span>
+                            <span class="data-value" id="p-location"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="case_number_label">Police Case #</span>
+                            <span class="data-value" id="p-case"></span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label" data-key="police_district_label">Police District</span>
+                            <span class="data-value" id="p-district"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 30px;">
+                <h3 data-key="physical_desc_title">Physical Description</h3>
+                <p><strong data-key="marks_label">Distinguishing Marks:</strong> <span id="p-marks">None noted.</span></p>
+                <p id="p-desc" style="line-height: 1.6;"></p>
+
+                <h3 style="margin-top: 30px;" data-key="additional_info_title">Additional Information</h3>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="data-label" data-key="vehicle_label">Vehicle Info</span>
+                        <span class="data-value" id="p-vehicle"></span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label" data-key="social_label">Social Media</span>
+                        <span class="data-value" id="p-social"></span>
+                    </div>
+                </div>
+
+                <div class="tip-box">
+                    <h3><i class="fas fa-bullhorn"></i> <span data-key="tip_title">Send a Tip or Provide Update</span></h3>
+                    <p data-key="tip_desc">Do you have information about this person? Submitting a tip effectively sends your information to the investigating agency.</p>
+                    <textarea id="tipMessage" rows="4" style="width:100%; padding:10px; border:1px solid #ccc; margin-bottom:10px;" data-placeholder-key="tip_placeholder" placeholder="Describe what you saw, when, and where..."></textarea>
+                    <button class="btn btn-danger" onclick="submitTip()" data-key="tip_submit">Submit Tip to Police</button>
+                    <p style="font-size:0.8rem; margin-top:10px; color:#666;" data-key="tip_emergency">* In emergencies, always dial 911 or your local emergency number immediately.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const personId = urlParams.get('id');
+
+        async function loadCase() {
+            if (!personId) {
+                alert('No case ID provided');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                // Fetch Person Details
+                // GET /api/people/:id
+                const res = await fetch(`${API_URL}/people/${personId}`, {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if(!res.ok) throw new Error('Case not found');
+                
+                const p = await res.json();
+
+                // Get Current Translations
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                const t = translations[lang] || translations['en'];
+                
+                document.getElementById('p-image').src = IMG_URL_BASE + (p.images && p.images[0] ? p.images[0].url : 'uploads/default.jpg');
+                document.getElementById('p-name').textContent = p.fullName;
+                document.getElementById('p-age').textContent = p.age || 'N/A';
+                document.getElementById('p-gender').textContent = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';
+                
+                // New Fields
+                document.getElementById('p-classification').textContent = p.classification || 'Missing';
+                document.getElementById('p-height').textContent = p.height ? `${p.height} cm` : 'Unknown';
+                document.getElementById('p-weight').textContent = p.weight ? `${p.weight} kg` : 'Unknown';
+                document.getElementById('p-eyes').textContent = p.eyeColor || 'Unknown';
+                document.getElementById('p-hair').textContent = p.hairColor || 'Unknown';
+                document.getElementById('p-race').textContent = p.race || 'Unknown';
+                document.getElementById('p-marks').textContent = p.distinguishingMarks || 'None noted.';
+
+                document.getElementById('p-date').textContent = new Date(p.lastSeenDate).toLocaleDateString();
+                document.getElementById('p-location').textContent = p.lastSeenLocation || p.city;
+                document.getElementById('p-case').textContent = p.policeCaseNumber || 'Pending';
+                document.getElementById('p-district').textContent = p.policeDistrict || 'N/A';
+                document.getElementById('p-desc').textContent = p.description || 'No description provided.';
+                document.getElementById('p-vehicle').textContent = p.vehicleInformation || 'None Listed';
+                document.getElementById('p-social').textContent = p.socialMediaAccounts || 'None Listed';
+                
+                const statusBadge = document.getElementById('p-status');
+                const isActive = p.status === 'Missing';
+                
+                // Translate Status
+                const statusText = isActive ? (t.status_missing || 'Missing') : (t.status_found || 'Found');
+                statusBadge.textContent = statusText.toUpperCase();
+
+                statusBadge.className = `status-badge status-${isActive ? 'Active' : 'NotActive'}`;
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('caseContent').style.display = 'block';
+
+                // --- Admin / Police Logic ---
+                if (isLoggedIn() && (getUserRole() === 'law_enforcement' || getUserRole() === 'admin')) {
+                    const adminPanel = document.getElementById('admin-edit-panel');
+                    if(adminPanel) {
+                        adminPanel.style.display = 'block';
+                        document.getElementById('edit-classification').value = p.classification || 'Missing';
+                        document.getElementById('edit-district').value = p.policeDistrict || '';
+                        document.getElementById('edit-cfn').value = p.policeCaseNumber || '';
+                    }
+                }
+
+                // Check for report action
+                if (urlParams.get('action') === 'report') {
+                    setTimeout(() => {
+                        const tipBox = document.querySelector('.tip-box');
+                        tipBox.scrollIntoView({ behavior: 'smooth' });
+                        tipBox.style.border = "3px solid #28a745";
+                        tipBox.style.backgroundColor = "#e8f5e9";
+                        document.getElementById('tipMessage').focus();
+                    }, 500);
+                }
+
+            } catch (err) {
+                document.getElementById('loading').innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+            }
+        }
+        
+        async function savePoliceData() {
+            try {
+                const updateData = {
+                    classification: document.getElementById('edit-classification').value,
+                    policeDistrict: document.getElementById('edit-district').value,
+                    policeCaseNumber: document.getElementById('edit-cfn').value
+                };
+                
+                // Get current status to ensure we don't accidentally wipe it? 
+                // No, just send what we want to update. PUT merges or replaces? 
+                // My backend PUT updates specific fields if they exist in body.
+                
+                await apiCall(`/people/${personId}`, 'PUT', updateData);
+                alert('Official Records Updated Successfully');
+                loadCase(); // Reload to show changes
+            } catch(e) {
+                alert('Update Failed: ' + e.message);
+            }
+        }
+
+        async function submitTip() {
+            const msg = document.getElementById('tipMessage').value;
+            const contact = document.getElementById('tipContact') ? document.getElementById('tipContact').value : '';
+            
+            if(!msg) { alert('Please enter information before submitting.'); return; }
+            
+            try {
+                const btn = document.querySelector('.tip-box button');
+                const origText = btn.innerText;
+                btn.innerText = "Sending...";
+                btn.disabled = true;
+
+                await apiCall('/tips', 'POST', { 
+                    personId: personId, 
+                    message: msg,
+                    contactInfo: contact
+                    // reporterName etc could be added if we had input fields
+                });
+                
+                alert('Tip submitted securely to the National Registry. The police will review your information shortly.');
+                document.getElementById('tipMessage').value = '';
+                btn.innerText = origText;
+                btn.disabled = false;
+            } catch (err) {
+                alert('Error submitting tip: ' + err.message);
+                document.querySelector('.tip-box button').disabled = false;
+            }
+        }
+
+        loadCase();
+    </script>
+</body>
+</html>
