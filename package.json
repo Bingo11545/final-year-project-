@@ -4,7 +4,8 @@
   "private": true,
   "description": "Root project for Missing Person Finder with backend and frontend",
   "scripts": {
-    "start": "npm run dev",
+    "start": "npm --prefix ./backend start",
+    "postinstall": "npm --prefix ./backend install",
     "backend": "npm --prefix ./backend start",
     "ai-service": "python ai-service/app.py",
     "frontend": "serve -s frontend -l 3000",
