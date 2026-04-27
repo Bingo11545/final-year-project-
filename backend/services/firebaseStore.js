@@ -45,6 +45,25 @@ ensureFirebaseInitialized();
 
 const db = admin.database();
 
+function stripUndefined(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => stripUndefined(item))
+      .filter((item) => item !== undefined);
+  }
+
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      const cleaned = stripUndefined(v);
+      if (cleaned !== undefined) out[k] = cleaned;
+    }
+    return out;
+  }
+
+  return value === undefined ? undefined : value;
+}
+
 function sanitizeId(id) {
   return String(id || '').replace(/[.#$\[\]/]/g, '_');
 }
@@ -68,13 +87,15 @@ async function getDoc(name, id) {
 
 async function setDoc(name, id, value) {
   const cleanId = sanitizeId(id || randomUUID());
-  await db.ref(`${name}/${cleanId}`).set(value);
-  return { id: cleanId, _id: cleanId, ...value };
+  const payload = stripUndefined(value);
+  await db.ref(`${name}/${cleanId}`).set(payload);
+  return { id: cleanId, _id: cleanId, ...payload };
 }
 
 async function updateDoc(name, id, patch) {
   const cleanId = sanitizeId(id);
-  await db.ref(`${name}/${cleanId}`).update(patch);
+  const payload = stripUndefined(patch);
+  await db.ref(`${name}/${cleanId}`).update(payload);
   return getDoc(name, cleanId);
 }
 
