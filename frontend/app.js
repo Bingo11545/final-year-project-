@@ -1,11 +1,9 @@
-const IS_LOCAL_ENV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
 // Update these two production URLs after deploying backend/AI services.
 const PROD_BACKEND_ORIGIN = 'https://missing-person-backend-vwmy.onrender.com';
 const PROD_AI_ORIGIN = 'https://final-year-project-k7vn.onrender.com';
 
-const BACKEND_ORIGIN = IS_LOCAL_ENV ? 'http://localhost:5000' : PROD_BACKEND_ORIGIN;
-const AI_URL = IS_LOCAL_ENV ? 'http://localhost:5001' : PROD_AI_ORIGIN;
+const BACKEND_ORIGIN = PROD_BACKEND_ORIGIN;
+const AI_URL = PROD_AI_ORIGIN;
 const API_URL = `${BACKEND_ORIGIN}/api`;
 const IMG_URL_BASE = `${BACKEND_ORIGIN}/`;
 

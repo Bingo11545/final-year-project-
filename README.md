@@ -17,7 +17,7 @@ Start the server:
 ```bash
 npm start
 ```
-The backend runs on `http://localhost:5000`.
+The backend runs on your deployed Render backend URL.
 
 ### 3. AI Service Setup
 Navigate to the `ai-service` folder.
@@ -37,7 +37,7 @@ Run the service:
 ```bash
 python app.py
 ```
-The AI service runs on `http://localhost:5001`.
+The AI service runs on your deployed Render AI service URL.
 
 ### 4. Frontend Usage
 Since the frontend uses pure HTML/JS, you can open `frontend/index.html` directly in your browser.
