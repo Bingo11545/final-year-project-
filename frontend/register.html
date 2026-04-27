@@ -703,7 +703,7 @@
 
                             <div class="verify-hint" id="verify-hint">
                                 <i class="fas fa-info-circle"></i>
-                                Upload your <strong>official Law Enforcement ID card</strong> or police badge document. The AI will verify it is a valid government-issued identification document.
+                                Upload your <strong>official Law Enforcement ID card</strong> or police badge document. A system admin will manually verify your document before approval.
                             </div>
 
                             <!-- ID upload zone -->
@@ -717,7 +717,7 @@
                                 <div class="upload-sub">JPG, PNG or PDF &nbsp;·&nbsp; Police ID / Authorization Letter</div>
                             </div>
 
-                            <!-- AI status -->
+                            <!-- Verification status -->
                             <div id="id-validation-status" class="id-val-status"></div>
                         </div>
                     </div>
@@ -740,7 +740,7 @@
     <script src="translations.js"></script>
     <script src="app.js"></script>
     <script>
-        let idDocValidated = false;
+        let idDocUploaded = false;
         let currentRole = 'public_user';
 
         // Role tab switcher
@@ -764,14 +764,14 @@
 
                 if (role === 'law_enforcement') {
                     hint.innerHTML = `<i class="fas fa-info-circle"></i>
-                        Upload your <strong>official Law Enforcement ID card</strong> or police badge / credential document. The image must clearly show a valid government-issued photo ID with your name and badge information.`;
+                        Upload your <strong>official Law Enforcement ID card</strong> or police badge / credential document. A system admin will review your file before your account is activated.`;
                 } else {
                     hint.innerHTML = `<i class="fas fa-info-circle"></i>
-                        Upload your organization's <strong>official authorization letter</strong> or government registration certificate. The document must be issued by an authorized Ethiopian government authority.`;
+                        Upload your organization's <strong>official authorization letter</strong> or government registration certificate. A system admin will review your file before your account is activated.`;
                 }
 
-                // Reset validation
-                idDocValidated = false;
+                // Reset upload state
+                idDocUploaded = false;
                 const statusEl = document.getElementById('id-validation-status');
                 statusEl.style.display = 'none';
                 statusEl.className = 'id-val-status';
@@ -780,7 +780,7 @@
             } else {
                 verifySection.style.display = 'none';
                 orgField.style.display = 'none';
-                idDocValidated = false;
+                idDocUploaded = false;
             }
         }
 
@@ -796,49 +796,31 @@
             }
         }
 
-        // ── AI ID Validation (STRICT — no fallback) ──
+        // ── Document Upload Validation (Manual Admin Review) ──
         async function handleIdUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const statusDiv = document.getElementById('id-validation-status');
-            statusDiv.className = 'id-val-status id-val-checking';
-            statusDiv.style.display = 'flex';
-            statusDiv.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>AI is verifying your ID document...</span>`;
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            const maxSize = 5 * 1024 * 1024;
 
-            idDocValidated = false;
-
-            try {
-                const formData = new FormData();
-                formData.append('image', file);
-
-                const response = await fetch(`${AI_URL}/validate-id`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.is_valid_id) {
-                        setIdStatus(statusDiv, true, `✓ Valid ID document verified — ${result.document_type || 'Official government ID'} recognized`);
-                        idDocValidated = true;
-                    } else {
-                        setIdStatus(statusDiv, false, '✗ This does not appear to be a valid official ID document. Please upload your law enforcement ID card, police badge credential, or organization authorization letter.');
-                        idDocValidated = false;
-                        document.getElementById('verificationDoc').value = '';
-                    }
-                } else {
-                    // AI service returned error (STRICT: reject)
-                    setIdStatus(statusDiv, false, '✗ AI verification service encountered an error. Please try again. A valid official ID is required to register as Law Enforcement or Authorized Organization.');
-                    idDocValidated = false;
-                    document.getElementById('verificationDoc').value = '';
-                }
-            } catch (err) {
-                // Network unreachable — STRICT: reject
-                setIdStatus(statusDiv, false, '✗ AI verification service is currently unavailable. Please try again later. You cannot register as Law Enforcement or Authorized Organization without verified credentials.');
-                idDocValidated = false;
+            if (!allowedTypes.includes(file.type)) {
+                setIdStatus(statusDiv, false, '✗ Invalid file type. Please upload PDF, JPG, or PNG.');
+                idDocUploaded = false;
                 document.getElementById('verificationDoc').value = '';
+                return;
             }
+
+            if (file.size > maxSize) {
+                setIdStatus(statusDiv, false, '✗ File is too large. Maximum allowed size is 5MB.');
+                idDocUploaded = false;
+                document.getElementById('verificationDoc').value = '';
+                return;
+            }
+
+            setIdStatus(statusDiv, true, '✓ Document uploaded successfully. Waiting for system admin verification after registration.');
+            idDocUploaded = true;
         }
 
         function setIdStatus(el, isValid, message) {
@@ -864,8 +846,8 @@
                     errEl.style.display = 'block';
                     return;
                 }
-                if (!idDocValidated) {
-                    errEl.textContent = 'Your uploaded document failed AI verification. Please upload a valid, visible official ID document or authorization letter.';
+                if (!idDocUploaded) {
+                    errEl.textContent = 'Your document upload is invalid. Please upload a valid PDF, JPG, or PNG file (max 5MB).';
                     errEl.style.display = 'block';
                     return;
                 }
@@ -889,11 +871,23 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Registration failed');
 
+                if (data.requiresApproval) {
+                    btn.innerHTML = '<i class="fas fa-clock"></i> <span>Pending Admin Approval</span>';
+                    btn.disabled = true;
+                    errEl.style.display = 'block';
+                    errEl.style.color = '#16a34a';
+                    errEl.textContent = data.msg || 'Registration submitted and pending system admin approval.';
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1800);
+                    return;
+                }
+
                 localStorage.setItem('token', data.token);
                 const assignedRole = getUserRole();
                 window.location.href = assignedRole === 'admin'
-                    ? 'system_admin/index.html'
-                    : (assignedRole === 'law_enforcement' ? 'police_admin/index.html' : 'user/index.html');
+                    ? '/system_admin/index.html'
+                    : (assignedRole === 'law_enforcement' ? '/police_admin/index.html' : '/user/index.html');
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.style.display = 'block';

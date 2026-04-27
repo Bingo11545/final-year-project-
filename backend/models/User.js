@@ -30,6 +30,15 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false // For authorities requiring verification
   },
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'approved'
+  },
+  verificationRejectionReason: {
+    type: String,
+    default: ''
+  },
   verificationDocument: String, // Path to uploaded ID/Doc
   resetPasswordToken: String,
   resetPasswordExpire: Date,

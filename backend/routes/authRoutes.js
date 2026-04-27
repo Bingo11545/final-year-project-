@@ -4,9 +4,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const sendEmail = require('../utils/sendEmail');
 const multer = require('multer');
 const path = require('path');
+const auth = require('../middleware/auth');
 
 // Multer Configuration for Documents
 const storage = multer.diskStorage({
@@ -56,9 +58,11 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
         }
 
         if (role === 'law_enforcement' || role === 'authorized_org') {
-             user.isVerified = false; // Requires admin verification
+               user.isVerified = false; // Requires admin verification
+               user.verificationStatus = 'pending';
         } else {
              user.isVerified = true;
+               user.verificationStatus = 'approved';
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -66,15 +70,30 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
 
         await user.save();
 
-        // Send Welcome Email
+        // Send registration email
         try {
-             await sendEmail({
-                email: user.email,
-                subject: 'Welcome to FindThem.AI',
-                message: `Hi ${user.username}, thank you for registering. You can now report missing persons.`
-            });
+            if (role === 'law_enforcement' || role === 'authorized_org') {
+                await sendEmail({
+                    email: user.email,
+                    subject: 'Registration Received - Pending Admin Approval',
+                    message: `Hi ${user.username}, your registration has been submitted and is pending system admin ID verification. You will be notified after approval or rejection.`
+                });
+            } else {
+                await sendEmail({
+                    email: user.email,
+                    subject: 'Welcome to FindThem.AI',
+                    message: `Hi ${user.username}, thank you for registering. You can now report missing persons.`
+                });
+            }
         } catch (emailErr) {
             console.error(emailErr); 
+        }
+
+        if (role === 'law_enforcement' || role === 'authorized_org') {
+            return res.status(201).json({
+                requiresApproval: true,
+                msg: 'Registration submitted. A system admin will verify your ID document before account activation.'
+            });
         }
 
         const payload = {
@@ -109,6 +128,22 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
+        const verificationStatus = user.verificationStatus || (user.isVerified ? 'approved' : 'pending');
+
+        if ((user.role === 'law_enforcement' || user.role === 'authorized_org') && verificationStatus !== 'approved') {
+            if (verificationStatus === 'rejected') {
+                return res.status(403).json({
+                    msg: `Registration rejected. Please resubmit your verification document.${user.verificationRejectionReason ? ` Reason: ${user.verificationRejectionReason}` : ''}`,
+                    verificationStatus: 'rejected'
+                });
+            }
+
+            return res.status(403).json({
+                msg: 'Registration pending system admin approval. You will be notified once review is complete.',
+                verificationStatus: 'pending'
+            });
+        }
+
         const payload = {
             user: {
                 id: user.id,
@@ -120,6 +155,104 @@ router.post('/login', async (req, res) => {
             if (err) throw err;
             res.json({ token, role: user.role });
         });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// Admin: Get pending authority registrations
+router.get('/pending-registrations', auth(['admin']), async (req, res) => {
+    try {
+        const pendingUsers = await User.find({
+            role: { $in: ['law_enforcement', 'authorized_org'] },
+            verificationStatus: 'pending'
+        })
+            .select('-password -resetPasswordToken -resetPasswordExpire')
+            .sort({ createdAt: 1 });
+
+        res.json(pendingUsers);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// Admin: Approve authority registration
+router.put('/registrations/:id/approve', auth(['admin']), async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        if (!['law_enforcement', 'authorized_org'].includes(user.role)) {
+            return res.status(400).json({ msg: 'Only authority registrations require approval' });
+        }
+
+        user.isVerified = true;
+        user.verificationStatus = 'approved';
+        user.verificationRejectionReason = '';
+        await user.save();
+
+        await Notification.create({
+            user: user._id,
+            message: 'Your registration has been approved. You can now log in and use your account.'
+        });
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Registration Approved',
+                message: `Hi ${user.username}, your registration was approved by system admin. You can now sign in.`
+            });
+        } catch (emailErr) {
+            console.error(emailErr);
+        }
+
+        res.json({ msg: 'Registration approved successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// Admin: Reject authority registration
+router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        if (!['law_enforcement', 'authorized_org'].includes(user.role)) {
+            return res.status(400).json({ msg: 'Only authority registrations require approval' });
+        }
+
+        user.isVerified = false;
+        user.verificationStatus = 'rejected';
+        user.verificationRejectionReason = (reason || '').trim();
+        await user.save();
+
+        await Notification.create({
+            user: user._id,
+            message: `Your registration was not approved. Please resubmit your ID document.${user.verificationRejectionReason ? ` Reason: ${user.verificationRejectionReason}` : ''}`
+        });
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Registration Needs Resubmission',
+                message: `Hi ${user.username}, your registration was not approved. Please resubmit your ID document.${user.verificationRejectionReason ? ` Reason: ${user.verificationRejectionReason}` : ''}`
+            });
+        } catch (emailErr) {
+            console.error(emailErr);
+        }
+
+        res.json({ msg: 'Registration rejected. User has been notified to resubmit.' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ msg: 'Server error' });
@@ -206,7 +339,6 @@ router.post('/resetpassword/:resettoken', async (req, res) => {
 });
 
 // Get User (Projected)
-const auth = require('../middleware/auth');
 router.get('/me', auth(), async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
