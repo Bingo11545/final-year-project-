@@ -9,6 +9,14 @@ const AI_URL = IS_LOCAL_ENV ? 'http://localhost:5001' : PROD_AI_ORIGIN;
 const API_URL = `${BACKEND_ORIGIN}/api`;
 const IMG_URL_BASE = `${BACKEND_ORIGIN}/`;
 
+const PUBLIC_PATHS_FOR_GUEST = new Set([
+    'index.html',
+    'login.html',
+    'register.html',
+    'forgot_password.html',
+    'reset_password.html'
+]);
+
 // --- Auth Utils ---
 function getToken() {
     return localStorage.getItem('token');
@@ -71,7 +79,9 @@ function updateNav() {
     const navRight = document.getElementById('nav-right');
     if (isLoggedIn()) {
         const role = getUserRole();
-        const dashboardLink = (role === 'law_enforcement' || role === 'admin') ? 'police_dashboard.html' : 'dashboard.html';
+        const dashboardLink = role === 'admin'
+            ? 'system_admin/index.html'
+            : (role === 'law_enforcement' ? 'police_admin/index.html' : 'user/index.html');
         
         navRight.innerHTML = `
             <a href="${dashboardLink}" title="Dashboard" data-key="dashboard">Dashboard</a>
@@ -90,8 +100,6 @@ function updateNav() {
         checkNotifications();
     } else {
         navRight.innerHTML = `
-            <a href="tel:991" style="background:#dc3545; color:white; border-radius:4px; padding:5px 10px; margin-right:5px;" data-key="btn_emergency">Emergency: 991</a>
-            <a href="login.html" data-key="login_title">Login</a>
             <a href="register.html" data-key="register">Register</a>
         `;
     }
@@ -136,3 +144,16 @@ function checkAuth() {
         window.location.href = 'login.html';
     }
 }
+
+function enforceGuestAccess() {
+    if (isLoggedIn()) return;
+
+    const path = decodeURIComponent(window.location.pathname || '/').replace(/^\/+/, '');
+    const currentPath = path || 'index.html';
+
+    if (!PUBLIC_PATHS_FOR_GUEST.has(currentPath)) {
+        window.location.href = 'login.html';
+    }
+}
+
+enforceGuestAccess();

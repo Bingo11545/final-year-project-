@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Area</title>
+</head>
+<body>
+    <p>Redirecting to user dashboard...</p>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '../login.html';
+        } else {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const role = payload?.user?.role;
+
+                if (role === 'admin') {
+                    window.location.href = '../system_admin/index.html';
+                } else if (role === 'law_enforcement') {
+                    window.location.href = '../police_admin/index.html';
+                } else {
+                    window.location.href = '../dashboard.html';
+                }
+            } catch (e) {
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+</body>
+</html>
