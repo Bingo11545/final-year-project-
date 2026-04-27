@@ -82,7 +82,7 @@ function updateNav() {
         const dashboardLink = role === 'admin'
             ? '/system_admin/index.html'
             : (role === 'law_enforcement' ? '/police_admin/dashboard.html' : '/user/dashboard.html');
-        const reportLink = role === 'public_user' ? '/user/report.html' : '/report.html';
+        const reportLink = '/user/report.html';
         
         navRight.innerHTML = `
             <a href="${dashboardLink}" title="Dashboard" data-key="dashboard">Dashboard</a>
