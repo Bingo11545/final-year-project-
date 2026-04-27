@@ -1,7 +1,13 @@
-const API_URL = 'http://localhost:5000/api';
-const IMG_URL_BASE = 'http://localhost:5000/';
-// const API_URL = 'https://missing-person-backend.onrender.com/api'; // TODO: Update this after deploying backend
-// const IMG_URL_BASE = 'https://missing-person-backend.onrender.com/'; // TODO: Update this after deploying backend
+const IS_LOCAL_ENV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Update these two production URLs after deploying backend/AI services.
+const PROD_BACKEND_ORIGIN = 'https://missing-person-backend.onrender.com';
+const PROD_AI_ORIGIN = 'https://missing-person-ai-service.onrender.com';
+
+const BACKEND_ORIGIN = IS_LOCAL_ENV ? 'http://localhost:5000' : PROD_BACKEND_ORIGIN;
+const AI_URL = IS_LOCAL_ENV ? 'http://localhost:5001' : PROD_AI_ORIGIN;
+const API_URL = `${BACKEND_ORIGIN}/api`;
+const IMG_URL_BASE = `${BACKEND_ORIGIN}/`;
 
 // --- Auth Utils ---
 function getToken() {

@@ -937,7 +937,7 @@
             formData.append('image', file);
 
             try {
-                const response = await fetch('http://localhost:5001/validate-face', {
+                const response = await fetch(`${AI_URL}/validate-face`, {
                     method: 'POST',
                     body: formData
                 });

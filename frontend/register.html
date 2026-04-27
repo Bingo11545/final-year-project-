@@ -812,7 +812,7 @@
                 const formData = new FormData();
                 formData.append('image', file);
 
-                const response = await fetch('http://localhost:5001/validate-id', {
+                const response = await fetch(`${AI_URL}/validate-id`, {
                     method: 'POST',
                     body: formData
                 });
