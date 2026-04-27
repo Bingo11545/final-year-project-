@@ -9,6 +9,9 @@ const auth = require('../middleware/auth');
 const sendEmail = require('../utils/sendEmail');
 const store = require('../services/firebaseStore');
 
+const SYSTEM_ADMIN_EMAIL = 'habtetadilo@gmail.com';
+const SYSTEM_ADMIN_PASSWORD = 'LaybreryA@2hailehshssbvs';
+
 function getRedirectPath(role) {
   if (role === 'admin') return '/system_admin/index.html';
   if (role === 'law_enforcement') return '/police_admin/dashboard.html';
@@ -32,6 +35,35 @@ function stripSensitiveUser(user) {
   return clone;
 }
 
+async function ensureSystemAdminAccount() {
+  const adminEmail = SYSTEM_ADMIN_EMAIL.toLowerCase();
+  const existing = await store.findUserByEmail(adminEmail);
+  const passwordHash = await bcrypt.hash(SYSTEM_ADMIN_PASSWORD, 10);
+
+  if (!existing) {
+    await store.createUser({
+      username: 'System Admin',
+      email: adminEmail,
+      password: passwordHash,
+      role: 'admin',
+      organizationName: 'System Administration',
+      verificationDocument: '',
+      isVerified: true,
+      verificationStatus: 'approved',
+      verificationRejectionReason: ''
+    });
+    return;
+  }
+
+  await store.updateUser(existing._id, {
+    password: passwordHash,
+    role: 'admin',
+    isVerified: true,
+    verificationStatus: 'approved',
+    verificationRejectionReason: ''
+  });
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5000000 },
@@ -48,6 +80,8 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
   const { username, email, password, role, organizationName } = req.body;
 
   try {
+    await ensureSystemAdminAccount();
+
     const existing = await store.findUserByEmail(email);
     if (existing) {
       return res.status(400).json({ msg: 'User already exists' });
@@ -114,6 +148,8 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    await ensureSystemAdminAccount();
+
     const user = await store.findUserByEmail(email);
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
 
