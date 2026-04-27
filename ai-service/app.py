@@ -3,9 +3,55 @@ from flask_cors import CORS
 import os
 import cv2
 import numpy as np
+from uuid import uuid4
 
 app = Flask(__name__)
 CORS(app)
+
+
+def _temp_file_path(prefix, filename):
+    return f"{prefix}_{uuid4().hex}_{filename or 'upload.jpg'}"
+
+
+def _cleanup_file(path):
+    if path and os.path.exists(path):
+        os.remove(path)
+
+
+def _face_boxes_from_path(img_path):
+    img = cv2.imread(img_path)
+    if img is None:
+        return img, []
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    boxes = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
+    return img, boxes
+
+
+def _opencv_embedding(img_path):
+    img, boxes = _face_boxes_from_path(img_path)
+    if img is None:
+        raise ValueError("Could not read image")
+
+    if len(boxes) > 0:
+        x, y, w, h = boxes[0]
+        roi = img[y:y + h, x:x + w]
+    else:
+        roi = img
+
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    resized = cv2.resize(gray, (64, 64), interpolation=cv2.INTER_AREA)
+    normalized = resized.astype(np.float32) / 255.0
+    return normalized.flatten().tolist()
+
+
+def _cosine_similarity(vec_a, vec_b):
+    a = np.array(vec_a, dtype=np.float32)
+    b = np.array(vec_b, dtype=np.float32)
+    denom = (np.linalg.norm(a) * np.linalg.norm(b))
+    if denom == 0:
+        return 0.0
+    return float(np.dot(a, b) / denom)
 
 # Mock database of embeddings for demonstration if DB not connected directly here
 # In production, this service would fetch known embeddings from the DB or a vector DB
@@ -21,20 +67,22 @@ def generate_embedding():
         return jsonify({"error": "No image provided"}), 400
     
     file = request.files['image']
-    # Save temporarily
-    temp_path = "temp_" + file.filename
+    temp_path = _temp_file_path("temp", file.filename)
     file.save(temp_path)
     
     try:
-        # Lazy-import DeepFace to avoid heavy TensorFlow import at app startup
-        from deepface import DeepFace
-        embedding = DeepFace.represent(img_path=temp_path, model_name="Facenet", enforce_detection=False)[0]["embedding"]
-        os.remove(temp_path)
-        return jsonify({"embedding": embedding})
+        # Prefer DeepFace when available, fallback to OpenCV embedding when not installed.
+        try:
+            from deepface import DeepFace
+            embedding = DeepFace.represent(img_path=temp_path, model_name="Facenet", enforce_detection=False)[0]["embedding"]
+            return jsonify({"embedding": embedding, "model": "deepface-facenet"})
+        except Exception:
+            embedding = _opencv_embedding(temp_path)
+            return jsonify({"embedding": embedding, "model": "opencv-fallback"})
     except Exception as e:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
         return jsonify({"error": "AI backend error: " + str(e)}), 500
+    finally:
+        _cleanup_file(temp_path)
 
 @app.route('/verify', methods=['POST'])
 def verify_face():
@@ -44,9 +92,20 @@ def verify_face():
     img_path_2 = data.get('img2_path')
     
     try:
-        from deepface import DeepFace
-        result = DeepFace.verify(img1_path=img_path_1, img2_path=img_path_2, model_name="Facenet")
-        return jsonify(result)
+        try:
+            from deepface import DeepFace
+            result = DeepFace.verify(img1_path=img_path_1, img2_path=img_path_2, model_name="Facenet")
+            return jsonify(result)
+        except Exception:
+            emb1 = _opencv_embedding(img_path_1)
+            emb2 = _opencv_embedding(img_path_2)
+            similarity = _cosine_similarity(emb1, emb2)
+            return jsonify({
+                "verified": similarity >= 0.75,
+                "distance": 1.0 - similarity,
+                "similarity": similarity,
+                "model": "opencv-fallback"
+            })
     except Exception as e:
         return jsonify({"error": "AI backend error: " + str(e)}), 500
 
@@ -61,56 +120,47 @@ def validate_face():
         return jsonify({"error": "No image provided"}), 400
     
     file = request.files['image']
-    temp_path = "temp_face_" + file.filename
+    temp_path = _temp_file_path("temp_face", file.filename)
     file.save(temp_path)
     
     try:
-        from deepface import DeepFace
-        
-        # Attempt face detection — enforce_detection=True will raise exception if no face found
         try:
+            from deepface import DeepFace
             result = DeepFace.extract_faces(
                 img_path=temp_path,
                 detector_backend="opencv",
                 enforce_detection=True
             )
-            
+
             if result and len(result) > 0:
                 confidence = result[0].get("confidence", 0.85)
-                os.remove(temp_path)
                 return jsonify({
                     "is_human_face": True,
                     "confidence": float(confidence),
-                    "faces_detected": len(result)
+                    "faces_detected": len(result),
+                    "detector": "deepface"
                 })
             else:
-                os.remove(temp_path)
                 return jsonify({
                     "is_human_face": False,
                     "confidence": 0.0,
-                    "reason": "No human face detected in the image"
+                    "reason": "No human face detected in the image",
+                    "detector": "deepface"
                 })
-                
-        except Exception as detection_error:
-            # DeepFace raises exception when no face is found with enforce_detection=True
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            
-            error_msg = str(detection_error).lower()
-            if "face" in error_msg and ("could not" in error_msg or "no face" in error_msg or "detected" in error_msg):
-                return jsonify({
-                    "is_human_face": False,
-                    "confidence": 0.0,
-                    "reason": "No human face could be detected in the uploaded image"
-                })
-            else:
-                # Re-raise if it's not a "no face" error
-                raise detection_error
-                
+        except Exception:
+            _, boxes = _face_boxes_from_path(temp_path)
+            faces_detected = len(boxes)
+            return jsonify({
+                "is_human_face": faces_detected > 0,
+                "confidence": 0.8 if faces_detected > 0 else 0.0,
+                "faces_detected": faces_detected,
+                "reason": None if faces_detected > 0 else "No human face could be detected in the uploaded image",
+                "detector": "opencv-fallback"
+            })
     except Exception as e:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
         return jsonify({"error": "Face validation error: " + str(e)}), 500
+    finally:
+        _cleanup_file(temp_path)
 
 
 # ============================================================
@@ -232,4 +282,4 @@ def validate_id():
 
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=False)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5001)), debug=False)
