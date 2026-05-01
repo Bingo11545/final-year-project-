@@ -6,6 +6,7 @@ const BACKEND_ORIGIN = PROD_BACKEND_ORIGIN;
 const AI_URL = PROD_AI_ORIGIN;
 const API_URL = `${BACKEND_ORIGIN}/api`;
 const IMG_URL_BASE = `${BACKEND_ORIGIN}/`;
+const IS_FORCED_PUBLIC_VIEW = new URLSearchParams(window.location.search).get('view') === 'public';
 
 const PUBLIC_PATHS_FOR_GUEST = new Set([
     'index',
@@ -89,7 +90,7 @@ function updateNav() {
     const navRight = document.getElementById('nav-right');
     if (!navRight) return;
 
-    if (isLoggedIn()) {
+    if (isLoggedIn() && !IS_FORCED_PUBLIC_VIEW) {
         const role = getUserRole();
         const dashboardLink = role === 'admin'
             ? '/system_admin/index.html'
@@ -187,6 +188,10 @@ function toggleNotif() {
 
 // Check auth on protected pages
 function checkAuth() {
+    if (IS_FORCED_PUBLIC_VIEW) {
+        return;
+    }
+
     if (!isLoggedIn()) {
         window.location.href = '/login.html';
     }
