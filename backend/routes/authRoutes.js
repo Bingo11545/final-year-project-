@@ -68,16 +68,31 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5000000 },
   fileFilter: function fileFilter(req, file, cb) {
-    const filetypes = /jpeg|jpg|png|pdf/;
+    const filetypes = /jpeg|jpg|png|webp|pdf/;
     const mimetype = filetypes.test(file.mimetype);
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     if (mimetype && extname) return cb(null, true);
-    cb(new Error('Error: Images and PDFs Only!'));
+    cb(new Error('Error: JPG, PNG, WEBP, and PDF files only!'));
   }
 });
 
-router.post('/register', upload.single('verificationDoc'), async (req, res) => {
-  const { username, email, password, role, organizationName } = req.body;
+router.post(
+  '/register',
+  upload.fields([
+    { name: 'verificationDoc', maxCount: 1 },
+    { name: 'profilePhoto', maxCount: 1 }
+  ]),
+  async (req, res) => {
+  const {
+    username,
+    email,
+    password,
+    role,
+    organizationName,
+    station,
+    dateOfBirth,
+    idNumber
+  } = req.body;
 
   try {
     await ensureSystemAdminAccount();
@@ -87,20 +102,46 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
+    const needsApproval = role === 'law_enforcement' || role === 'authorized_org';
+    const normalizedStation = (station || '').trim();
+    const normalizedDob = (dateOfBirth || '').trim();
+    const normalizedIdNumber = (idNumber || '').trim();
+
+    if (needsApproval) {
+      if (!normalizedStation || !normalizedDob || !normalizedIdNumber) {
+        return res.status(400).json({
+          msg: 'Station, date of birth, and ID/Service number are required for police and organization registration.'
+        });
+      }
+    }
+
     let verificationDocument = '';
-    if (req.file) {
+    const verificationDocFile = req.files?.verificationDoc?.[0];
+    if (verificationDocFile) {
       const savedFile = await store.createFile({
-        originalName: req.file.originalname,
-        contentType: req.file.mimetype,
-        size: req.file.size,
-        dataBuffer: req.file.buffer,
+        originalName: verificationDocFile.originalname,
+        contentType: verificationDocFile.mimetype,
+        size: verificationDocFile.size,
+        dataBuffer: verificationDocFile.buffer,
         purpose: 'verification-doc'
       });
       verificationDocument = `api/files/${savedFile._id}`;
     }
 
+    let profilePhoto = '';
+    const profilePhotoFile = req.files?.profilePhoto?.[0];
+    if (profilePhotoFile) {
+      const savedPhoto = await store.createFile({
+        originalName: profilePhotoFile.originalname,
+        contentType: profilePhotoFile.mimetype,
+        size: profilePhotoFile.size,
+        dataBuffer: profilePhotoFile.buffer,
+        purpose: 'registration-photo'
+      });
+      profilePhoto = `api/files/${savedPhoto._id}`;
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
-    const needsApproval = role === 'law_enforcement' || role === 'authorized_org';
 
     const user = await store.createUser({
       username,
@@ -108,6 +149,10 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
       password: passwordHash,
       role,
       organizationName: organizationName || '',
+      station: normalizedStation,
+      dateOfBirth: normalizedDob,
+      idNumber: normalizedIdNumber,
+      profilePhoto,
       verificationDocument,
       isVerified: !needsApproval,
       verificationStatus: needsApproval ? 'pending' : 'approved',
@@ -127,6 +172,14 @@ router.post('/register', upload.single('verificationDoc'), async (req, res) => {
     }
 
     if (needsApproval) {
+      if (!verificationDocument) {
+        return res.status(400).json({ msg: 'Please upload your verification document.' });
+      }
+
+      if (!profilePhoto) {
+        return res.status(400).json({ msg: 'Please upload your profile photo.' });
+      }
+
       return res.status(201).json({
         requiresApproval: true,
         msg: 'Registration submitted. A system admin will verify your ID document before account activation.'

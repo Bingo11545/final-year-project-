@@ -142,6 +142,14 @@ async function listNotificationsByUser(userId) {
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
+async function updateNotification(id, patch) {
+  return updateDoc('notifications', id, patch);
+}
+
+async function getNotificationById(id) {
+  return getDoc('notifications', id);
+}
+
 async function createFile({ originalName, contentType, size, dataBuffer, uploadedBy, purpose }) {
   const id = randomUUID();
   const payload = {
@@ -203,6 +211,8 @@ module.exports = {
   getUserById,
   createNotification,
   listNotificationsByUser,
+  updateNotification,
+  getNotificationById,
   createFile,
   getFileById,
   createPerson,

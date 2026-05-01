@@ -29,13 +29,17 @@
 
     <div class="auth-page-wrapper">
         <div class="form-card">
-            <!-- Logo mark -->
-            <div style="text-align:center; margin-bottom:1.75rem;">
-                <div style="width:56px; height:56px; background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; box-shadow:0 0 25px var(--accent-blue-glow);">
-                    <i class="fas fa-lock" style="color:white; font-size:1.4rem;"></i>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem; justify-content:flex-start;">
+                <div style="width:42px; height:42px; background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px var(--accent-blue-glow);">
+                    <i class="fas fa-search-location" style="color:white; font-size:1rem;"></i>
                 </div>
-                <h2 data-key="login_title">Login</h2>
-                <p class="subtitle" style="color:var(--text-secondary); font-size:0.875rem; margin-top:4px;">Access the national registry system</p>
+                <div style="font-family:'Outfit',sans-serif; font-weight:800; font-size:1.05rem;">Find Missing <span class="highlight">Person</span></div>
+            </div>
+
+            <!-- Login header -->
+            <div style="text-align:left; margin-bottom:1.75rem;">
+                <h2 data-key="login_title" style="margin-bottom:6px;">Login</h2>
+                <p class="subtitle" style="color:var(--text-secondary); font-size:0.875rem; margin-top:0;">Access the national registry system</p>
             </div>
 
             <div id="error-msg" style="display:none; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25); color:#f87171; padding:11px 15px; border-radius:8px; font-size:0.875rem; margin-bottom:1rem;"></div>

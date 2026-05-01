@@ -104,6 +104,25 @@ router.get('/notifications', auth(), async (req, res) => {
   }
 });
 
+router.put('/notifications/:id/read', auth(), async (req, res) => {
+  try {
+    const notification = await store.getNotificationById(req.params.id);
+    if (!notification) {
+      return res.status(404).json({ msg: 'Notification not found' });
+    }
+
+    if (String(notification.user) !== String(req.user.id)) {
+      return res.status(403).json({ msg: 'Access Denied' });
+    }
+
+    const updated = await store.updateNotification(req.params.id, { isRead: true });
+    return res.json(updated);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 router.get('/pending', auth(), async (req, res) => {
   try {
     if (!['law_enforcement', 'admin'].includes(req.user.role)) {
@@ -160,6 +179,10 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', [auth(), handleImageUpload], async (req, res) => {
   try {
+    if (req.user.role === 'admin') {
+      return res.status(403).json({ msg: 'System admin accounts cannot submit person reports.' });
+    }
+
     const {
       fullName,
       age,

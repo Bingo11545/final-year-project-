@@ -549,6 +549,8 @@
         /* Org field */
         .org-field { display: none; }
 
+        .authority-fields { display: none; }
+
         /* Divider */
         .register-divider {
             height: 1px;
@@ -681,6 +683,50 @@
                         </div>
                     </div>
 
+                    <div class="rform-group">
+                        <label>Confirm Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-check-double"></i>
+                            <input type="password" id="confirmPassword" placeholder="Re-enter your password" required>
+                        </div>
+                    </div>
+
+                    <div class="authority-fields" id="authority-fields">
+                        <div class="rform-group">
+                            <label>Station</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-building-shield"></i>
+                                <input type="text" id="station" placeholder="Police station or organization office">
+                            </div>
+                        </div>
+
+                        <div class="rform-group">
+                            <label>Date of Birth</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-calendar-days"></i>
+                                <input type="date" id="dateOfBirth">
+                            </div>
+                        </div>
+
+                        <div class="rform-group">
+                            <label>ID Number / Service Number</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-id-badge"></i>
+                                <input type="text" id="idNumber" placeholder="Official ID or service number">
+                            </div>
+                        </div>
+
+                        <div class="rform-group">
+                            <label>Profile Photo</label>
+                            <div class="id-upload-zone" style="padding:1.1rem;">
+                                <input type="file" id="profilePhoto" accept=".jpg,.jpeg,.png,.webp" onchange="handleProfilePhotoUpload(event)">
+                                <div class="upload-title">Upload officer/organization photo</div>
+                                <div class="upload-sub">JPG, PNG, WEBP · max 5MB</div>
+                            </div>
+                            <div id="photo-validation-status" class="id-val-status" style="margin-top:8px;"></div>
+                        </div>
+                    </div>
+
                     <!-- Organization name (shown for org role) -->
                     <div class="rform-group org-field" id="org-field">
                         <label>Organization Name</label>
@@ -741,6 +787,7 @@
     <script src="app.js"></script>
     <script>
         let idDocUploaded = false;
+        let profilePhotoUploaded = false;
         let currentRole = 'public_user';
 
         // Role tab switcher
@@ -756,10 +803,12 @@
 
             const verifySection = document.getElementById('verify-section');
             const orgField = document.getElementById('org-field');
+            const authorityFields = document.getElementById('authority-fields');
             const hint = document.getElementById('verify-hint');
 
             if (role === 'law_enforcement' || role === 'authorized_org') {
                 verifySection.style.display = 'block';
+                authorityFields.style.display = 'block';
                 orgField.style.display = (role === 'authorized_org') ? 'block' : 'none';
 
                 if (role === 'law_enforcement') {
@@ -772,16 +821,49 @@
 
                 // Reset upload state
                 idDocUploaded = false;
+                profilePhotoUploaded = false;
                 const statusEl = document.getElementById('id-validation-status');
                 statusEl.style.display = 'none';
                 statusEl.className = 'id-val-status';
                 document.getElementById('verificationDoc').value = '';
+                const photoStatus = document.getElementById('photo-validation-status');
+                photoStatus.style.display = 'none';
+                photoStatus.className = 'id-val-status';
+                document.getElementById('profilePhoto').value = '';
 
             } else {
                 verifySection.style.display = 'none';
                 orgField.style.display = 'none';
+                authorityFields.style.display = 'none';
                 idDocUploaded = false;
+                profilePhotoUploaded = false;
             }
+        }
+
+        function handleProfilePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('photo-validation-status');
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const maxSize = 5 * 1024 * 1024;
+
+            if (!allowedTypes.includes(file.type)) {
+                setIdStatus(statusDiv, false, '✗ Invalid photo type. Please upload JPG, PNG, or WEBP.');
+                profilePhotoUploaded = false;
+                document.getElementById('profilePhoto').value = '';
+                return;
+            }
+
+            if (file.size > maxSize) {
+                setIdStatus(statusDiv, false, '✗ Photo is too large. Maximum allowed size is 5MB.');
+                profilePhotoUploaded = false;
+                document.getElementById('profilePhoto').value = '';
+                return;
+            }
+
+            setIdStatus(statusDiv, true, '✓ Profile photo uploaded successfully.');
+            profilePhotoUploaded = true;
         }
 
         function togglePassword() {
@@ -838,6 +920,14 @@
 
             const role = currentRole;
             const needsVerification = (role === 'law_enforcement' || role === 'authorized_org');
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                errEl.textContent = 'Password and Confirm Password do not match.';
+                errEl.style.display = 'block';
+                return;
+            }
 
             if (needsVerification) {
                 const fileInput = document.getElementById('verificationDoc');
@@ -848,6 +938,18 @@
                 }
                 if (!idDocUploaded) {
                     errEl.textContent = 'Your document upload is invalid. Please upload a valid PDF, JPG, or PNG file (max 5MB).';
+                    errEl.style.display = 'block';
+                    return;
+                }
+
+                if (!document.getElementById('station').value.trim() || !document.getElementById('dateOfBirth').value || !document.getElementById('idNumber').value.trim()) {
+                    errEl.textContent = 'Station, date of birth, and ID/Service number are required for police and organization registration.';
+                    errEl.style.display = 'block';
+                    return;
+                }
+
+                if (!profilePhotoUploaded || !document.getElementById('profilePhoto').files[0]) {
+                    errEl.textContent = 'Please upload a valid officer/organization profile photo.';
                     errEl.style.display = 'block';
                     return;
                 }
@@ -863,9 +965,14 @@
                 formData.append('password', document.getElementById('password').value);
                 formData.append('role', role);
                 formData.append('organizationName', document.getElementById('organizationName').value || '');
+                formData.append('station', document.getElementById('station').value || '');
+                formData.append('dateOfBirth', document.getElementById('dateOfBirth').value || '');
+                formData.append('idNumber', document.getElementById('idNumber').value || '');
 
                 const fileInput = document.getElementById('verificationDoc');
                 if (fileInput.files[0]) formData.append('verificationDoc', fileInput.files[0]);
+                const photoInput = document.getElementById('profilePhoto');
+                if (photoInput.files[0]) formData.append('profilePhoto', photoInput.files[0]);
 
                 const res = await fetch(`${API_URL}/auth/register`, { method: 'POST', body: formData });
                 const data = await res.json();
