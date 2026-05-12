@@ -36,6 +36,7 @@ const missingPersonSchema = new mongoose.Schema({
   },
   
   // New Fields for Detailed Case Submission
+  officialVerificationRef: String,
   policeDistrict: String,
   policeCaseNumber: String,
   isPoliceReported: { type: Boolean, default: false },

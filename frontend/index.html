@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Find Missing Person — Missing Persons Identification powered by AI. Report and search for missing persons across Ethiopia.">
+    <meta name="description" content="Find Missing Person - National Missing Persons Identification platform powered by AI for reporting and searching cases across Ethiopia.">
     <title>Find Missing Person — National Missing Persons System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -40,7 +40,7 @@
                     <span>Ethiopian Federal Police Commission</span>
                 </div>
                 <h1 data-key="title">Missing Persons <span class="gradient-text">Identification</span></h1>
-                <p class="subtitle" data-key="tagline">Modernizing investigations with Artificial Intelligence — a unified platform for reporting, searching, and finding missing individuals across Ethiopia.</p>
+                <p class="subtitle" data-key="tagline">A unified AI platform for reporting, searching, and locating missing individuals across Ethiopia.</p>
                 <div class="hero-actions">
                     <a href="/user/report.html" class="btn btn-danger" id="btn-report-hero">
                         <i class="fas fa-exclamation-circle"></i>
@@ -69,8 +69,38 @@
         </div>
     </div>
 
-    <!-- SEARCH BAR -->
+    <!-- HOW IT WORKS -->
     <div class="container">
+        <div class="section-header">
+            <h2 style="font-family:var(--font-heading); font-size:1.5rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:12px; border:none; text-transform:none; padding:0; margin:0;">
+                <span style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">How It Works / እንዴት ይሰራል</span>
+            </h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-icon"><i class="fas fa-file-contract" style="color:white;"></i></div>
+                <h3 data-key="step1_title">1. File Police Report</h3>
+                <p data-key="step1_desc">Mandatory reporting to EFP or Local Police. Obtain official case number.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.3);">
+                    <i class="fas fa-id-card" style="color:white;"></i>
+                </div>
+                <h3 data-key="step2_title">2. Official Submission</h3>
+                <p data-key="step2_desc">Digitize case details for 'Declaration of Absence' legal processes.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 15px rgba(5,150,105,0.3);">
+                    <i class="fas fa-brain" style="color:white;"></i>
+                </div>
+                <h3 data-key="step3_title">3. AI Matching</h3>
+                <p data-key="step3_desc">Automated face recognition cross-referenced against the national sightings database.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="container" style="margin-top:1.5rem;">
         <div class="search-container">
             <h2><i class="fas fa-search" style="color:var(--accent-blue); margin-right:10px;"></i><span data-key="search_title">Search National Registry</span></h2>
             <div class="search-row">
@@ -129,36 +159,6 @@
         </div>
     </div>
 
-    <!-- HOW IT WORKS -->
-    <div class="container" style="margin-top:4rem;">
-        <div class="section-header">
-            <h2 style="font-family:var(--font-heading); font-size:1.5rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:12px; border:none; text-transform:none; padding:0; margin:0;">
-                <span style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">How It Works / እንዴት ይሰራል</span>
-            </h2>
-        </div>
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-icon"><i class="fas fa-file-contract" style="color:white;"></i></div>
-                <h3 data-key="step1_title">1. File Police Report</h3>
-                <p data-key="step1_desc">Mandatory reporting to EFP or Local Police. Obtain official case number.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.3);">
-                    <i class="fas fa-id-card" style="color:white;"></i>
-                </div>
-                <h3 data-key="step2_title">2. Official Submission</h3>
-                <p data-key="step2_desc">Digitize case details for 'Declaration of Absence' legal processes.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-icon" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 15px rgba(5,150,105,0.3);">
-                    <i class="fas fa-brain" style="color:white;"></i>
-                </div>
-                <h3 data-key="step3_title">3. AI Matching</h3>
-                <p data-key="step3_desc">Automated face recognition cross-referenced against the national sightings database.</p>
-            </div>
-        </div>
-    </div>
-
     <div class="container">
         <hr style="border:0; border-top:1px solid var(--border-subtle); margin:2rem 0;">
     </div>
@@ -170,7 +170,7 @@
                 <span class="dot" style="width:10px;height:10px;background:var(--accent-red);border-radius:50%;box-shadow:0 0 10px var(--accent-red);display:inline-block;animation:pulse 2s infinite;"></span>
                 <span data-key="section_active">Active Investigations</span>
             </h2>
-            <span style="font-size:0.8rem; color:var(--text-muted);">Live updates from EFP nationwide</span>
+            <span style="font-size:0.8rem; color:var(--text-muted);">Live updates from the EFP nationwide registry</span>
         </div>
         <div id="publicFeed" class="grid-container">
             <div class="loading-indicator" style="grid-column:1/-1;">
@@ -241,7 +241,7 @@
                 if (people.length === 0) {
                     container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-secondary);">
                         <i class="fas fa-search" style="font-size:2rem; color:var(--text-muted); margin-bottom:1rem; display:block;"></i>
-                        <p style="font-size:1rem;">No active cases matching your criteria found in national registry.</p>
+                        <p style="font-size:1rem;">No active cases in the national registry match your criteria.</p>
                     </div>`;
                     return;
                 }
@@ -284,7 +284,7 @@
             } catch (error) {
                 container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#f87171;">
                     <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
-                    <p>Secure connection failed. Please try again.</p>
+                    <p>Connection failed. Please try again.</p>
                 </div>`;
             }
         }

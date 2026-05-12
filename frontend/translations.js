@@ -3,7 +3,7 @@ const translations = {
         // Home / Hero
         title: "National Missing Persons Identification System",
         subtitle: "Ethiopian Federal Police Commission",
-        tagline: "A unified AI-powered platform for reporting, searching, and finding missing individuals across Ethiopia.",
+        tagline: "A unified AI-powered platform for reporting, searching, and locating missing individuals across Ethiopia.",
         btn_report: "Report Missing Person",
         btn_search: "Search Database",
         search_title: "Search National Registry",
@@ -14,13 +14,13 @@ const translations = {
         search_age: "Age",
         stat_active_label: "Active Cases",
         stat_found_label: "Persons Found",
-        stat_ai_label: "AI-Powered Matching",
+        stat_ai_label: "AI-Assisted Matching",
 
         // How it works
         step1_title: "1. File Police Report",
-        step1_desc: "Mandatory reporting to EFP or Local Police. Obtain official case number.",
+        step1_desc: "Report first to the EFP or local police and obtain an official case number.",
         step2_title: "2. Official Submission",
-        step2_desc: "Digitize case details for 'Declaration of Absence' legal processes.",
+        step2_desc: "Submit verified case details for official legal and investigative processing.",
         step3_title: "3. AI Matching",
         step3_desc: "Automated face recognition cross-referenced against the national sightings database.",
 
@@ -88,12 +88,13 @@ const translations = {
         // Report form
         report_page_title: "Official Missing Person Report",
         report_step1: "Step 1: Legal Requirement",
-        report_step2: "Step 2: Police Record Data",
+        report_step2: "Step 2: Official Verification Reference",
         report_step3: "Step 3: Last Known Location",
         report_step4: "Step 4: Subject Identification",
-        report_step5: "Step 5: Vehicle & Digital Data",
-        report_step6: "Step 6: Biometric Data",
-        report_step7: "Step 7: Reporter Info",
+        report_step5: "Step 5: Physical Characteristics",
+        report_step6: "Step 6: Vehicle & Digital Data",
+        report_step7: "Step 7: Biometric Photo",
+        report_step8: "Step 8: Reporter Information",
         report_submit: "Submit to National Registry",
 
         // Footer
@@ -107,7 +108,7 @@ const translations = {
         // Home / Hero
         title: "ብሔራዊ የጠፉ ሰዎች መለያ ስርዓት",
         subtitle: "የኢትዮጵያ ፌዴራል ፖሊስ ኮሚሽን",
-        tagline: "ምርመራዎችን በሰው ሰራሽ አስተውሎት (AI) ያዘምናል — ጠፊ ሰዎችን ለሪፖርት ማቅረብ፣ ለመፈለግ እና ለማግኘት የተዋሃደ መድረክ።",
+        tagline: "ለጠፉ ሰዎች ሪፖርት ማቅረብ፣ መፈለግ እና መለየት የሚያግዝ በAI የተደገፈ አንድ የተዋሃደ መድረክ።",
         btn_report: "የጠፋ ሰው ሪፖርት ያድርጉ",
         btn_search: "መረጃ ቋት ይፈልጉ",
         search_title: "ብሔራዊ መዝገብ ይፈልጉ",
@@ -118,15 +119,15 @@ const translations = {
         search_age: "እድሜ",
         stat_active_label: "ንቁ ጉዳዮች",
         stat_found_label: "የተገኙ ሰዎች",
-        stat_ai_label: "AI-ድጋፍ ማዛዘን",
+        stat_ai_label: "በAI የተደገፈ ማመሳከር",
 
         // How it works
         step1_title: "1. የፖሊስ ሪፖርት ያቅርቡ",
         step1_desc: "ለፌዴራል ወይም ለአካባቢ ፖሊስ ሪፖርት ማድረግ ግዴታ ነው። ይፋዊ የክስ ቁጥር ይያዙ።",
         step2_title: "2. ይፋዊ ምዝገባ",
-        step2_desc: "ለህጋዊ 'የመጥፋት ማረጋገጫ' ሂደቶች ዝርዝሮችን ዲጂታል ያድርጉ።",
+        step2_desc: "የተረጋገጡ የጉዳይ ዝርዝሮችን ለህጋዊ እና ለምርመራ ሂደት ያስገቡ።",
         step3_title: "3. በ AI ማመሳከር",
-        step3_desc: "ከብሔራዊ የመረጃ ቋት ጋር ያለ ቆሙ የፊት ለይቶ ማወቂያ ማመሳከር።",
+        step3_desc: "በራስ-ሰር የፊት ማወቂያ ከብሔራዊ የመረጃ ቋት ጋር ይዛመዳል።",
 
         // Dashboard
         section_active: "ንቁ ጉዳዮች",
@@ -181,7 +182,7 @@ const translations = {
         confirm_password: "የይለፍ ቃል ያረጋግጡ",
         dashboard: "ዳሽቦርድ",
         logout: "ውጣ",
-        reset_password: "የይለፍ ቃል ከባተ",
+        reset_password: "የይለፍ ቃል ያዘምኑ",
         send_link: "የመቀየሪያ ሊንክ ላክ",
         notifications: "ማስታወቂያዎች",
 
@@ -192,12 +193,13 @@ const translations = {
         // Report form
         report_page_title: "ይፋዊ የጠፋ ሰው ሪፖርት ማቅረቢያ",
         report_step1: "ደረጃ 1: ህጋዊ ግዴታ",
-        report_step2: "ደረጃ 2: የፖሊስ መዝገብ ዝርዝር",
+        report_step2: "ደረጃ 2: ይፋዊ ማረጋገጫ ማጣቀሻ",
         report_step3: "ደረጃ 3: የመጨረሻ ቦታ",
         report_step4: "ደረጃ 4: የግለሰቡ መለያ",
-        report_step5: "ደረጃ 5: ተሽከርካሪ እና ዲጂታል",
-        report_step6: "ደረጃ 6: ፎቶ እና ባዮሜትሪክ",
-        report_step7: "ደረጃ 7: ሪፖርት አቅራቢ መረጃ",
+        report_step5: "ደረጃ 5: አካላዊ ባህሪያት",
+        report_step6: "ደረጃ 6: ተሽከርካሪ እና ዲጂታል መረጃ",
+        report_step7: "ደረጃ 7: ባዮሜትሪክ ፎቶ",
+        report_step8: "ደረጃ 8: የአቅራቢ መረጃ",
         report_submit: "ወደ ብሔራዊ መዝገብ አስገባ",
 
         // Footer

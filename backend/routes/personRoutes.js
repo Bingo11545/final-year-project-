@@ -152,6 +152,20 @@ router.get('/police/all', auth(), async (req, res) => {
   }
 });
 
+router.get('/with-mine', auth(), async (req, res) => {
+  try {
+    const users = await store.listUsers();
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+
+    let people = await store.listPeople((p) => p.isApproved === true || String(p.reportedBy) === String(req.user.id));
+    people = applyFilters(people, req.query).map((p) => normalizePerson(p, userMap));
+    return res.json(people);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const users = await store.listUsers();
@@ -195,6 +209,7 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
       contactPhone,
       status,
       isAnonymous,
+      officialVerificationRef,
       policeDistrict,
       policeCaseNumber,
       isPoliceReported,
@@ -212,6 +227,11 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
 
     const reporter = await store.getUserById(req.user.id);
     const isApproved = !!(reporter && ['law_enforcement', 'admin'].includes(reporter.role));
+    const hasOfficialReference = !!String(officialVerificationRef || policeCaseNumber || '').trim();
+
+    if (!hasOfficialReference) {
+      return res.status(400).json({ msg: 'A report ID or official verification reference is required.' });
+    }
 
     const payload = {
       fullName,
@@ -235,9 +255,10 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
       reportedBy: req.user.id,
       isAnonymous: isAnonymous === 'true' || isAnonymous === true,
       isApproved,
+      officialVerificationRef: String(officialVerificationRef || '').trim(),
       policeDistrict,
       policeCaseNumber,
-      isPoliceReported: isPoliceReported === 'true' || isPoliceReported === true,
+      isPoliceReported: hasOfficialReference || isPoliceReported === 'true' || isPoliceReported === true,
       vehicleInformation,
       socialMediaAccounts,
       images: [],

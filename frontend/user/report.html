@@ -541,7 +541,7 @@
                     <span>Official Report Portal</span>
                 </div>
                 <h1>Report a <span style="background:linear-gradient(135deg,#fca5a5,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Missing Person</span></h1>
-                <p>Submit an official case to the National Registry. All reports are verified and cross-referenced with our AI matching system. Accuracy ensures faster reunification.</p>
+                <p>Submit an official case to the National Registry. Every report is verified and cross-referenced by our AI matching system. Accurate details improve response speed and reunification outcomes.</p>
             </div>
         </div>
     </div>
@@ -552,7 +552,7 @@
         <div class="form-intro-banner">
             <div class="intro-icon"><i class="fas fa-clipboard-list"></i></div>
             <p>
-                <strong>Complete all required fields carefully.</strong> Accurate information significantly increases the chances of finding a missing person. All submitted data is encrypted and handled in accordance with Ethiopian Federal Police regulations.
+                <strong>Complete all required fields carefully.</strong> Accurate information significantly improves the chance of finding a missing person. All submitted data is encrypted and handled in accordance with Ethiopian Federal Police regulations.
             </p>
         </div>
 
@@ -575,33 +575,37 @@
                     </div>
                     <div>
                         <h3 data-key="report_step1">Step 1: Legal Requirement</h3>
-                        <p>Mandatory per Proclamation No. 720/2011 — Federal Police Act</p>
+                        <p>Mandatory under Proclamation No. 720/2011 - Federal Police Act</p>
                     </div>
                 </div>
                 <label class="legal-check-label">
                     <input type="checkbox" id="legalCheck" required>
-                    <span>I certify that I have already filed a report with the <strong>Ethiopian Federal Police</strong> or regional authority, and I am submitting this case for the National Digital Registry.</span>
+                    <span>I certify that this case has already been reported to the <strong>Ethiopian Federal Police</strong> or a regional police authority.</span>
                 </label>
             </div>
 
             <div id="mainForm" style="display:none;">
 
                 <!-- STEP 2: POLICE RECORD (Law Enforcement Only) -->
-                <div id="step-police-record" class="report-card card-indigo" style="display:none;">
+                <div id="step-official-record" class="report-card card-indigo">
                     <div class="report-card-header">
                         <div class="step-badge indigo">2</div>
                         <div>
-                            <h3 data-key="report_step2">Step 2: Police Record Data</h3>
-                            <p>Official case file information — Law Enforcement use only</p>
+                            <h3 data-key="report_step2">Step 2: Official Verification Reference</h3>
+                            <p>Enter the police report ID or official verification reference linked to this case</p>
                         </div>
+                    </div>
+                    <div class="form-group-modern">
+                        <label>Report ID / Official Verification Reference <span class="req">*</span></label>
+                        <input type="text" id="officialVerificationRef" placeholder="e.g. EFP-2026-11548 or 10/254/2016" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group-modern">
-                            <label>Police Station / District <span class="req">*</span></label>
+                            <label>Police Station / District</label>
                             <input type="text" id="policeDistrict" placeholder="e.g. Bole Sub-City Woreda 03">
                         </div>
                         <div class="form-group-modern">
-                            <label>Case File Number (CFN) <span class="req">*</span></label>
+                            <label>Case File Number (CFN)</label>
                             <input type="text" id="policeCaseNumber" placeholder="e.g. 10/254/2016">
                         </div>
                     </div>
@@ -705,7 +709,7 @@
                     <div class="report-card-header">
                         <div class="step-badge purple">5</div>
                         <div>
-                            <h3>Step 5: Physical Characteristics</h3>
+                            <h3 data-key="report_step5">Step 5: Physical Characteristics</h3>
                             <p>Describe physical attributes to aid identification</p>
                         </div>
                     </div>
@@ -759,7 +763,7 @@
                     <div class="report-card-header">
                         <div class="step-badge green">6</div>
                         <div>
-                            <h3 data-key="report_step5">Step 6: Vehicle &amp; Social Media</h3>
+                            <h3 data-key="report_step6">Step 6: Vehicle &amp; Social Media</h3>
                             <p>Additional context that may aid the investigation</p>
                         </div>
                     </div>
@@ -778,7 +782,7 @@
                     <div class="report-card-header">
                         <div class="step-badge red">7</div>
                         <div>
-                            <h3 data-key="report_step6">Step 7: Biometric Photo</h3>
+                            <h3 data-key="report_step7">Step 7: Biometric Photo</h3>
                             <p>Upload a clear, high-resolution facial photo — AI validated for identity matching</p>
                         </div>
                     </div>
@@ -803,7 +807,7 @@
 
                     <div class="ai-info-box">
                         <i class="fas fa-microchip"></i>
-                        <span>Our AI system generates a 128-dimensional facial embedding for cross-referencing against the national registry. Only photos containing a clearly visible human face are accepted.</span>
+                        <span>Our AI system verifies that the uploaded image contains a clear human face before generating a facial template for secure matching in the national registry.</span>
                     </div>
                 </div>
 
@@ -812,7 +816,7 @@
                     <div class="report-card-header">
                         <div class="step-badge indigo">8</div>
                         <div>
-                            <h3 data-key="report_step7">Step 8: Reporter Information</h3>
+                            <h3 data-key="report_step8">Step 8: Reporter Information</h3>
                             <p>Your contact details for case follow-up (kept confidential)</p>
                         </div>
                     </div>
@@ -871,12 +875,13 @@
         const userRole = typeof getUserRole === 'function' ? getUserRole() : null;
         const isPolice = (userRole === 'law_enforcement' || userRole === 'admin');
 
-        const policeStep = document.getElementById('step-police-record');
+        const officialStep = document.getElementById('step-official-record');
+        const officialVerificationRefInput = document.getElementById('officialVerificationRef');
         const policeDistrictInput = document.getElementById('policeDistrict');
         const policeCaseInput = document.getElementById('policeCaseNumber');
 
         if (isPolice) {
-            policeStep.style.display = 'block';
+            officialStep.style.display = 'block';
             policeDistrictInput.required = true;
             policeCaseInput.required = true;
 
@@ -886,7 +891,7 @@
             legalCheck.checked = true;
             legalCheck.dispatchEvent(new Event('change'));
         } else {
-            policeStep.style.display = 'none';
+            officialStep.style.display = 'block';
             policeDistrictInput.required = false;
             policeCaseInput.required = false;
         }
@@ -900,14 +905,14 @@
 
             // Validate file type
             if (!file.type.startsWith('image/')) {
-                alert('Please upload a valid image file (JPG, PNG, WEBP).');
+                showToast('Please upload a valid image file (JPG, PNG, or WEBP).', 'error');
                 event.target.value = '';
                 return;
             }
 
             // Validate file size (10MB max)
             if (file.size > 10 * 1024 * 1024) {
-                alert('File size exceeds 10MB. Please upload a smaller image.');
+                showToast('File size exceeds 10MB. Please upload a smaller image.', 'error');
                 event.target.value = '';
                 return;
             }
@@ -946,7 +951,15 @@
                 if (response.ok) {
                     const result = await response.json();
                     if (result.is_human_face) {
-                        setValidationStatus(statusEl, true, `✓ Human face verified — AI confidence: ${Math.round(result.confidence * 100)}%`);
+                        const confidencePercent = Math.round((result.confidence || 0) * 100);
+                        const userTier = confidencePercent >= 80
+                            ? 'High confidence'
+                            : (confidencePercent >= 50 ? 'Medium confidence' : 'Low confidence');
+                        const confidenceMessage = isPolice
+                            ? `Human face verified - confidence: ${confidencePercent}%`
+                            : `Human face verified - ${userTier}`;
+
+                        setValidationStatus(statusEl, true, `✓ ${confidenceMessage}`);
                         photoValidated = true;
                     } else {
                         setValidationStatus(statusEl, false, '✗ No human face detected. The uploaded image must contain a clear, visible human face. Please try again with a proper photo of the missing person.');
@@ -994,18 +1007,24 @@
             e.preventDefault();
 
             if (!legalCheck.checked) {
-                alert('You must certify the police report requirement.');
+                showToast('You must confirm the legal reporting requirement before continuing.', 'warning');
+                return;
+            }
+
+            if (!officialVerificationRefInput.value.trim()) {
+                showToast('Please provide a report ID or official verification reference.', 'warning');
+                officialVerificationRefInput.focus();
                 return;
             }
 
             const imgInput = document.getElementById('image');
             if (!imgInput.files[0]) {
-                alert('Please upload a biometric photo of the missing person.');
+                showToast('Please upload a biometric photo of the missing person.', 'warning');
                 return;
             }
 
             if (!photoValidated) {
-                alert('The uploaded photo has not been verified by AI. Please upload a clear facial photograph of the missing person and wait for AI verification.');
+                showToast('The uploaded photo has not passed AI verification. Please upload a clear facial photo and wait for verification.', 'warning');
                 return;
             }
 
@@ -1023,6 +1042,7 @@
             formData.append('eyeColor', document.getElementById('eyeColor').value);
             formData.append('hairColor', document.getElementById('hairColor').value);
             formData.append('distinguishingMarks', document.getElementById('distinguishingMarks').value);
+            formData.append('officialVerificationRef', officialVerificationRefInput.value.trim());
             formData.append('policeDistrict', document.getElementById('policeDistrict').value);
             formData.append('policeCaseNumber', document.getElementById('policeCaseNumber').value);
             formData.append('isPoliceReported', 'true');
@@ -1052,12 +1072,15 @@
             }
 
             try {
-                await apiCall('/people', 'POST', formData, true);
-                alert('Case Successfully Registered with National Registry! Reference ID generated.');
-                window.location.href = 'index.html';
+                const response = await apiCall('/people', 'POST', formData, true);
+                showToast('Case successfully registered with the National Registry.', 'success');
+                const createdId = response && response.person && response.person._id;
+                window.location.href = createdId
+                    ? `/user/case.html?id=${encodeURIComponent(createdId)}`
+                    : '/user/dashboard.html';
             } catch (err) {
                 console.error(err);
-                alert('Submission Error: ' + err.message);
+                showToast(`Submission error: ${err.message}`, 'error', 5500);
                 btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>Submit to National Registry</span>`;
                 btn.disabled = false;
             }

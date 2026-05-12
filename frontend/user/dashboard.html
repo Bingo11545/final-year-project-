@@ -124,7 +124,7 @@
         async function loadPeople() {
             const status = document.getElementById('filterStatus').value;
             const search = document.getElementById('search').value;
-            let url = `/people?`;
+            let url = `/people/with-mine?`;
             if (status) url += `status=${status}&`;
             if (search) url += `name=${encodeURIComponent(search)}`;
 
@@ -162,6 +162,9 @@
                     const classTag = p.classification
                         ? `<span class="classification-tag">${p.classification}</span>`
                         : '';
+                    const moderationTag = p.isApproved === false
+                        ? `<span class="classification-tag" style="background:rgba(245,158,11,0.14); border-color:rgba(245,158,11,0.28); color:#f59e0b;">Pending Review</span>`
+                        : '';
                     const caseBar = p.policeCaseNumber
                         ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> Case ${p.policeCaseNumber}</div>`
                         : '';
@@ -175,6 +178,7 @@
                             <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
                                 <span class="status-badge ${badgeClass}">${statusText}</span>
                                 ${classTag}
+                                ${moderationTag}
                             </div>
                             <div class="card-meta">
                                 <span>
