@@ -590,27 +590,27 @@
                     <div class="panel-logo-text">Find Missing <span>Person</span></div>
                 </div>
 
-                <div class="panel-tagline">Join Ethiopia's National Missing Person Registry</div>
+                <div class="panel-tagline" data-key="register_panel_tagline">Join Ethiopia's National Missing Person Registry</div>
                 <p class="panel-desc">
-                    Create your account to report missing persons, submit tips, and help reunite families across Ethiopia. Every report matters.
+                    <span data-key="register_panel_desc">Create your account to report missing persons, submit tips, and help reunite families across Ethiopia. Every report matters.</span>
                 </p>
 
                 <div class="panel-features">
                     <div class="panel-feature">
                         <i class="fas fa-shield-alt"></i>
-                        <span>Secure, encrypted data handling</span>
+                        <span data-key="register_feature_secure">Secure, encrypted data handling</span>
                     </div>
                     <div class="panel-feature">
                         <i class="fas fa-robot"></i>
-                        <span>AI-powered facial recognition matching</span>
+                        <span data-key="register_feature_ai">AI-powered facial recognition matching</span>
                     </div>
                     <div class="panel-feature">
                         <i class="fas fa-network-wired"></i>
-                        <span>Connected to national law enforcement</span>
+                        <span data-key="register_feature_connected">Connected to national law enforcement</span>
                     </div>
                     <div class="panel-feature">
                         <i class="fas fa-clock"></i>
-                        <span>24/7 real-time case updates</span>
+                        <span data-key="register_feature_updates">24/7 real-time case updates</span>
                     </div>
                 </div>
             </div>
@@ -627,23 +627,23 @@
                 </div>
 
                 <div class="register-header">
-                    <h1>Create Account</h1>
-                    <p>Join the Find Missing Person system</p>
+                    <h1 data-key="register_create_account">Create Account</h1>
+                    <p data-key="register_join_system">Join the Find Missing Person system</p>
                 </div>
 
                 <!-- Role selector tabs -->
                 <div class="role-tabs" role="tablist">
                     <button type="button" class="role-tab-btn active" id="tab-public" onclick="selectRole('public_user')" role="tab">
                         <i class="fas fa-user"></i>
-                        Public
+                        <span data-key="register_role_public">Public</span>
                     </button>
                     <button type="button" class="role-tab-btn" id="tab-law" onclick="selectRole('law_enforcement')" role="tab">
                         <i class="fas fa-user-shield"></i>
-                        Police
+                        <span data-key="register_role_police">Police</span>
                     </button>
                     <button type="button" class="role-tab-btn" id="tab-org" onclick="selectRole('authorized_org')" role="tab">
                         <i class="fas fa-building"></i>
-                        Organization
+                        <span data-key="register_role_organization">Organization</span>
                     </button>
                 </div>
 
@@ -655,28 +655,28 @@
 
                     <!-- Full Name -->
                     <div class="rform-group">
-                        <label>Full Name</label>
+                        <label data-key="full_name">Full Name</label>
                         <div class="input-with-icon">
                             <i class="fas fa-user"></i>
-                            <input type="text" id="username" placeholder="Your full name" required>
+                            <input type="text" id="username" data-placeholder-key="register_full_name_ph" placeholder="Your full name" required>
                         </div>
                     </div>
 
                     <!-- Email -->
                     <div class="rform-group">
-                        <label>Email Address</label>
+                        <label data-key="register_email_address">Email Address</label>
                         <div class="input-with-icon">
                             <i class="fas fa-envelope"></i>
-                            <input type="email" id="email" placeholder="your@email.com" required>
+                            <input type="email" id="email" data-placeholder-key="email_placeholder" placeholder="your@email.com" required>
                         </div>
                     </div>
 
                     <!-- Password -->
                     <div class="rform-group">
-                        <label>Password</label>
+                        <label data-key="password">Password</label>
                         <div class="input-with-icon" style="position:relative;">
                             <i class="fas fa-key"></i>
-                            <input type="password" id="password" placeholder="Create a strong password" required id="password">
+                            <input type="password" id="password" data-placeholder-key="register_password_ph" placeholder="Create a strong password" required id="password">
                             <button type="button" onclick="togglePassword()" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" id="pwd-toggle">
                                 <i class="fas fa-eye" id="pwd-eye"></i>
                             </button>
@@ -684,24 +684,24 @@
                     </div>
 
                     <div class="rform-group">
-                        <label>Confirm Password</label>
+                        <label data-key="confirm_password">Confirm Password</label>
                         <div class="input-with-icon">
                             <i class="fas fa-check-double"></i>
-                            <input type="password" id="confirmPassword" placeholder="Re-enter your password" required>
+                            <input type="password" id="confirmPassword" data-placeholder-key="register_confirm_password_ph" placeholder="Re-enter your password" required>
                         </div>
                     </div>
 
                     <div class="authority-fields" id="authority-fields">
                         <div class="rform-group">
-                            <label>Station</label>
+                            <label data-key="register_station">Station</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-building-shield"></i>
-                                <input type="text" id="station" placeholder="Police station or organization office">
+                                <input type="text" id="station" data-placeholder-key="register_station_ph" placeholder="Police station or organization office">
                             </div>
                         </div>
 
                         <div class="rform-group">
-                            <label>Date of Birth</label>
+                            <label data-key="register_dob">Date of Birth</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-calendar-days"></i>
                                 <input type="date" id="dateOfBirth">
@@ -709,19 +709,19 @@
                         </div>
 
                         <div class="rform-group">
-                            <label>ID Number / Service Number</label>
+                            <label data-key="register_id_number">ID Number / Service Number</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-id-badge"></i>
-                                <input type="text" id="idNumber" placeholder="Official ID or service number">
+                                <input type="text" id="idNumber" data-placeholder-key="register_id_number_ph" placeholder="Official ID or service number">
                             </div>
                         </div>
 
                         <div class="rform-group">
-                            <label>Profile Photo</label>
+                            <label data-key="register_profile_photo">Profile Photo</label>
                             <div class="id-upload-zone" style="padding:1.1rem;">
                                 <input type="file" id="profilePhoto" accept=".jpg,.jpeg,.png,.webp" onchange="handleProfilePhotoUpload(event)">
-                                <div class="upload-title">Upload officer/organization photo</div>
-                                <div class="upload-sub">JPG, PNG, WEBP · max 5MB</div>
+                                <div class="upload-title" data-key="register_profile_upload_title">Upload officer/organization photo</div>
+                                <div class="upload-sub" data-key="register_profile_upload_sub">JPG, PNG, WEBP · max 5MB</div>
                             </div>
                             <div id="photo-validation-status" class="id-val-status" style="margin-top:8px;"></div>
                         </div>
@@ -729,10 +729,10 @@
 
                     <!-- Organization name (shown for org role) -->
                     <div class="rform-group org-field" id="org-field">
-                        <label>Organization Name</label>
+                        <label data-key="register_org_name">Organization Name</label>
                         <div class="input-with-icon">
                             <i class="fas fa-building"></i>
-                            <input type="text" id="organizationName" placeholder="Full organization name">
+                            <input type="text" id="organizationName" data-placeholder-key="register_org_name_ph" placeholder="Full organization name">
                         </div>
                     </div>
 
@@ -742,12 +742,12 @@
                             <div class="verify-header">
                                 <div class="verify-icon"><i class="fas fa-shield-alt"></i></div>
                                 <div>
-                                    <div class="verify-title">Role Verification Required</div>
-                                    <div class="verify-subtitle">Official ID document required to proceed</div>
+                                    <div class="verify-title" data-key="register_verify_required_title">Role Verification Required</div>
+                                    <div class="verify-subtitle" data-key="register_verify_required_subtitle">Official ID document required to proceed</div>
                                 </div>
                             </div>
 
-                            <div class="verify-hint" id="verify-hint">
+                            <div class="verify-hint" id="verify-hint" data-key="register_verify_hint_law">
                                 <i class="fas fa-info-circle"></i>
                                 Upload your <strong>official Law Enforcement ID card</strong> or police badge document. A system admin will manually verify your document before approval.
                             </div>
@@ -759,8 +759,8 @@
                                 <div class="id-upload-icon">
                                     <i class="fas fa-id-card"></i>
                                 </div>
-                                <div class="upload-title">Click to upload ID document</div>
-                                <div class="upload-sub">JPG, PNG or PDF &nbsp;·&nbsp; Police ID / Authorization Letter</div>
+                                <div class="upload-title" data-key="register_id_upload_title">Click to upload ID document</div>
+                                <div class="upload-sub" data-key="register_id_upload_sub">JPG, PNG or PDF &nbsp;·&nbsp; Police ID / Authorization Letter</div>
                             </div>
 
                             <!-- Verification status -->
@@ -772,12 +772,12 @@
 
                     <button type="submit" id="submit-btn" class="btn-register">
                         <i class="fas fa-user-plus"></i>
-                        <span>Create Account</span>
+                        <span data-key="register_create_account">Create Account</span>
                     </button>
                 </form>
 
                 <div class="login-link">
-                    Already have an account? <a href="/login.html">Sign in</a>
+                    <span data-key="already_account">Already have an account?</span> <a href="/login.html" data-key="register_sign_in">Sign in</a>
                 </div>
             </div>
         </div>
@@ -789,6 +789,12 @@
         let idDocUploaded = false;
         let profilePhotoUploaded = false;
         let currentRole = 'public_user';
+
+        function getLocalText(key, fallback) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const active = (translations && translations[lang]) || translations.en;
+            return active[key] || fallback;
+        }
 
         // Role tab switcher
         function selectRole(role) {
@@ -813,10 +819,10 @@
 
                 if (role === 'law_enforcement') {
                     hint.innerHTML = `<i class="fas fa-info-circle"></i>
-                        Upload your <strong>official Law Enforcement ID card</strong> or police badge / credential document. A system admin will review your file before your account is activated.`;
+                        ${getLocalText('register_verify_hint_law', 'Upload your <strong>official Law Enforcement ID card</strong> or police badge / credential document. A system admin will review your file before your account is activated.')}`;
                 } else {
                     hint.innerHTML = `<i class="fas fa-info-circle"></i>
-                        Upload your organization's <strong>official authorization letter</strong> or government registration certificate. A system admin will review your file before your account is activated.`;
+                        ${getLocalText('register_verify_hint_org', "Upload your organization's <strong>official authorization letter</strong> or government registration certificate. A system admin will review your file before your account is activated.")}`;
                 }
 
                 // Reset upload state
@@ -849,20 +855,20 @@
             const maxSize = 5 * 1024 * 1024;
 
             if (!allowedTypes.includes(file.type)) {
-                setIdStatus(statusDiv, false, '✗ Invalid photo type. Please upload JPG, PNG, or WEBP.');
+                setIdStatus(statusDiv, false, getLocalText('register_invalid_photo_type', '✗ Invalid photo type. Please upload JPG, PNG, or WEBP.'));
                 profilePhotoUploaded = false;
                 document.getElementById('profilePhoto').value = '';
                 return;
             }
 
             if (file.size > maxSize) {
-                setIdStatus(statusDiv, false, '✗ Photo is too large. Maximum allowed size is 5MB.');
+                setIdStatus(statusDiv, false, getLocalText('register_photo_too_large', '✗ Photo is too large. Maximum allowed size is 5MB.'));
                 profilePhotoUploaded = false;
                 document.getElementById('profilePhoto').value = '';
                 return;
             }
 
-            setIdStatus(statusDiv, true, '✓ Profile photo uploaded successfully.');
+            setIdStatus(statusDiv, true, getLocalText('register_profile_photo_uploaded', '✓ Profile photo uploaded successfully.'));
             profilePhotoUploaded = true;
         }
 
@@ -888,20 +894,20 @@
             const maxSize = 5 * 1024 * 1024;
 
             if (!allowedTypes.includes(file.type)) {
-                setIdStatus(statusDiv, false, '✗ Invalid file type. Please upload PDF, JPG, or PNG.');
+                setIdStatus(statusDiv, false, getLocalText('register_invalid_doc_type', '✗ Invalid file type. Please upload PDF, JPG, or PNG.'));
                 idDocUploaded = false;
                 document.getElementById('verificationDoc').value = '';
                 return;
             }
 
             if (file.size > maxSize) {
-                setIdStatus(statusDiv, false, '✗ File is too large. Maximum allowed size is 5MB.');
+                setIdStatus(statusDiv, false, getLocalText('register_doc_too_large', '✗ File is too large. Maximum allowed size is 5MB.'));
                 idDocUploaded = false;
                 document.getElementById('verificationDoc').value = '';
                 return;
             }
 
-            setIdStatus(statusDiv, true, '✓ Document uploaded successfully. Waiting for system admin verification after registration.');
+            setIdStatus(statusDiv, true, getLocalText('register_doc_uploaded', '✓ Document uploaded successfully. Waiting for system admin verification after registration.'));
             idDocUploaded = true;
         }
 
@@ -924,7 +930,7 @@
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             if (password !== confirmPassword) {
-                errEl.textContent = 'Password and Confirm Password do not match.';
+                errEl.textContent = getLocalText('register_password_mismatch', 'Password and Confirm Password do not match.');
                 errEl.style.display = 'block';
                 return;
             }
@@ -932,30 +938,30 @@
             if (needsVerification) {
                 const fileInput = document.getElementById('verificationDoc');
                 if (!fileInput.files[0]) {
-                    errEl.textContent = 'Please upload your official ID document or authorization letter to register as Law Enforcement or Authorized Organization.';
+                    errEl.textContent = getLocalText('register_require_doc', 'Please upload your official ID document or authorization letter to register as Law Enforcement or Authorized Organization.');
                     errEl.style.display = 'block';
                     return;
                 }
                 if (!idDocUploaded) {
-                    errEl.textContent = 'Your document upload is invalid. Please upload a valid PDF, JPG, or PNG file (max 5MB).';
+                    errEl.textContent = getLocalText('register_invalid_doc_upload', 'Your document upload is invalid. Please upload a valid PDF, JPG, or PNG file (max 5MB).');
                     errEl.style.display = 'block';
                     return;
                 }
 
                 if (!document.getElementById('station').value.trim() || !document.getElementById('dateOfBirth').value || !document.getElementById('idNumber').value.trim()) {
-                    errEl.textContent = 'Station, date of birth, and ID/Service number are required for police and organization registration.';
+                    errEl.textContent = getLocalText('register_require_authority_fields', 'Station, date of birth, and ID/Service number are required for police and organization registration.');
                     errEl.style.display = 'block';
                     return;
                 }
 
                 if (!profilePhotoUploaded || !document.getElementById('profilePhoto').files[0]) {
-                    errEl.textContent = 'Please upload a valid officer/organization profile photo.';
+                    errEl.textContent = getLocalText('register_require_profile_photo', 'Please upload a valid officer/organization profile photo.');
                     errEl.style.display = 'block';
                     return;
                 }
             }
 
-            btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Creating account...';
+            btn.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> ${getLocalText('register_creating_account', 'Creating account...')}`;
             btn.disabled = true;
 
             try {
@@ -979,11 +985,11 @@
                 if (!res.ok) throw new Error(data.msg || 'Registration failed');
 
                 if (data.requiresApproval) {
-                    btn.innerHTML = '<i class="fas fa-clock"></i> <span>Pending Admin Approval</span>';
+                    btn.innerHTML = `<i class="fas fa-clock"></i> <span>${getLocalText('register_pending_admin_approval', 'Pending Admin Approval')}</span>`;
                     btn.disabled = true;
                     errEl.style.display = 'block';
                     errEl.style.color = '#16a34a';
-                    errEl.textContent = data.msg || 'Registration submitted and pending system admin approval.';
+                    errEl.textContent = data.msg || getLocalText('register_pending_registration', 'Registration submitted and pending system admin approval.');
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 1800);
@@ -995,7 +1001,7 @@
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.style.display = 'block';
-                btn.innerHTML = '<i class="fas fa-user-plus"></i> <span>Create Account</span>';
+                btn.innerHTML = `<i class="fas fa-user-plus"></i> <span>${getLocalText('register_create_account', 'Create Account')}</span>`;
                 btn.disabled = false;
             }
         });

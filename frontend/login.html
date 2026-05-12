@@ -39,7 +39,7 @@
             <!-- Login header -->
             <div style="text-align:left; margin-bottom:1.75rem;">
                 <h2 data-key="login_title" style="margin-bottom:6px;">Login</h2>
-                <p class="subtitle" style="color:var(--text-secondary); font-size:0.875rem; margin-top:0;">Access the national registry system</p>
+                <p class="subtitle" style="color:var(--text-secondary); font-size:0.875rem; margin-top:0;" data-key="login_subtitle">Access the national registry system</p>
             </div>
 
             <div id="error-msg" style="display:none; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25); color:#f87171; padding:11px 15px; border-radius:8px; font-size:0.875rem; margin-bottom:1rem;"></div>
@@ -49,14 +49,14 @@
                     <label data-key="email">Email</label>
                     <div style="position:relative;">
                         <i class="fas fa-envelope" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
-                        <input type="email" id="email" placeholder="your@email.com" required style="padding-left:38px;">
+                        <input type="email" id="email" data-placeholder-key="email_placeholder" placeholder="your@email.com" required style="padding-left:38px;">
                     </div>
                 </div>
                 <div class="form-group">
                     <label data-key="password">Password</label>
                     <div style="position:relative;">
                         <i class="fas fa-key" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
-                        <input type="password" id="password" placeholder="••••••••" required style="padding-left:38px;">
+                        <input type="password" id="password" data-placeholder-key="password_placeholder" placeholder="••••••••" required style="padding-left:38px;">
                     </div>
                 </div>
                 <div style="text-align:right; margin-bottom:1.25rem; margin-top:-0.5rem;">
@@ -83,7 +83,9 @@
             const btn = document.getElementById('submit-btn');
             const errEl = document.getElementById('error-msg');
             errEl.style.display = 'none';
-            btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Signing in...';
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const t = (translations && translations[lang]) || translations.en;
+            btn.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> ${t.signing_in || 'Signing in...'}`;
             btn.disabled = true;
 
             try {
@@ -96,7 +98,9 @@
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.style.display = 'block';
-                btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> <span data-key="login_title">Login</span>';
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                const t = (translations && translations[lang]) || translations.en;
+                btn.innerHTML = `<i class="fas fa-arrow-right-to-bracket"></i> <span>${t.login_title || 'Login'}</span>`;
                 btn.disabled = false;
             }
         });

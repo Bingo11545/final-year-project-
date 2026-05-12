@@ -556,14 +556,18 @@
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
                 <i class="fas fa-sun"></i>
             </button>
+            <select id="languageSelector" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
             <a href="/user/report.html" class="btn btn-sm" style="background:linear-gradient(135deg,#ef4444,#dc2626); box-shadow:0 4px 14px rgba(239,68,68,0.35);">
-                <i class="fas fa-plus"></i> New Report
+                <i class="fas fa-plus"></i> <span data-key="police_new_report">New Report</span>
             </a>
             <a href="/index.html?view=public" class="pd-btn pd-btn-view" style="text-decoration:none; padding:8px 14px;">
-                <i class="fas fa-globe"></i> Public View
+                <i class="fas fa-globe"></i> <span data-key="police_public_view">Public View</span>
             </a>
             <a href="#" onclick="logout()" class="pd-btn pd-btn-reject" style="text-decoration:none; padding:8px 14px;">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> <span data-key="logout">Logout</span>
             </a>
         </div>
     </nav>
@@ -579,49 +583,49 @@
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <div>
-                    <div class="pd-agency-name" id="sidebar-username">Officer</div>
-                    <div class="pd-agency-role">Law Enforcement</div>
+                    <div class="pd-agency-name" id="sidebar-username" data-key="police_officer">Officer</div>
+                    <div class="pd-agency-role" data-key="police_role_law_enforcement">Law Enforcement</div>
                 </div>
             </div>
 
-            <div class="pd-sidebar-label">Case Management</div>
+            <div class="pd-sidebar-label" data-key="police_case_management">Case Management</div>
 
             <div class="pd-nav-item active" onclick="switchSection('pending')" id="nav-pending">
                 <div class="nav-icon"><i class="fas fa-hourglass-half"></i></div>
-                <span>Pending Approvals</span>
+                <span data-key="police_pending_approvals">Pending Approvals</span>
                 <span class="badge" id="badge-pending">0</span>
             </div>
 
             <div class="pd-nav-item" onclick="switchSection('tips')" id="nav-tips">
                 <div class="nav-icon"><i class="fas fa-lightbulb"></i></div>
-                <span>Tips &amp; Claims</span>
+                <span data-key="police_tips_claims">Tips &amp; Claims</span>
                 <span class="badge" id="badge-tips">0</span>
             </div>
 
             <div class="pd-nav-item" onclick="switchSection('active')" id="nav-active">
                 <div class="nav-icon"><i class="fas fa-search"></i></div>
-                <span>Active Cases</span>
+                <span data-key="police_active_cases">Active Cases</span>
             </div>
 
             <div class="pd-nav-item" onclick="switchSection('found')" id="nav-found">
                 <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
-                <span>Found / Resolved</span>
+                <span data-key="police_found_resolved">Found / Resolved</span>
                 <span class="badge" id="badge-found" style="background:rgba(34,197,94,0.85);">0</span>
             </div>
 
             <div class="pd-sidebar-bottom">
-                <div class="pd-sidebar-label" style="margin-top:0;">Quick Actions</div>
+                <div class="pd-sidebar-label" style="margin-top:0;" data-key="police_quick_actions">Quick Actions</div>
                 <a href="/user/report.html" class="pd-nav-item" style="text-decoration:none;">
                     <div class="nav-icon" style="background:rgba(239,68,68,0.12);color:#f87171;"><i class="fas fa-plus"></i></div>
-                    <span>Add New Case</span>
+                    <span data-key="police_add_new_case">Add New Case</span>
                 </a>
                 <a href="/index.html?view=public" class="pd-nav-item" style="text-decoration:none;">
                     <div class="nav-icon"><i class="fas fa-globe"></i></div>
-                    <span>Public Registry</span>
+                    <span data-key="police_public_registry">Public Registry</span>
                 </a>
                 <a href="#" onclick="logout()" class="pd-nav-item" style="text-decoration:none;">
                     <div class="nav-icon" style="background:rgba(239,68,68,0.10);color:#f87171;"><i class="fas fa-sign-out-alt"></i></div>
-                    <span style="color:#f87171;">Sign Out</span>
+                    <span style="color:#f87171;" data-key="police_sign_out">Sign Out</span>
                 </a>
             </div>
         </aside>
@@ -635,25 +639,25 @@
                     <div class="pd-stat-glow"></div>
                     <div class="pd-stat-icon"><i class="fas fa-hourglass-half"></i></div>
                     <div class="pd-stat-num" id="stat-pending">—</div>
-                    <div class="pd-stat-label">Pending Review</div>
+                    <div class="pd-stat-label" data-key="police_pending_review">Pending Review</div>
                 </div>
                 <div class="pd-stat-card blue">
                     <div class="pd-stat-glow"></div>
                     <div class="pd-stat-icon"><i class="fas fa-search"></i></div>
                     <div class="pd-stat-num" id="stat-active">—</div>
-                    <div class="pd-stat-label">Active Cases</div>
+                    <div class="pd-stat-label" data-key="police_active_cases">Active Cases</div>
                 </div>
                 <div class="pd-stat-card green">
                     <div class="pd-stat-glow"></div>
                     <div class="pd-stat-icon"><i class="fas fa-user-check"></i></div>
                     <div class="pd-stat-num" id="stat-found">—</div>
-                    <div class="pd-stat-label">Persons Found</div>
+                    <div class="pd-stat-label" data-key="police_persons_found">Persons Found</div>
                 </div>
                 <div class="pd-stat-card purple">
                     <div class="pd-stat-glow"></div>
                     <div class="pd-stat-icon"><i class="fas fa-lightbulb"></i></div>
                     <div class="pd-stat-num" id="stat-tips">—</div>
-                    <div class="pd-stat-label">Incoming Tips</div>
+                    <div class="pd-stat-label" data-key="police_incoming_tips">Incoming Tips</div>
                 </div>
             </div>
 
@@ -665,13 +669,13 @@
                             <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,0.3);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
                                 <i class="fas fa-hourglass-half" style="color:white;"></i>
                             </div>
-                            Pending Approvals
+                            <span data-key="police_pending_approvals">Pending Approvals</span>
                         </div>
-                        <div class="pd-page-sub">Cases awaiting your review and authorization before public posting</div>
+                        <div class="pd-page-sub" data-key="police_pending_sub">Cases awaiting your review and authorization before public posting</div>
                     </div>
                 </div>
                 <div id="list-pending">
-                    <div class="loading-indicator"><div class="spinner"></div><span>Loading pending cases...</span></div>
+                    <div class="loading-indicator"><div class="spinner"></div><span data-key="police_loading_pending">Loading pending cases...</span></div>
                 </div>
             </div>
 
@@ -683,13 +687,13 @@
                             <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 4px 14px rgba(139,92,246,0.3);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
                                 <i class="fas fa-lightbulb" style="color:white;"></i>
                             </div>
-                            Tips &amp; Found Claims
+                            <span data-key="police_tips_title">Tips &amp; Found Claims</span>
                         </div>
-                        <div class="pd-page-sub">Public sighting reports and found-person claims submitted by citizens</div>
+                        <div class="pd-page-sub" data-key="police_tips_sub">Public sighting reports and found-person claims submitted by citizens</div>
                     </div>
                 </div>
                 <div id="list-tips">
-                    <div class="loading-indicator"><div class="spinner"></div><span>Loading tips...</span></div>
+                    <div class="loading-indicator"><div class="spinner"></div><span data-key="police_loading_tips">Loading tips...</span></div>
                 </div>
             </div>
 
@@ -701,17 +705,17 @@
                             <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal));box-shadow:0 4px 14px var(--accent-blue-glow);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
                                 <i class="fas fa-search" style="color:white;"></i>
                             </div>
-                            Active Cases
+                            <span data-key="police_active_cases">Active Cases</span>
                         </div>
-                        <div class="pd-page-sub">All approved, publicly visible missing person cases</div>
+                        <div class="pd-page-sub" data-key="police_active_sub">All approved, publicly visible missing person cases</div>
                     </div>
                 </div>
                 <div class="pd-search">
                     <i class="fas fa-search" style="color:var(--text-muted);flex-shrink:0;"></i>
-                    <input type="text" id="search-active" placeholder="Search by name, location, case number..." onkeyup="loadAllInternal()">
+                    <input type="text" id="search-active" data-placeholder-key="police_search_active_ph" placeholder="Search by name, location, case number..." onkeyup="loadAllInternal()">
                 </div>
                 <div id="list-active">
-                    <div class="loading-indicator"><div class="spinner"></div><span>Loading active cases...</span></div>
+                    <div class="loading-indicator"><div class="spinner"></div><span data-key="police_loading_active">Loading active cases...</span></div>
                 </div>
             </div>
 
@@ -723,24 +727,39 @@
                             <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 14px rgba(34,197,94,0.3);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
                                 <i class="fas fa-check-circle" style="color:white;"></i>
                             </div>
-                            Found &amp; Resolved
+                            <span data-key="police_found_resolved">Found &amp; Resolved</span>
                         </div>
-                        <div class="pd-page-sub">Successfully resolved cases — persons located and reunited</div>
+                        <div class="pd-page-sub" data-key="police_found_sub">Successfully resolved cases - persons located and reunited</div>
                     </div>
                 </div>
                 <div id="list-found">
-                    <div class="loading-indicator"><div class="spinner"></div><span>Loading resolved cases...</span></div>
+                    <div class="loading-indicator"><div class="spinner"></div><span data-key="police_loading_resolved">Loading resolved cases...</span></div>
                 </div>
             </div>
 
         </main>
     </div>
 
+    <script src="translations.js"></script>
     <script src="app.js"></script>
     <script>
+        function policeText(key, fallback) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const active = (translations && translations[lang]) || translations.en;
+            return active[key] || fallback;
+        }
+
         checkAuth();
         if (getUserRole() !== 'law_enforcement' && getUserRole() !== 'admin') {
             window.location.href = '/user/dashboard.html';
+        }
+
+        const selector = document.getElementById('languageSelector');
+        if (selector) {
+            const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+            selector.value = savedLang;
+            selector.onchange = (e) => changeLanguage(e.target.value);
+            changeLanguage(savedLang);
         }
 
         // Show username in sidebar
@@ -778,8 +797,8 @@
                 if (count === 0) {
                     container.innerHTML = `<div class="pd-empty">
                         <i class="fas fa-inbox"></i>
-                        <h3>No tips yet</h3>
-                        <p>No tips or found claims have been received yet.</p>
+                        <h3>${policeText('police_no_tips_title', 'No tips yet')}</h3>
+                        <p>${policeText('police_no_tips_desc', 'No tips or found claims have been received yet.')}</p>
                     </div>`;
                     return;
                 }
@@ -788,16 +807,16 @@
                     <div class="pd-case-card tip-c">
                         <div class="tip-icon">💡</div>
                         <div class="pd-case-body">
-                            <div class="pd-case-name">Tip regarding: ${t.person ? t.person.fullName : 'Unknown Case'}</div>
+                            <div class="pd-case-name">${policeText('police_tip_regarding', 'Tip regarding')}: ${t.person ? t.person.fullName : policeText('police_unknown_case', 'Unknown Case')}</div>
                             <div class="pd-case-meta">
                                 <span><i class="fas fa-comment-dots"></i>${t.message}</span>
                             </div>
                             <div class="pd-case-meta">
-                                <span><i class="fas fa-phone"></i>${t.contactInfo || 'Anonymous'}</span>
+                                <span><i class="fas fa-phone"></i>${t.contactInfo || policeText('police_anonymous', 'Anonymous')}</span>
                                 <span><i class="fas fa-calendar"></i>${new Date(t.createdAt).toLocaleDateString()}</span>
                                 <span>
                                     ${t.status === 'Verified - Match'
-                                        ? `<span class="verified-badge"><i class="fas fa-check"></i>VERIFIED</span>`
+                                        ? `<span class="verified-badge"><i class="fas fa-check"></i>${policeText('police_verified', 'VERIFIED')}</span>`
                                         : `<span style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);padding:2px 8px;border-radius:50px;font-size:0.7rem;font-weight:700;">${t.status}</span>`
                                     }
                                 </span>
@@ -806,39 +825,39 @@
                         <div class="pd-case-actions">
                             ${t.status !== 'Verified - Match'
                                 ? `<button class="pd-btn pd-btn-approve" onclick="verifyTip('${t._id}','${t.person ? t.person._id : ''}')">
-                                       <i class="fas fa-check"></i> Verify Found
+                                       <i class="fas fa-check"></i> ${policeText('police_verify_found', 'Verify Found')}
                                    </button>`
                                 : ''
                             }
                             <button class="pd-btn pd-btn-info" onclick="updateTipStatus('${t._id}','Reviewed')">
-                                <i class="fas fa-eye"></i> Mark Reviewed
+                                <i class="fas fa-eye"></i> ${policeText('police_mark_reviewed', 'Mark Reviewed')}
                             </button>
                             <a href="/user/case.html?id=${t.person ? t.person._id : ''}" class="pd-btn pd-btn-view">
-                                <i class="fas fa-external-link-alt"></i> View Case
+                                <i class="fas fa-external-link-alt"></i> ${policeText('police_view_case', 'View Case')}
                             </a>
                         </div>
                     </div>
                 `).join('');
             } catch (e) {
-                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading</h3><p>${e.message}</p></div>`;
+                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>${policeText('police_error_loading', 'Error Loading')}</h3><p>${e.message}</p></div>`;
             }
         }
 
         async function verifyTip(tipId, personId) {
-            if (!confirm('Are you sure this tip confirms the person is found? This will update the case status to FOUND.')) return;
+            if (!confirm(policeText('police_confirm_verify_tip', 'Are you sure this tip confirms the person is found? This will update the case status to FOUND.'))) return;
             try {
                 await apiCall(`/tips/${tipId}`, 'PUT', { status: 'Verified - Match' });
                 if (personId) await apiCall(`/people/${personId}/status`, 'PUT', { status: 'Found' });
                 loadTips();
-                alert('Case Closed. Person marked as Found based on this tip.');
-            } catch (e) { alert(e.message); }
+                showToast(policeText('police_case_closed_tip', 'Case closed. Person marked as Found based on this tip.'), 'success');
+            } catch (e) { showToast(e.message, 'error'); }
         }
 
         async function updateTipStatus(id, newStatus) {
             try {
                 await apiCall(`/tips/${id}`, 'PUT', { status: newStatus });
                 loadTips();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showToast(e.message, 'error'); }
         }
 
         // ── PENDING ──
@@ -854,8 +873,8 @@
                 if (count === 0) {
                     container.innerHTML = `<div class="pd-empty">
                         <i class="fas fa-check-double"></i>
-                        <h3>All clear!</h3>
-                        <p>No cases are awaiting approval. All submissions have been reviewed.</p>
+                        <h3>${policeText('police_all_clear_title', 'All clear!')}</h3>
+                        <p>${policeText('police_all_clear_desc', 'No cases are awaiting approval. All submissions have been reviewed.')}</p>
                     </div>`;
                     return;
                 }
@@ -864,26 +883,26 @@
                     <div class="pd-case-card pending">
                         <img class="pd-case-img" src="${p.images && p.images[0] ? IMG_URL_BASE + p.images[0].url : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo'}" alt="${p.fullName}">
                         <div class="pd-case-body">
-                            <div class="pd-case-name">${p.fullName} <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400;">· Age ${p.age || 'N/A'}</span></div>
+                            <div class="pd-case-name">${p.fullName} <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400;">· ${policeText('age_label', 'Age')} ${p.age || policeText('not_available', 'N/A')}</span></div>
                             <div class="pd-case-meta">
-                                <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || 'Unknown location'}</span>
+                                <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || policeText('police_unknown_location', 'Unknown location')}</span>
                                 <span><i class="fas fa-calendar"></i>${new Date(p.createdAt).toLocaleDateString()}</span>
                                 ${p.policeCaseNumber ? `<span><i class="fas fa-hashtag"></i>${p.policeCaseNumber}</span>` : ''}
                             </div>
-                            <div class="pd-case-desc">${p.description || 'No additional description provided.'}</div>
+                            <div class="pd-case-desc">${p.description || policeText('police_no_additional_desc', 'No additional description provided.')}</div>
                         </div>
                         <div class="pd-case-actions">
                             <button class="pd-btn pd-btn-approve" onclick="approveCase('${p._id}')">
-                                <i class="fas fa-check"></i> Approve
+                                <i class="fas fa-check"></i> ${policeText('police_approve', 'Approve')}
                             </button>
                             <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
-                                <i class="fas fa-eye"></i> View Full
+                                <i class="fas fa-eye"></i> ${policeText('police_view_full', 'View Full')}
                             </a>
                         </div>
                     </div>
                 `).join('');
             } catch (e) {
-                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading</h3><p>${e.message}</p></div>`;
+                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>${policeText('police_error_loading', 'Error Loading')}</h3><p>${e.message}</p></div>`;
             }
         }
 
@@ -905,7 +924,7 @@
                 const activeContainer = document.getElementById('list-active');
                 const filtered = activeCases.filter(p => p.fullName.toLowerCase().includes(search.toLowerCase()));
                 if (filtered.length === 0) {
-                    activeContainer.innerHTML = `<div class="pd-empty"><i class="fas fa-search"></i><h3>No results</h3><p>No active cases match your search.</p></div>`;
+                    activeContainer.innerHTML = `<div class="pd-empty"><i class="fas fa-search"></i><h3>${policeText('police_no_results_title', 'No results')}</h3><p>${policeText('police_no_results_desc', 'No active cases match your search.')}</p></div>`;
                 } else {
                     activeContainer.innerHTML = filtered.map(p => `
                         <div class="pd-case-card active-c">
@@ -913,20 +932,20 @@
                             <div class="pd-case-body">
                                 <div class="pd-case-name">${p.fullName}
                                     <span class="verified-badge" style="background:rgba(59,130,246,0.1);color:var(--accent-teal);border-color:rgba(59,130,246,0.2);margin-left:8px;font-size:0.65rem;">
-                                        <i class="fas fa-check"></i> APPROVED
+                                        <i class="fas fa-check"></i> ${policeText('police_approved_badge', 'APPROVED')}
                                     </span>
                                 </div>
                                 <div class="pd-case-meta">
-                                    <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || 'Unknown'}</span>
-                                    ${p.policeCaseNumber ? `<span><i class="fas fa-hashtag"></i>Case ${p.policeCaseNumber}</span>` : ''}
+                                    <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || policeText('police_unknown', 'Unknown')}</span>
+                                    ${p.policeCaseNumber ? `<span><i class="fas fa-hashtag"></i>${policeText('police_case_prefix', 'Case')} ${p.policeCaseNumber}</span>` : ''}
                                 </div>
                             </div>
                             <div class="pd-case-actions">
                                 <button class="pd-btn pd-btn-find" onclick="updateStatus('${p._id}','Found')">
-                                    <i class="fas fa-user-check"></i> Mark Found
+                                    <i class="fas fa-user-check"></i> ${policeText('police_mark_found', 'Mark Found')}
                                 </button>
                                 <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
-                                    <i class="fas fa-external-link-alt"></i> View/Edit
+                                    <i class="fas fa-external-link-alt"></i> ${policeText('police_view_edit', 'View/Edit')}
                                 </a>
                             </div>
                         </div>
@@ -936,7 +955,7 @@
                 // Found
                 const foundContainer = document.getElementById('list-found');
                 if (foundCases.length === 0) {
-                    foundContainer.innerHTML = `<div class="pd-empty"><i class="fas fa-user-check"></i><h3>No resolved cases yet</h3><p>Cases marked as found or resolved will appear here.</p></div>`;
+                    foundContainer.innerHTML = `<div class="pd-empty"><i class="fas fa-user-check"></i><h3>${policeText('police_no_resolved_title', 'No resolved cases yet')}</h3><p>${policeText('police_no_resolved_desc', 'Cases marked as found or resolved will appear here.')}</p></div>`;
                 } else {
                     foundContainer.innerHTML = foundCases.map(p => `
                         <div class="pd-case-card found-c">
@@ -945,41 +964,41 @@
                                 <div class="pd-case-name">${p.fullName}</div>
                                 <div class="pd-case-meta">
                                     <span class="verified-badge"><i class="fas fa-check-circle"></i>${p.status}</span>
-                                    <span><i class="fas fa-calendar-check"></i>Resolved ${new Date(p.updatedAt || Date.now()).toLocaleDateString()}</span>
+                                    <span><i class="fas fa-calendar-check"></i>${policeText('police_resolved_on', 'Resolved')} ${new Date(p.updatedAt || Date.now()).toLocaleDateString()}</span>
                                 </div>
                             </div>
                             <div class="pd-case-actions">
                                 <button class="pd-btn" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);" onclick="updateStatus('${p._id}','Missing')">
-                                    <i class="fas fa-undo"></i> Revert
+                                    <i class="fas fa-undo"></i> ${policeText('police_revert', 'Revert')}
                                 </button>
                                 <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
-                                    <i class="fas fa-eye"></i> View
+                                    <i class="fas fa-eye"></i> ${policeText('police_view', 'View')}
                                 </a>
                             </div>
                         </div>
                     `).join('');
                 }
             } catch (e) {
-                console.error(e);
+                showToast(e.message || policeText('police_loading_failed', 'Failed to load dashboard data.'), 'error');
             }
         }
 
         async function approveCase(id) {
-            if (!confirm('Approve this case for public posting?')) return;
+            if (!confirm(policeText('police_confirm_approve_case', 'Approve this case for public posting?'))) return;
             try {
                 await apiCall(`/people/${id}/approve`, 'PUT');
                 loadPending();
-                alert('Case Approved and published to the national registry.');
-            } catch (e) { alert(e.message); }
+                showToast(policeText('police_case_approved_success', 'Case approved and published to the national registry.'), 'success');
+            } catch (e) { showToast(e.message, 'error'); }
         }
 
         async function updateStatus(id, newStatus) {
-            if (!confirm(`Change status to ${newStatus}?`)) return;
+            if (!confirm(`${policeText('police_confirm_change_status', 'Change status to')} ${newStatus}?`)) return;
             try {
                 await apiCall(`/people/${id}/status`, 'PUT', { status: newStatus });
                 loadAllInternal();
-                alert(`Status updated to ${newStatus}`);
-            } catch (e) { alert(e.message); }
+                showToast(`${policeText('police_status_updated', 'Status updated to')} ${newStatus}`, 'success');
+            } catch (e) { showToast(e.message, 'error'); }
         }
 
         // Init

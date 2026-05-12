@@ -79,16 +79,16 @@
 
     <div class="container" style="max-width: 1000px; background: white; margin-top: 20px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
         <div id="loading" style="padding:50px; text-align:center;">
-            <i class="fas fa-spinner fa-spin fa-3x"></i><br>Loading Case File...
+            <i class="fas fa-spinner fa-spin fa-3x"></i><br><span data-key="case_loading">Loading case file...</span>
         </div>
 
         <!-- Police Admin Panel -->
         <div id="admin-edit-panel" style="display:none; background:#fff3cd; padding:15px; border:1px solid #ffeeba; margin-bottom:20px; border-radius:8px;">
-            <h3 style="color:#856404; margin-top:0;"><i class="fas fa-user-shield"></i> Police Administration</h3>
-            <p style="font-size:0.9rem; color:#856404;">You can edit official case details here before or after approval.</p>
+            <h3 style="color:#856404; margin-top:0;"><i class="fas fa-user-shield"></i> <span data-key="case_police_admin">Police Administration</span></h3>
+            <p style="font-size:0.9rem; color:#856404;" data-key="case_police_admin_desc">You can edit official case details here before or after approval.</p>
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
                 <div>
-                    <label style="display:block; font-weight:bold;">Classification</label>
+                    <label style="display:block; font-weight:bold;" data-key="classification_label">Classification</label>
                     <select id="edit-classification" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                          <option value="Missing">Missing</option>
                          <option value="Endangered">Endangered</option>
@@ -102,16 +102,16 @@
                     </select>
                 </div>
                 <div>
-                    <label style="display:block; font-weight:bold;">Police District</label>
+                    <label style="display:block; font-weight:bold;" data-key="police_district_label">Police District</label>
                     <input type="text" id="edit-district" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
                 <div>
-                     <label style="display:block; font-weight:bold;">Case File Number</label>
+                     <label style="display:block; font-weight:bold;" data-key="case_number_label">Case File Number</label>
                     <input type="text" id="edit-cfn" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
             </div>
             <div style="margin-top:15px; text-align:right;">
-                <button onclick="savePoliceData()" class="btn" style="background:#0645B1; color:white; border:none; padding:8px 20px; border-radius:4px;">Save Official Records</button>
+                <button onclick="savePoliceData()" class="btn" style="background:#0645B1; color:white; border:none; padding:8px 20px; border-radius:4px;" data-key="case_save_official_records">Save Official Records</button>
             </div>
         </div>
 
@@ -208,9 +208,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         const personId = urlParams.get('id');
 
+        function caseText(key, fallback) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const active = (translations && translations[lang]) || translations.en;
+            return active[key] || fallback;
+        }
+
         async function loadCase() {
             if (!personId) {
-                alert('No case ID provided');
+                showToast(caseText('case_no_id', 'No case ID provided.'), 'error');
                 window.location.href = '/index.html';
                 return;
             }
@@ -222,7 +228,7 @@
                     headers: { 'Content-Type': 'application/json' }
                 });
                 
-                if(!res.ok) throw new Error('Case not found');
+                if(!res.ok) throw new Error(caseText('case_not_found', 'Case not found'));
                 
                 const p = await res.json();
 
@@ -289,7 +295,7 @@
                 }
 
             } catch (err) {
-                document.getElementById('loading').innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+                document.getElementById('loading').innerHTML = `<p style="color:red">${caseText('case_error_prefix', 'Error')}: ${err.message}</p>`;
             }
         }
         
@@ -306,10 +312,10 @@
                 // My backend PUT updates specific fields if they exist in body.
                 
                 await apiCall(`/people/${personId}`, 'PUT', updateData);
-                alert('Official Records Updated Successfully');
+                showToast(caseText('case_records_updated', 'Official records updated successfully.'), 'success');
                 loadCase(); // Reload to show changes
             } catch(e) {
-                alert('Update Failed: ' + e.message);
+                showToast(`${caseText('case_update_failed', 'Update failed')}: ${e.message}`, 'error');
             }
         }
 
@@ -317,12 +323,12 @@
             const msg = document.getElementById('tipMessage').value;
             const contact = document.getElementById('tipContact') ? document.getElementById('tipContact').value : '';
             
-            if(!msg) { alert('Please enter information before submitting.'); return; }
+            if(!msg) { showToast(caseText('case_tip_empty', 'Please enter information before submitting.'), 'warning'); return; }
             
             try {
                 const btn = document.querySelector('.tip-box button');
                 const origText = btn.innerText;
-                btn.innerText = "Sending...";
+                btn.innerText = caseText('case_tip_sending', 'Sending...');
                 btn.disabled = true;
 
                 await apiCall('/tips', 'POST', { 
@@ -332,12 +338,12 @@
                     // reporterName etc could be added if we had input fields
                 });
                 
-                alert('Tip submitted securely to the National Registry. The police will review your information shortly.');
+                showToast(caseText('case_tip_sent', 'Tip submitted securely to the National Registry. The police will review your information shortly.'), 'success');
                 document.getElementById('tipMessage').value = '';
                 btn.innerText = origText;
                 btn.disabled = false;
             } catch (err) {
-                alert('Error submitting tip: ' + err.message);
+                showToast(`${caseText('case_tip_error', 'Error submitting tip')}: ${err.message}`, 'error');
                 document.querySelector('.tip-box button').disabled = false;
             }
         }
