@@ -7,57 +7,200 @@
     <title>Case Profile - EFP Missing Persons</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="theme.js"></script>
     <style>
+        .case-page-shell {
+            max-width: 1060px;
+            margin-top: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .case-surface {
+            overflow: hidden;
+            padding: 0;
+        }
+
         .profile-header {
-            background: #fff;
+            background: linear-gradient(165deg, rgba(19,28,53,0.92), rgba(15,22,41,0.92));
             padding: 30px;
-            border-bottom: 3px solid var(--primary-color);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             gap: 30px;
             flex-wrap: wrap;
         }
+
+        [data-theme="light"] .profile-header {
+            background: linear-gradient(165deg, #ffffff, #f5f9ff);
+            border-bottom-color: rgba(0,0,0,0.08);
+        }
+
         .profile-img {
             width: 300px;
             height: 300px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
         }
+
         .profile-info {
             flex: 1;
         }
+
         .profile-info h1 {
-            color: var(--primary-color);
+            color: var(--text-primary);
             margin-top: 0;
-            font-size: 2.5rem;
+            font-family: var(--font-heading);
+            font-size: clamp(1.85rem, 4vw, 2.4rem);
+            letter-spacing: -0.02em;
         }
+
         .data-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
+
         .data-item {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-subtle);
+            padding: 12px;
+            border-radius: 10px;
         }
+
+        [data-theme="light"] .data-item {
+            background: #f8fafc;
+            border-color: rgba(0,0,0,0.08);
+        }
+
         .data-label {
-            font-weight: bold;
-            color: #666;
-            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
             display: block;
         }
+
         .data-value {
-            font-size: 1.1rem;
-            color: #333;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-top: 2px;
         }
+
+        .case-content {
+            padding: 30px;
+        }
+
+        .case-content p {
+            color: var(--text-secondary);
+        }
+
+        .case-section-title {
+            font-family: var(--font-heading);
+            color: var(--text-primary);
+            margin-bottom: 0.6rem;
+        }
+
+        .case-sub-heading {
+            margin-top: 30px;
+        }
+
         .tip-box {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
+            background: linear-gradient(165deg, rgba(59,130,246,0.1), rgba(14,165,233,0.08));
+            border: 1px solid rgba(59,130,246,0.25);
             padding: 20px;
             margin-top: 30px;
-            border-radius: 5px;
+            border-radius: 14px;
+        }
+
+        [data-theme="light"] .tip-box {
+            background: linear-gradient(165deg, rgba(29,78,216,0.07), rgba(3,105,161,0.06));
+            border-color: rgba(29,78,216,0.2);
+        }
+
+        .tip-note {
+            font-size: 0.82rem;
+            margin-top: 10px;
+            color: var(--text-secondary);
+        }
+
+        .tip-box-focus {
+            border: 2px solid var(--accent-green);
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.18);
+        }
+
+        .admin-panel {
+            display: none;
+            margin: 18px;
+            padding: 18px;
+            border-radius: 12px;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.25);
+        }
+
+        [data-theme="light"] .admin-panel {
+            background: #fff7e6;
+            border-color: rgba(217,119,6,0.25);
+        }
+
+        .admin-panel-title,
+        .admin-panel-subtitle {
+            color: #fbbf24;
+        }
+
+        [data-theme="light"] .admin-panel-title,
+        [data-theme="light"] .admin-panel-subtitle {
+            color: #92400e;
+        }
+
+        .admin-panel-title {
+            margin-top: 0;
+        }
+
+        .admin-panel-subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .admin-save {
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        .case-loading,
+        .case-error {
+            padding: 50px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .case-error {
+            color: #f87171;
+        }
+
+        @media (max-width: 860px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .case-content,
+            .profile-header {
+                padding: 20px;
+            }
+
+            .profile-img {
+                width: 100%;
+                height: auto;
+                max-height: 360px;
+            }
         }
     </style>
 </head>
@@ -67,29 +210,29 @@
             <i class="fas fa-shield-alt"></i> <span data-key="subtitle">EFP Missing Persons</span>
         </div>
         <div style="display:flex; align-items:center;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme" style="margin-right:10px;"><i class="fas fa-sun"></i></button>
              <select id="languageSelector" style="margin-right: 1rem; padding: 0.5rem; border-radius: 5px;">
                 <option value="en">English</option>
                 <option value="am">Amharic</option>
-                <option value="om">Oromo</option>
-                <option value="ti">Tigrinya</option>
              </select>
-            <a href="/index.html" class="btn" style="background:transparent; border:1px solid #fff;" data-key="btn_back_home">Back to Home</a>
+            <a href="/index.html" class="btn btn-secondary btn-sm" data-key="btn_back_home">Back to Home</a>
         </div>
     </nav>
 
-    <div class="container" style="max-width: 1000px; background: white; margin-top: 20px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <div id="loading" style="padding:50px; text-align:center;">
+    <div class="container case-page-shell">
+        <div class="case-surface surface-card-soft">
+        <div id="loading" class="case-loading">
             <i class="fas fa-spinner fa-spin fa-3x"></i><br><span data-key="case_loading">Loading case file...</span>
         </div>
 
         <!-- Police Admin Panel -->
-        <div id="admin-edit-panel" style="display:none; background:#fff3cd; padding:15px; border:1px solid #ffeeba; margin-bottom:20px; border-radius:8px;">
-            <h3 style="color:#856404; margin-top:0;"><i class="fas fa-user-shield"></i> <span data-key="case_police_admin">Police Administration</span></h3>
-            <p style="font-size:0.9rem; color:#856404;" data-key="case_police_admin_desc">You can edit official case details here before or after approval.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+        <div id="admin-edit-panel" class="admin-panel">
+            <h3 class="admin-panel-title"><i class="fas fa-user-shield"></i> <span data-key="case_police_admin">Police Administration</span></h3>
+            <p class="admin-panel-subtitle" data-key="case_police_admin_desc">You can edit official case details here before or after approval.</p>
+            <div class="admin-grid">
                 <div>
-                    <label style="display:block; font-weight:bold;" data-key="classification_label">Classification</label>
-                    <select id="edit-classification" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <label data-key="classification_label">Classification</label>
+                    <select id="edit-classification">
                          <option value="Missing">Missing</option>
                          <option value="Endangered">Endangered</option>
                          <option value="Involuntary">Involuntary</option>
@@ -102,16 +245,16 @@
                     </select>
                 </div>
                 <div>
-                    <label style="display:block; font-weight:bold;" data-key="police_district_label">Police District</label>
-                    <input type="text" id="edit-district" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <label data-key="police_district_label">Police District</label>
+                    <input type="text" id="edit-district">
                 </div>
                 <div>
-                     <label style="display:block; font-weight:bold;" data-key="case_number_label">Case File Number</label>
-                    <input type="text" id="edit-cfn" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                     <label data-key="case_number_label">Case File Number</label>
+                    <input type="text" id="edit-cfn">
                 </div>
             </div>
-            <div style="margin-top:15px; text-align:right;">
-                <button onclick="savePoliceData()" class="btn" style="background:#0645B1; color:white; border:none; padding:8px 20px; border-radius:4px;" data-key="case_save_official_records">Save Official Records</button>
+            <div class="admin-save">
+                <button onclick="savePoliceData()" class="btn" data-key="case_save_official_records">Save Official Records</button>
             </div>
         </div>
 
@@ -124,7 +267,7 @@
                     <div class="data-grid">
                         <div class="data-item">
                             <span class="data-label" data-key="classification_label">Classification</span>
-                            <span class="data-value" id="p-classification" style="color:var(--danger-color); font-weight:bold;"></span>
+                            <span class="data-value" id="p-classification"></span>
                         </div>
                         <div class="data-item">
                             <span class="data-label" data-key="age_label">Age</span>
@@ -174,12 +317,12 @@
                 </div>
             </div>
 
-            <div style="padding: 30px;">
-                <h3 data-key="physical_desc_title">Physical Description</h3>
+            <div class="case-content">
+                <h3 class="case-section-title" data-key="physical_desc_title">Physical Description</h3>
                 <p><strong data-key="marks_label">Distinguishing Marks:</strong> <span id="p-marks">None noted.</span></p>
-                <p id="p-desc" style="line-height: 1.6;"></p>
+                <p id="p-desc"></p>
 
-                <h3 style="margin-top: 30px;" data-key="additional_info_title">Additional Information</h3>
+                <h3 class="case-section-title case-sub-heading" data-key="additional_info_title">Additional Information</h3>
                 <div class="data-grid">
                     <div class="data-item">
                         <span class="data-label" data-key="vehicle_label">Vehicle Info</span>
@@ -194,11 +337,13 @@
                 <div class="tip-box">
                     <h3><i class="fas fa-bullhorn"></i> <span data-key="tip_title">Send a Tip or Provide Update</span></h3>
                     <p data-key="tip_desc">Do you have information about this person? Submitting a tip effectively sends your information to the investigating agency.</p>
-                    <textarea id="tipMessage" rows="4" style="width:100%; padding:10px; border:1px solid #ccc; margin-bottom:10px;" data-placeholder-key="tip_placeholder" placeholder="Describe what you saw, when, and where..."></textarea>
+                    <textarea id="tipMessage" rows="4" style="margin-bottom:10px;" data-placeholder-key="tip_placeholder" placeholder="Describe what you saw, when, and where..."></textarea>
+                    <input type="text" id="tipContact" placeholder="Your contact info (optional)" style="margin-bottom:10px;">
                     <button class="btn btn-danger" onclick="submitTip()" data-key="tip_submit">Submit Tip to Police</button>
-                    <p style="font-size:0.8rem; margin-top:10px; color:#666;" data-key="tip_emergency">* In emergencies, contact your local emergency services immediately.</p>
+                    <p class="tip-note" data-key="tip_emergency">* In emergencies, contact your local emergency services immediately.</p>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 
@@ -288,14 +433,13 @@
                     setTimeout(() => {
                         const tipBox = document.querySelector('.tip-box');
                         tipBox.scrollIntoView({ behavior: 'smooth' });
-                        tipBox.style.border = "3px solid #28a745";
-                        tipBox.style.backgroundColor = "#e8f5e9";
+                        tipBox.classList.add('tip-box-focus');
                         document.getElementById('tipMessage').focus();
                     }, 500);
                 }
 
             } catch (err) {
-                document.getElementById('loading').innerHTML = `<p style="color:red">${caseText('case_error_prefix', 'Error')}: ${err.message}</p>`;
+                document.getElementById('loading').innerHTML = `<p class="case-error">${caseText('case_error_prefix', 'Error')}: ${err.message}</p>`;
             }
         }
         

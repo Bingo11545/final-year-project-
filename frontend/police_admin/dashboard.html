@@ -540,6 +540,50 @@
             align-items: center; justify-content: center;
             font-size: 1.5rem;
         }
+
+        .pd-link-inline { text-decoration: none; padding: 8px 14px; }
+        .badge-green { background: rgba(34,197,94,0.85) !important; }
+        .pd-sidebar-label-top { margin-top: 0; }
+        .nav-icon-danger { background: rgba(239,68,68,0.12) !important; color: #f87171 !important; }
+        .nav-icon-danger-soft { background: rgba(239,68,68,0.10) !important; color: #f87171 !important; }
+        .pd-text-danger { color: #f87171; }
+        .pd-title-icon-orange,
+        .pd-title-icon-purple,
+        .pd-title-icon-blue,
+        .pd-title-icon-green {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+        }
+        .pd-title-icon-orange { background: linear-gradient(135deg,#f59e0b,#d97706); box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
+        .pd-title-icon-purple { background: linear-gradient(135deg,#8b5cf6,#7c3aed); box-shadow: 0 4px 14px rgba(139,92,246,0.3); }
+        .pd-title-icon-blue { background: linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); box-shadow: 0 4px 14px var(--accent-blue-glow); }
+        .pd-title-icon-green { background: linear-gradient(135deg,#22c55e,#16a34a); box-shadow: 0 4px 14px rgba(34,197,94,0.3); }
+        .pd-title-icon i { color: #fff; }
+        .pd-search-icon { color: var(--text-muted); flex-shrink: 0; }
+        .tip-status-pill {
+            background: rgba(245,158,11,0.12);
+            color: #f59e0b;
+            border: 1px solid rgba(245,158,11,0.2);
+            padding: 2px 8px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .pd-case-age { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; }
+        .verified-badge-approved {
+            background: rgba(59,130,246,0.1);
+            color: var(--accent-teal);
+            border-color: rgba(59,130,246,0.2);
+            margin-left: 8px;
+            font-size: 0.65rem;
+        }
+        .pd-btn-revert {
+            background: rgba(245,158,11,0.12);
+            color: #f59e0b;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
     </style>
 </head>
 <body class="pd-wrapper">
@@ -547,12 +591,12 @@
     <!-- NAV -->
     <nav>
         <div class="logo">
-            <div class="logo-icon"><i class="fas fa-shield-alt" style="color:white; font-size:0.9rem;"></i></div>
-            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+            <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+            <a href="index.html">
                 Find Missing <span class="highlight">Person</span>
             </a>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div class="nav-tools">
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
                 <i class="fas fa-sun"></i>
             </button>
@@ -560,13 +604,13 @@
                 <option value="en">🌐 English</option>
                 <option value="am">🇪🇹 አማርኛ</option>
             </select>
-            <a href="/user/report.html" class="btn btn-sm" style="background:linear-gradient(135deg,#ef4444,#dc2626); box-shadow:0 4px 14px rgba(239,68,68,0.35);">
+            <a href="/user/report.html" class="btn btn-danger btn-sm">
                 <i class="fas fa-plus"></i> <span data-key="police_new_report">New Report</span>
             </a>
-            <a href="/index.html?view=public" class="pd-btn pd-btn-view" style="text-decoration:none; padding:8px 14px;">
+            <a href="/index.html?view=public" class="pd-btn pd-btn-view pd-link-inline">
                 <i class="fas fa-globe"></i> <span data-key="police_public_view">Public View</span>
             </a>
-            <a href="#" onclick="logout()" class="pd-btn pd-btn-reject" style="text-decoration:none; padding:8px 14px;">
+            <a href="#" onclick="logout()" class="pd-btn pd-btn-reject pd-link-inline">
                 <i class="fas fa-sign-out-alt"></i> <span data-key="logout">Logout</span>
             </a>
         </div>
@@ -610,22 +654,22 @@
             <div class="pd-nav-item" onclick="switchSection('found')" id="nav-found">
                 <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
                 <span data-key="police_found_resolved">Found / Resolved</span>
-                <span class="badge" id="badge-found" style="background:rgba(34,197,94,0.85);">0</span>
+                <span class="badge badge-green" id="badge-found">0</span>
             </div>
 
             <div class="pd-sidebar-bottom">
-                <div class="pd-sidebar-label" style="margin-top:0;" data-key="police_quick_actions">Quick Actions</div>
-                <a href="/user/report.html" class="pd-nav-item" style="text-decoration:none;">
-                    <div class="nav-icon" style="background:rgba(239,68,68,0.12);color:#f87171;"><i class="fas fa-plus"></i></div>
+                <div class="pd-sidebar-label pd-sidebar-label-top" data-key="police_quick_actions">Quick Actions</div>
+                <a href="/user/report.html" class="pd-nav-item">
+                    <div class="nav-icon nav-icon-danger"><i class="fas fa-plus"></i></div>
                     <span data-key="police_add_new_case">Add New Case</span>
                 </a>
-                <a href="/index.html?view=public" class="pd-nav-item" style="text-decoration:none;">
+                <a href="/index.html?view=public" class="pd-nav-item">
                     <div class="nav-icon"><i class="fas fa-globe"></i></div>
                     <span data-key="police_public_registry">Public Registry</span>
                 </a>
-                <a href="#" onclick="logout()" class="pd-nav-item" style="text-decoration:none;">
-                    <div class="nav-icon" style="background:rgba(239,68,68,0.10);color:#f87171;"><i class="fas fa-sign-out-alt"></i></div>
-                    <span style="color:#f87171;" data-key="police_sign_out">Sign Out</span>
+                <a href="#" onclick="logout()" class="pd-nav-item">
+                    <div class="nav-icon nav-icon-danger-soft"><i class="fas fa-sign-out-alt"></i></div>
+                    <span class="pd-text-danger" data-key="police_sign_out">Sign Out</span>
                 </a>
             </div>
         </aside>
@@ -666,8 +710,8 @@
                 <div class="pd-top-bar">
                     <div>
                         <div class="pd-page-title">
-                            <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,0.3);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
-                                <i class="fas fa-hourglass-half" style="color:white;"></i>
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-orange">
+                                <i class="fas fa-hourglass-half"></i>
                             </div>
                             <span data-key="police_pending_approvals">Pending Approvals</span>
                         </div>
@@ -684,8 +728,8 @@
                 <div class="pd-top-bar">
                     <div>
                         <div class="pd-page-title">
-                            <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 4px 14px rgba(139,92,246,0.3);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
-                                <i class="fas fa-lightbulb" style="color:white;"></i>
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-purple">
+                                <i class="fas fa-lightbulb"></i>
                             </div>
                             <span data-key="police_tips_title">Tips &amp; Found Claims</span>
                         </div>
@@ -702,8 +746,8 @@
                 <div class="pd-top-bar">
                     <div>
                         <div class="pd-page-title">
-                            <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal));box-shadow:0 4px 14px var(--accent-blue-glow);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
-                                <i class="fas fa-search" style="color:white;"></i>
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-blue">
+                                <i class="fas fa-search"></i>
                             </div>
                             <span data-key="police_active_cases">Active Cases</span>
                         </div>
@@ -711,7 +755,7 @@
                     </div>
                 </div>
                 <div class="pd-search">
-                    <i class="fas fa-search" style="color:var(--text-muted);flex-shrink:0;"></i>
+                    <i class="fas fa-search pd-search-icon"></i>
                     <input type="text" id="search-active" data-placeholder-key="police_search_active_ph" placeholder="Search by name, location, case number..." onkeyup="loadAllInternal()">
                 </div>
                 <div id="list-active">
@@ -724,8 +768,8 @@
                 <div class="pd-top-bar">
                     <div>
                         <div class="pd-page-title">
-                            <div class="pd-page-title title-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 14px rgba(34,197,94,0.3);width:44px;height:44px;border-radius:12px;font-size:1.1rem;">
-                                <i class="fas fa-check-circle" style="color:white;"></i>
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-green">
+                                <i class="fas fa-check-circle"></i>
                             </div>
                             <span data-key="police_found_resolved">Found &amp; Resolved</span>
                         </div>
@@ -817,7 +861,7 @@
                                 <span>
                                     ${t.status === 'Verified - Match'
                                         ? `<span class="verified-badge"><i class="fas fa-check"></i>${policeText('police_verified', 'VERIFIED')}</span>`
-                                        : `<span style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);padding:2px 8px;border-radius:50px;font-size:0.7rem;font-weight:700;">${t.status}</span>`
+                                        : `<span class="tip-status-pill">${t.status}</span>`
                                     }
                                 </span>
                             </div>
@@ -883,7 +927,7 @@
                     <div class="pd-case-card pending">
                         <img class="pd-case-img" src="${p.images && p.images[0] ? IMG_URL_BASE + p.images[0].url : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo'}" alt="${p.fullName}">
                         <div class="pd-case-body">
-                            <div class="pd-case-name">${p.fullName} <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400;">· ${policeText('age_label', 'Age')} ${p.age || policeText('not_available', 'N/A')}</span></div>
+                            <div class="pd-case-name">${p.fullName} <span class="pd-case-age">· ${policeText('age_label', 'Age')} ${p.age || policeText('not_available', 'N/A')}</span></div>
                             <div class="pd-case-meta">
                                 <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || policeText('police_unknown_location', 'Unknown location')}</span>
                                 <span><i class="fas fa-calendar"></i>${new Date(p.createdAt).toLocaleDateString()}</span>
@@ -931,7 +975,7 @@
                             <img class="pd-case-img" src="${p.images && p.images[0] ? IMG_URL_BASE + p.images[0].url : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo'}" alt="${p.fullName}">
                             <div class="pd-case-body">
                                 <div class="pd-case-name">${p.fullName}
-                                    <span class="verified-badge" style="background:rgba(59,130,246,0.1);color:var(--accent-teal);border-color:rgba(59,130,246,0.2);margin-left:8px;font-size:0.65rem;">
+                                    <span class="verified-badge verified-badge-approved">
                                         <i class="fas fa-check"></i> ${policeText('police_approved_badge', 'APPROVED')}
                                     </span>
                                 </div>
@@ -968,7 +1012,7 @@
                                 </div>
                             </div>
                             <div class="pd-case-actions">
-                                <button class="pd-btn" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);" onclick="updateStatus('${p._id}','Missing')">
+                                <button class="pd-btn pd-btn-revert" onclick="updateStatus('${p._id}','Missing')">
                                     <i class="fas fa-undo"></i> ${policeText('police_revert', 'Revert')}
                                 </button>
                                 <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">

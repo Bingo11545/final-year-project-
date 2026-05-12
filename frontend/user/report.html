@@ -510,17 +510,55 @@
         }
         [data-theme="light"] .ai-info-box { color: #374151; background: rgba(29,78,216,0.04); border-color: rgba(29,78,216,0.12); }
         .ai-info-box i { color: var(--accent-blue); margin-top: 2px; flex-shrink: 0; }
+
+        .report-title-gradient {
+            background: linear-gradient(135deg,#fca5a5,#f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .police-banner-note {
+            font-weight: 400;
+            margin-left: 8px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .report-card-header-compact {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .icon-sm { font-size: 0.9rem; }
+        .hidden-block { display: none; }
+        .uppercase-input { text-transform: uppercase; }
+        .input-icon-wrap { position: relative; }
+        .input-leading-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+        .input-with-leading-icon { padding-left: 40px; }
+        .legal-check-spaced { margin-top: 0.5rem; }
+        .secure-note-icon { color: var(--accent-blue); margin-right: 6px; }
+        .spinner-14 { width: 14px; height: 14px; border-width: 2px; }
+        .spinner-18 { width: 18px; height: 18px; border-width: 2px; }
     </style>
 </head>
 <body class="report-wrapper">
     <nav>
         <div class="logo">
-            <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i></div>
-            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+            <div class="logo-icon"><i class="fas fa-search-location"></i></div>
+            <a href="index.html">
                 Find Missing <span class="highlight">Person</span>
             </a>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div class="nav-tools">
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
                 <i class="fas fa-sun"></i>
             </button>
@@ -540,7 +578,7 @@
                     <i class="fas fa-exclamation-circle"></i>
                     <span>Official Report Portal</span>
                 </div>
-                <h1>Report a <span style="background:linear-gradient(135deg,#fca5a5,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Missing Person</span></h1>
+                <h1>Report a <span class="report-title-gradient">Missing Person</span></h1>
                 <p>Submit an official case to the National Registry. Every report is verified and cross-referenced by our AI matching system. Accurate details improve response speed and reunification outcomes.</p>
             </div>
         </div>
@@ -557,11 +595,11 @@
         </div>
 
         <!-- Police Banner -->
-        <div id="police-banner" style="display:none;" class="police-banner">
+        <div id="police-banner" class="police-banner hidden-block">
             <i class="fas fa-shield-alt"></i>
             <div>
                 <strong>Law Enforcement Mode Active</strong>
-                <span style="font-weight:400; margin-left:8px; font-size:0.85rem; opacity:0.9;">This report will be automatically approved and published to the national registry.</span>
+                <span class="police-banner-note">This report will be automatically approved and published to the national registry.</span>
             </div>
         </div>
 
@@ -569,9 +607,9 @@
 
             <!-- STEP 1: LEGAL CERTIFICATION -->
             <div class="legal-card">
-                <div class="report-card-header" style="margin-bottom:1rem; padding-bottom:1rem;">
+                <div class="report-card-header report-card-header-compact">
                     <div class="step-badge amber">
-                        <i class="fas fa-gavel" style="font-size:0.9rem;"></i>
+                        <i class="fas fa-gavel icon-sm"></i>
                     </div>
                     <div>
                         <h3 data-key="report_step1">Step 1: Legal Requirement</h3>
@@ -584,7 +622,7 @@
                 </label>
             </div>
 
-            <div id="mainForm" style="display:none;">
+            <div id="mainForm" class="hidden-block">
 
                 <!-- STEP 2: POLICE RECORD (Law Enforcement Only) -->
                 <div id="step-official-record" class="report-card card-indigo">
@@ -671,7 +709,7 @@
                     </div>
                     <div class="form-group-modern">
                         <label>Full Legal Name (First–Middle–Last) <span class="req">*</span></label>
-                        <input type="text" id="fullName" style="text-transform: uppercase;" placeholder="FULL NAME IN CAPS" required>
+                        <input type="text" id="fullName" class="uppercase-input" placeholder="FULL NAME IN CAPS" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group-modern">
@@ -800,7 +838,7 @@
                     <div id="photo-preview-container">
                         <img id="photo-preview-img" src="" alt="Preview">
                         <div id="ai-validation-status" class="ai-validation-status ai-status-checking">
-                            <div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>
+                            <div class="spinner spinner-14"></div>
                             <span id="ai-status-text">AI is verifying the photo contains a human face...</span>
                         </div>
                     </div>
@@ -822,12 +860,12 @@
                     </div>
                     <div class="form-group-modern">
                         <label>Contact Phone <span class="req">*</span></label>
-                        <div style="position:relative;">
-                            <i class="fas fa-phone" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none;"></i>
-                            <input type="text" id="contactPhone" required placeholder="+251 9XX XXX XXXX" style="padding-left:40px;">
+                        <div class="input-icon-wrap">
+                            <i class="fas fa-phone input-leading-icon"></i>
+                            <input type="text" id="contactPhone" required placeholder="+251 9XX XXX XXXX" class="input-with-leading-icon">
                         </div>
                     </div>
-                    <label class="legal-check-label" style="margin-top:0.5rem;">
+                    <label class="legal-check-label legal-check-spaced">
                         <input type="checkbox" id="isAnonymous">
                         <span>Request Anonymity — my contact information will be withheld pending police approval.</span>
                     </label>
@@ -838,7 +876,7 @@
                 <!-- SUBMIT -->
                 <div class="submit-area">
                     <p>
-                        <i class="fas fa-lock" style="color:var(--accent-blue);margin-right:6px;"></i>
+                        <i class="fas fa-lock secure-note-icon"></i>
                         Your report is encrypted and securely submitted to the Ethiopian Federal Police National Registry. All data is handled under strict confidentiality protocols.
                     </p>
                     <button type="submit" class="btn-submit-report" id="submit-btn">
@@ -927,7 +965,7 @@
 
             previewContainer.style.display = 'block';
             statusDiv.className = 'ai-validation-status ai-status-checking';
-            statusDiv.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>AI is verifying the photo contains a human face...</span>`;
+            statusDiv.innerHTML = `<div class="spinner spinner-14"></div><span>AI is verifying the photo contains a human face...</span>`;
             photoValidated = false;
 
             try {
@@ -1029,7 +1067,7 @@
             }
 
             const btn = document.getElementById('submit-btn');
-            btn.innerHTML = `<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div><span>Encrypting &amp; Submitting...</span>`;
+            btn.innerHTML = `<div class="spinner spinner-18"></div><span>Encrypting &amp; Submitting...</span>`;
             btn.disabled = true;
 
             const formData = new FormData();

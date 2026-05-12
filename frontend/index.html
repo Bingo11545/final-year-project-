@@ -19,7 +19,7 @@
 
         <div class="nav-links"></div>
 
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div class="nav-tools">
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle day/night mode">
                 <i class="fas fa-sun"></i>
             </button>
@@ -36,7 +36,7 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-badge">
-                    <span style="width:6px;height:6px;background:var(--accent-green);border-radius:50%;display:inline-block;"></span>
+                    <span class="hero-dot"></span>
                     <span>Ethiopian Federal Police Commission</span>
                 </div>
                 <h1 data-key="title">Missing Persons <span class="gradient-text">Identification</span></h1>
@@ -72,8 +72,8 @@
     <!-- HOW IT WORKS -->
     <div class="container">
         <div class="section-header">
-            <h2 style="font-family:var(--font-heading); font-size:1.5rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:12px; border:none; text-transform:none; padding:0; margin:0;">
-                <span style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">How It Works / እንዴት ይሰራል</span>
+            <h2 class="section-title-modern">
+                <span class="text-gradient-title">How It Works / እንዴት ይሰራል</span>
             </h2>
         </div>
         <div class="steps-grid">
@@ -100,11 +100,11 @@
     </div>
 
     <!-- SEARCH BAR -->
-    <div class="container" style="margin-top:1.5rem;">
+    <div class="container search-mt">
         <div class="search-container">
-            <h2><i class="fas fa-search" style="color:var(--accent-blue); margin-right:10px;"></i><span data-key="search_title">Search National Registry</span></h2>
+            <h2><i class="fas fa-search meta-icon-blue"></i><span data-key="search_title">Search National Registry</span></h2>
             <div class="search-row">
-                <div class="search-group" style="flex:2; min-width:200px;">
+                <div class="search-group search-group-wide">
                     <label data-key="search_name">Name / ID</label>
                     <div class="input-icon-wrapper">
                         <i class="fas fa-user input-icon"></i>
@@ -125,7 +125,7 @@
                 </div>
             </div>
             <div class="search-row">
-                <div class="search-group" style="flex:2;">
+                <div class="search-group search-group-wide">
                     <label data-key="search_region">Region / ክልል</label>
                     <select id="searchRegion">
                         <option value="">All Regions / ሁሉም ክልሎች</option>
@@ -145,11 +145,11 @@
                         <option>Tigray</option>
                     </select>
                 </div>
-                <div class="search-group" style="flex:2;">
+                <div class="search-group search-group-wide">
                     <label data-key="search_city">City / ከተማ</label>
                     <input type="text" id="searchCity" placeholder="City or zone...">
                 </div>
-                <div style="display:flex; align-items:flex-end; padding-bottom:0;">
+                <div class="search-actions">
                     <button onclick="loadPublicFeed()" class="search-btn" id="search-submit-btn">
                         <i class="fas fa-arrow-right"></i>
                         <span data-key="btn_search">Search</span>
@@ -160,20 +160,20 @@
     </div>
 
     <div class="container">
-        <hr style="border:0; border-top:1px solid var(--border-subtle); margin:2rem 0;">
+        <hr class="subtle-divider">
     </div>
 
     <!-- CASES FEED -->
-    <div class="container" id="feed-section" style="margin-bottom:2rem;">
+    <div class="container section-gap-bottom" id="feed-section">
         <div class="section-header">
-            <h2 style="font-family:var(--font-heading); font-size:1.5rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:12px; border:none; text-transform:none; padding:0; margin:0;">
-                <span class="dot" style="width:10px;height:10px;background:var(--accent-red);border-radius:50%;box-shadow:0 0 10px var(--accent-red);display:inline-block;animation:pulse 2s infinite;"></span>
+            <h2 class="section-title-modern">
+                <span class="status-dot-red"></span>
                 <span data-key="section_active">Active Investigations</span>
             </h2>
-            <span style="font-size:0.8rem; color:var(--text-muted);">Live updates from the EFP nationwide registry</span>
+            <span class="section-subtitle">Live updates from the EFP nationwide registry</span>
         </div>
         <div id="publicFeed" class="grid-container">
-            <div class="loading-indicator" style="grid-column:1/-1;">
+            <div class="loading-indicator loading-full">
                 <div class="spinner"></div>
                 <span>Accessing National Registry...</span>
             </div>
@@ -185,7 +185,7 @@
         <div class="container">
             <div class="footer-inner">
                 <div class="footer-brand">
-                    <div class="logo" style="margin-bottom:1rem;">
+                    <div class="logo footer-logo-wrap">
                         <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.85rem;"></i></div>
                         <span>Find Missing <span class="highlight">Person</span></span>
                     </div>
@@ -200,7 +200,7 @@
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 Find Missing Person — EFP Missing Persons System. All Rights Reserved.</p>
-                <p style="color:var(--text-muted); font-size:0.75rem;">Authorized Use Only</p>
+                <p class="footer-mini">Authorized Use Only</p>
             </div>
         </div>
     </footer>
@@ -222,7 +222,7 @@
 
         async function loadPublicFeed() {
             const container = document.getElementById('publicFeed');
-            container.innerHTML = `<div class="loading-indicator" style="grid-column:1/-1;"><div class="spinner"></div><span>Searching registry...</span></div>`;
+            container.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>Searching registry...</span></div>`;
 
             const name = document.getElementById('searchName').value;
             const region = document.getElementById('searchRegion').value;
@@ -239,8 +239,8 @@
                 container.innerHTML = '';
 
                 if (people.length === 0) {
-                    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-secondary);">
-                        <i class="fas fa-search" style="font-size:2rem; color:var(--text-muted); margin-bottom:1rem; display:block;"></i>
+                    container.innerHTML = `<div class="empty-state loading-full" style="padding:4rem;">
+                        <i class="fas fa-search"></i>
                         <p style="font-size:1rem;">No active cases in the national registry match your criteria.</p>
                     </div>`;
                     return;
@@ -258,22 +258,22 @@
                         <img src="${imgUrl}" alt="${p.fullName}" onerror="this.src='https://via.placeholder.com/260x220/131c35/4a5568?text=No+Photo'">
                         <div class="info">
                             <h4>${p.fullName}</h4>
-                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                            <div class="chip-row">
                                 <span class="status-badge status-Active">Missing</span>
                                 ${classTag}
                             </div>
                             <div class="card-meta">
-                                <span><i class="fas fa-birthday-cake" style="color:var(--accent-blue); font-size:0.7rem; margin-right:6px;"></i><strong>Age:</strong> ${p.age || 'N/A'} &bull; ${p.gender || 'N/A'}</span>
-                                <span><i class="fas fa-map-marker-alt" style="color:var(--accent-red); font-size:0.7rem; margin-right:6px;"></i><strong>Last Seen:</strong> ${p.city || p.lastSeenLocation || 'Unknown'}</span>
-                                <span><i class="fas fa-calendar" style="color:var(--text-muted); font-size:0.7rem; margin-right:6px;"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : 'Date unknown'}</span>
+                                <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>Age:</strong> ${p.age || 'N/A'} &bull; ${p.gender || 'N/A'}</span>
+                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>Last Seen:</strong> ${p.city || p.lastSeenLocation || 'Unknown'}</span>
+                                <span><i class="fas fa-calendar meta-icon-muted"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : 'Date unknown'}</span>
                             </div>
                             <div class="card-actions">
                                 <button onclick="window.location.href='/user/case.html?id=${p._id}'"
-                                    style="background:rgba(255,255,255,0.06); color:var(--text-primary); border:1px solid var(--border-subtle);">
+                                    class="action-ghost">
                                     View Profile
                                 </button>
                                 <button onclick="window.location.href='/user/case.html?id=${p._id}&action=report'"
-                                    style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); color:white; border:none;">
+                                    class="action-primary">
                                     Send Tip
                                 </button>
                             </div>
@@ -282,8 +282,8 @@
                     container.appendChild(card);
                 });
             } catch (error) {
-                container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#f87171;">
-                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
+                container.innerHTML = `<div class="error-state loading-full">
+                    <i class="fas fa-exclamation-triangle"></i>
                     <p>Connection failed. Please try again.</p>
                 </div>`;
             }
