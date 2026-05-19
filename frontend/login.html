@@ -16,7 +16,7 @@
                 Find Missing <span class="highlight">Person</span>
             </a>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div class="nav-tools">
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle theme">
                 <i class="fas fa-sun"></i>
             </button>
@@ -27,8 +27,49 @@
         </div>
     </nav>
 
-    <div class="auth-page-wrapper">
-        <div class="form-card">
+    <div class="auth-shell">
+        <section class="auth-hero-panel">
+            <div class="auth-hero-content">
+                <div class="registry-alert-bar">
+                    <div class="registry-alert-left">
+                        <span class="status-dot-red"></span>
+                        <span data-key="subtitle">Ethiopian Federal Police Commission</span>
+                    </div>
+                    <a href="/how-it-works.html" class="emergency-badge guide-badge-link">
+                        <i class="fas fa-circle-info"></i>
+                        <span data-key="home_quick_guide">How It Works?</span>
+                    </a>
+                </div>
+
+                <div class="hero-badge">
+                    <span class="hero-dot"></span>
+                    <span data-key="login_title">Login</span>
+                </div>
+                <h1 class="auth-hero-title" data-key="title">National Missing Persons Identification System</h1>
+                <p class="auth-hero-desc" data-key="tagline">A unified AI-powered platform for reporting, searching, and locating missing individuals across Ethiopia.</p>
+
+                <div class="auth-side-actions">
+                    <a href="/register.html" class="btn btn-danger">
+                        <i class="fas fa-user-plus"></i>
+                        <span data-key="register">Register</span>
+                    </a>
+                    <a href="/how-it-works.html" class="btn btn-secondary">
+                        <i class="fas fa-circle-info"></i>
+                        <span data-key="home_quick_guide">How It Works?</span>
+                    </a>
+                </div>
+
+                <div class="auth-feature-list">
+                    <div class="auth-feature-item"><i class="fas fa-shield-alt"></i><span data-key="register_feature_secure">Secure, encrypted data handling</span></div>
+                    <div class="auth-feature-item"><i class="fas fa-robot"></i><span data-key="register_feature_ai">AI-powered facial recognition matching</span></div>
+                    <div class="auth-feature-item"><i class="fas fa-network-wired"></i><span data-key="register_feature_connected">Connected to national law enforcement</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-form-panel">
+        <div class="auth-form-wrap">
+        <div class="form-card auth-card">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem; justify-content:flex-start;">
                 <div style="width:42px; height:42px; background:linear-gradient(135deg,var(--accent-blue),var(--accent-teal)); border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px var(--accent-blue-glow);">
                     <i class="fas fa-search-location" style="color:white; font-size:1rem;"></i>
@@ -78,6 +119,8 @@
                 <a href="/register.html" data-key="register"> Register</a>
             </div>
         </div>
+        </div>
+        </section>
     </div>
 
     <script src="translations.js"></script>
@@ -103,20 +146,12 @@
                 document.getElementById('email-error').textContent = `${t.email || 'Email'} is required`;
                 document.getElementById('email-error').style.display = 'block';
                 isValid = false;
-            } else if (!isValidGmail(email)) {
-                document.getElementById('email-error').textContent = t.auth_email_gmail_only || 'Email must end with @gmail.com';
-                document.getElementById('email-error').style.display = 'block';
-                isValid = false;
             } else {
                 document.getElementById('email-error').style.display = 'none';
             }
 
             if (!password) {
                 document.getElementById('password-error').textContent = t.auth_password_required || 'Password is required';
-                document.getElementById('password-error').style.display = 'block';
-                isValid = false;
-            } else if (!isStrongPassword(password)) {
-                document.getElementById('password-error').textContent = getPasswordRuleMessage();
                 document.getElementById('password-error').style.display = 'block';
                 isValid = false;
             } else {
@@ -150,13 +185,13 @@
 
         // Real-time validation
         document.getElementById('email').addEventListener('blur', function() {
-            if (this.value && isValidGmail(this.value)) {
+            if (this.value) {
                 document.getElementById('email-error').style.display = 'none';
             }
         });
 
         document.getElementById('password').addEventListener('blur', function() {
-            if (this.value && isStrongPassword(this.value)) {
+            if (this.value) {
                 document.getElementById('password-error').style.display = 'none';
             }
         });

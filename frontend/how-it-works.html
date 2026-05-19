@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <meta name="description" content="How the Find Missing Person workflow works for registration, reporting, tips, and active case browsing.">
+    <title>How It Works — Find Missing Person</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.9rem;"></i></div>
+            <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px;">
+                Find Missing <span class="highlight">Person</span>
+            </a>
+        </div>
+
+        <div class="nav-tools">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle day/night mode">
+                <i class="fas fa-sun"></i>
+            </button>
+            <select id="languageSelector" aria-label="Select Language">
+                <option value="en">🌐 English</option>
+                <option value="am">🇪🇹 አማርኛ</option>
+            </select>
+            <div id="nav-right"></div>
+        </div>
+    </nav>
+
+    <section class="hero-section guide-hero-section">
+        <div class="container">
+            <div class="registry-alert-bar">
+                <div class="registry-alert-left">
+                    <span class="status-dot-red"></span>
+                    <span data-key="guide_page_title">How It Works</span>
+                </div>
+                <a href="/user/report.html" class="emergency-badge guide-badge-link">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                    <span data-key="guide_cta_report">Report Missing Person</span>
+                </a>
+            </div>
+
+            <div class="hero-content hero-content-tight">
+                <div class="hero-badge">
+                    <span class="hero-dot"></span>
+                    <span data-key="subtitle">Ethiopian Federal Police Commission</span>
+                </div>
+                <h1 data-key="guide_hero_title">How The System Works</h1>
+                <p class="subtitle" data-key="guide_hero_desc">Follow the correct path for registration, reporting, tip submission, and browsing active cases. Each step below mirrors the actual workflow used in the platform.</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="container guide-main">
+        <section class="guide-grid">
+            <article class="guide-flow-card">
+                <div class="guide-flow-header">
+                    <div class="step-icon"><i class="fas fa-user-plus" style="color:white;"></i></div>
+                    <div>
+                        <h2 data-key="guide_register_title">Register An Account</h2>
+                        <p data-key="guide_register_desc">Create a verified account before you submit cases or track private reports.</p>
+                    </div>
+                </div>
+                <ol class="guide-step-list">
+                    <li data-key="guide_register_step1">Open the Register page and choose your role: public, police, or organization.</li>
+                    <li data-key="guide_register_step2">Use a valid @gmail.com address and a password with at least 8 characters, letters, and numbers.</li>
+                    <li data-key="guide_register_step3">If you select police or organization, upload the required identity document and profile photo.</li>
+                    <li data-key="guide_register_step4">Submit the form and wait for approval if your role requires verification.</li>
+                </ol>
+            </article>
+
+            <article class="guide-flow-card">
+                <div class="guide-flow-header">
+                    <div class="step-icon guide-step-red"><i class="fas fa-file-circle-plus" style="color:white;"></i></div>
+                    <div>
+                        <h2 data-key="guide_report_title">Report A Missing Person</h2>
+                        <p data-key="guide_report_desc">Use the official report form to submit a case to the registry.</p>
+                    </div>
+                </div>
+                <ol class="guide-step-list">
+                    <li data-key="guide_report_step1">Log in and open the Report Missing Person page.</li>
+                    <li data-key="guide_report_step2">Complete the legal check and enter verified case details, location, and subject information.</li>
+                    <li data-key="guide_report_step3">Upload a clear face photo so the AI service can validate it for matching.</li>
+                    <li data-key="guide_report_step4">Submit the report to publish it to the registry or send it for approval, depending on your role.</li>
+                </ol>
+            </article>
+
+            <article class="guide-flow-card">
+                <div class="guide-flow-header">
+                    <div class="step-icon guide-step-teal"><i class="fas fa-comment-dots" style="color:white;"></i></div>
+                    <div>
+                        <h2 data-key="guide_tip_title">Send A Tip</h2>
+                        <p data-key="guide_tip_desc">Provide new information from any case profile without changing the official record yourself.</p>
+                    </div>
+                </div>
+                <ol class="guide-step-list">
+                    <li data-key="guide_tip_step1">Open a case profile from the active cases list.</li>
+                    <li data-key="guide_tip_step2">Write what you saw, where you saw it, and when it happened.</li>
+                    <li data-key="guide_tip_step3">Add your contact information if you want investigators to follow up, then submit the tip.</li>
+                </ol>
+            </article>
+
+            <article class="guide-flow-card">
+                <div class="guide-flow-header">
+                    <div class="step-icon guide-step-gold"><i class="fas fa-layer-group" style="color:white;"></i></div>
+                    <div>
+                        <h2 data-key="guide_active_title">See Only Active Cases</h2>
+                        <p data-key="guide_active_desc">The platform keeps active missing-person cases visible and hides found cases outside police workflows.</p>
+                    </div>
+                </div>
+                <ol class="guide-step-list">
+                    <li data-key="guide_active_step1">Use the homepage search panel to browse public active cases only.</li>
+                    <li data-key="guide_active_step2">Use the dashboard search and filters to review the active cases linked to your account.</li>
+                    <li data-key="guide_active_step3">Open each profile to review the last-seen data, classification, and timeline.</li>
+                    <li data-key="guide_active_step4">Use the refresh control to load the latest active records from the registry.</li>
+                </ol>
+            </article>
+        </section>
+
+        <section class="guide-cta-panel">
+            <div>
+                <h2 data-key="guide_cta_title">Ready To Continue?</h2>
+                <p data-key="guide_cta_desc">Go back to the registry, open your dashboard, or file a new report from the quick actions below.</p>
+            </div>
+            <div class="hero-actions">
+                <a href="/user/dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-table-columns"></i>
+                    <span data-key="guide_cta_dashboard">Open Dashboard</span>
+                </a>
+                <a href="/user/report.html" class="btn btn-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span data-key="guide_cta_report">Report Missing Person</span>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <div class="logo footer-logo-wrap">
+                        <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.85rem;"></i></div>
+                        <span>Find Missing <span class="highlight">Person</span></span>
+                    </div>
+                    <p data-key="footer_desc">Ensuring peace and security through professional service and community partnership.</p>
+                </div>
+                <div class="footer-col">
+                    <h5 data-key="footer_links">Quick Links</h5>
+                    <a href="/user/report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="guide_cta_report">Report Missing Person</span></a>
+                    <a href="/user/dashboard.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="guide_cta_dashboard">Open Dashboard</span></a>
+                    <a href="/index.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_footer_search_link">Search Database</span></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Find Missing Person — EFP Missing Persons System. All Rights Reserved.</p>
+                <p class="footer-mini">Authorized Use Only</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        updateNav();
+
+        const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+        const selector = document.getElementById('languageSelector');
+        if (selector) {
+            selector.value = savedLang;
+            selector.onchange = (e) => changeLanguage(e.target.value);
+        }
+        changeLanguage(savedLang);
+    </script>
+</body>
+</html>

@@ -12,7 +12,6 @@
 </head>
 <body>
 
-    <!-- NAVIGATION -->
     <nav>
         <div class="logo">
             <div class="logo-icon">
@@ -35,71 +34,144 @@
         </div>
     </nav>
 
-    <!-- DASHBOARD CONTENT -->
-    <div class="container">
-
-        <!-- Header -->
-        <div class="dashboard-header">
-            <div class="dashboard-heading-row">
-                <div>
-                    <h1 class="dashboard-title">
-                        <span class="status-dot-red" style="margin-right:10px; vertical-align:middle;"></span>
-                        <span data-key="section_active">Active Cases</span>
-                    </h1>
-                    <p class="dashboard-subtitle" data-key="dashboard_subtitle_live">Live national registry - updated in real time</p>
+    <div class="hero-section">
+        <div class="container">
+            <div class="registry-alert-bar">
+                <div class="registry-alert-left">
+                    <span class="status-dot-red"></span>
+                    <span data-key="dashboard_subtitle_live">Live national registry - updated in real time</span>
                 </div>
-                <a href="/user/report.html" class="btn btn-danger btn-sm" id="btn-new-report">
+                <a href="/how-it-works.html" class="emergency-badge guide-badge-link">
+                    <i class="fas fa-circle-info"></i>
+                    <span data-key="home_quick_guide">How It Works?</span>
+                </a>
+            </div>
+
+            <div class="hero-content hero-content-tight">
+                <div class="hero-badge">
+                    <span class="hero-dot"></span>
+                    <span data-key="dashboard_badge">Personal Case Center</span>
+                </div>
+                <h1 data-key="dashboard_title_main">Track Your Active Missing Person Reports</h1>
+                <p class="subtitle" data-key="dashboard_tagline_main">Review your reported cases, filter active records, and open the official process guide from one place.</p>
+                <div class="hero-actions">
+                    <a href="/user/report.html" class="btn btn-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span data-key="btn_report">Report Missing Person</span>
+                    </a>
+                    <a href="/how-it-works.html" class="btn btn-secondary">
+                        <i class="fas fa-circle-info"></i>
+                        <span data-key="home_quick_guide">How It Works?</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container search-mt">
+        <div class="search-container">
+            <h2><i class="fas fa-search meta-icon-blue"></i><span data-key="dashboard_search_title">Search Your Active Cases</span></h2>
+            <div class="search-row">
+                <div class="search-group search-group-wide">
+                    <label data-key="search_name">Name / ID</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input
+                            type="text"
+                            id="search"
+                            data-placeholder-key="search_placeholder"
+                            placeholder="Search name..."
+                            onkeyup="loadPeople()"
+                        >
+                    </div>
+                </div>
+                <div class="search-group">
+                    <label data-key="filters_label">Filters</label>
+                    <select id="filterStatus" onchange="loadPeople()">
+                        <option value="Missing" data-key="status_missing">Missing</option>
+                    </select>
+                </div>
+                <div class="search-actions">
+                    <button onclick="loadPeople()" class="search-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        <span data-key="refresh">Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions-bar">
+            <div class="quick-stat-card">
+                <span class="quick-stat-number" id="dashboard-case-count">0</span>
+                <span class="quick-stat-label" data-key="dashboard_stat_reported">Cases You Reported</span>
+            </div>
+            <div class="quick-stat-card">
+                <span class="quick-stat-number">LIVE</span>
+                <span class="quick-stat-label" data-key="dashboard_stat_live">Live Registry View</span>
+            </div>
+            <div class="quick-guide-card">
+                <div class="quick-guide-copy">
+                    <h3 data-key="guide_page_title">How It Works</h3>
+                    <p data-key="guide_active_desc">The platform keeps active missing-person cases visible and hides found cases outside police workflows.</p>
+                </div>
+                <a href="/how-it-works.html" class="btn btn-danger btn-sm">
+                    <i class="fas fa-arrow-right"></i>
+                    <span data-key="home_quick_guide">How It Works?</span>
+                </a>
+            </div>
+            <div class="quick-guide-card">
+                <div class="quick-guide-copy">
+                    <h3 data-key="btn_report">Report Missing Person</h3>
+                    <p data-key="dashboard_tagline_main">Review your reported cases, filter active records, and open the official process guide from one place.</p>
+                </div>
+                <a href="/user/report.html" class="btn btn-secondary btn-sm">
                     <i class="fas fa-plus"></i>
                     <span data-key="nav_report">Report / Upload</span>
                 </a>
             </div>
         </div>
+    </div>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-            <div class="filter-label-wrap">
-                <i class="fas fa-filter" style="color:var(--accent-blue); font-size:0.9rem;"></i>
-                <span class="filter-label" data-key="filters_label">Filters</span>
-            </div>
-            <div class="filter-divider"></div>
+    <div class="container">
+        <hr class="subtle-divider">
+    </div>
 
-            <div class="search-field-wrap">
-                <i class="fas fa-search search-field-icon"></i>
-                <input
-                    type="text"
-                    id="search"
-                    data-placeholder-key="search_placeholder"
-                    placeholder="Search name..."
-                    onkeyup="loadPeople()"
-                    class="input-with-left-icon"
-                >
-            </div>
-
-            <select id="filterStatus" onchange="loadPeople()" style="flex:1; min-width:160px; max-width:220px;">
-                <option value="Missing" data-key="status_missing">Missing</option>
-            </select>
-
-            <button onclick="loadPeople()" class="btn btn-sm" style="flex-shrink:0; padding:9px 20px;">
-                <i class="fas fa-sync-alt"></i>
-                <span data-key="refresh">Refresh</span>
-            </button>
+    <div class="container section-gap-bottom" id="feed-section">
+        <div class="section-header">
+            <h2 class="section-title-modern">
+                <span class="status-dot-red"></span>
+                <span data-key="section_active">Active Cases</span>
+            </h2>
+            <span class="section-subtitle" data-key="dashboard_subtitle_live">Live national registry - updated in real time</span>
         </div>
-
-        <!-- Cases Grid -->
-        <div id="listContainer" style="margin-bottom:4rem;">
-            <div class="loading-indicator">
+        <div id="listContainer" class="grid-container" style="margin-bottom:4rem;">
+            <div class="loading-indicator loading-full">
                 <div class="spinner"></div>
                 <span data-key="loading">Loading cases...</span>
             </div>
         </div>
-
     </div>
 
-    <!-- FOOTER -->
     <footer>
         <div class="container">
-            <div class="footer-bottom" style="border-top:none; padding-top:0;">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <div class="logo footer-logo-wrap">
+                        <div class="logo-icon"><i class="fas fa-search-location" style="color:white; font-size:0.85rem;"></i></div>
+                        <span>Find Missing <span class="highlight">Person</span></span>
+                    </div>
+                    <p data-key="footer_desc">Ensuring peace and security through professional service and community partnership.</p>
+                </div>
+                <div class="footer-col">
+                    <h5 data-key="footer_links">Quick Links</h5>
+                    <a href="/user/report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="btn_report">Report Missing Person</span></a>
+                    <a href="/how-it-works.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="home_quick_guide">How It Works?</span></a>
+                    <a href="/index.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_footer_search_link">Search Database</span></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
                 <p>&copy; 2026 Find Missing Person — EFP Missing Persons System. All Rights Reserved.</p>
+                <p class="footer-mini">Authorized Use Only</p>
             </div>
         </div>
     </footer>
@@ -134,6 +206,8 @@
 
             try {
                 const people = (await apiCall(url)).filter((person) => person.status !== 'Found');
+                const caseCount = document.getElementById('dashboard-case-count');
+                if (caseCount) caseCount.textContent = String(people.length);
                 container.innerHTML = '';
 
                 if (people.length === 0) {

@@ -34,21 +34,31 @@
     <!-- HERO -->
     <div class="hero-section">
         <div class="container">
+            <div class="registry-alert-bar">
+                <div class="registry-alert-left">
+                    <span class="status-dot-red"></span>
+                    <span data-key="public_registry_subtitle">Live updates from the EFP nationwide registry</span>
+                </div>
+                <a href="/how-it-works.html" class="emergency-badge guide-badge-link">
+                    <i class="fas fa-circle-info"></i>
+                    <span data-key="home_quick_guide">How It Works?</span>
+                </a>
+            </div>
             <div class="hero-content">
                 <div class="hero-badge">
                     <span class="hero-dot"></span>
-                    <span>Ethiopian Federal Police Commission</span>
+                    <span data-key="subtitle">Ethiopian Federal Police Commission</span>
                 </div>
-                <h1 data-key="title">Missing Persons <span class="gradient-text">Identification</span></h1>
+                <h1 data-key="title">National Missing Persons Identification System</h1>
                 <p class="subtitle" data-key="tagline">A unified AI platform for reporting, searching, and locating missing individuals across Ethiopia.</p>
                 <div class="hero-actions">
                     <a href="/user/report.html" class="btn btn-danger" id="btn-report-hero">
                         <i class="fas fa-exclamation-circle"></i>
                         <span data-key="btn_report">Report Missing Person</span>
                     </a>
-                    <a href="#feed-section" class="btn btn-secondary" id="btn-search-hero">
-                        <i class="fas fa-search"></i>
-                        <span data-key="btn_search">Search Database</span>
+                    <a href="/how-it-works.html" class="btn btn-secondary" id="btn-search-hero">
+                        <i class="fas fa-circle-info"></i>
+                        <span data-key="home_quick_guide">How It Works?</span>
                     </a>
                 </div>
                 <div class="hero-stats">
@@ -61,36 +71,6 @@
                         <span class="stat-label" data-key="stat_ai_label">Powered Matching</span>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- HOW IT WORKS -->
-    <div class="container">
-        <div class="section-header">
-            <h2 class="section-title-modern">
-                <span class="text-gradient-title">How It Works / እንዴት ይሰራል</span>
-            </h2>
-        </div>
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-icon"><i class="fas fa-file-contract" style="color:white;"></i></div>
-                <h3 data-key="step1_title">1. File Police Report</h3>
-                <p data-key="step1_desc">Mandatory reporting to EFP or Local Police. Obtain official case number.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.3);">
-                    <i class="fas fa-id-card" style="color:white;"></i>
-                </div>
-                <h3 data-key="step2_title">2. Official Submission</h3>
-                <p data-key="step2_desc">Digitize case details for 'Declaration of Absence' legal processes.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-icon" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 15px rgba(5,150,105,0.3);">
-                    <i class="fas fa-brain" style="color:white;"></i>
-                </div>
-                <h3 data-key="step3_title">3. AI Matching</h3>
-                <p data-key="step3_desc">Automated face recognition cross-referenced against the national sightings database.</p>
             </div>
         </div>
     </div>
@@ -108,11 +88,11 @@
                     </div>
                 </div>
                 <div class="search-group">
-                    <label>Gender / ጾታ</label>
+                    <label data-key="search_gender">Gender</label>
                     <select id="searchGender">
-                        <option value="">Any / ሁሉም</option>
-                        <option value="Male">Male / ወንድ</option>
-                        <option value="Female">Female / ሴት</option>
+                        <option value="" data-key="search_any">Any</option>
+                        <option value="Male" data-key="male">Male</option>
+                        <option value="Female" data-key="female">Female</option>
                     </select>
                 </div>
                 <div class="search-group">
@@ -124,26 +104,26 @@
                 <div class="search-group search-group-wide">
                     <label data-key="search_region">Region / ክልል</label>
                     <select id="searchRegion">
-                        <option value="">All Regions / ሁሉም ክልሎች</option>
-                        <option>Addis Ababa</option>
-                        <option>Afar</option>
-                        <option>Amhara</option>
-                        <option>Benishangul-Gumuz</option>
-                        <option>Central Ethiopia</option>
-                        <option>Dire Dawa</option>
-                        <option>Gambela</option>
-                        <option>Harari</option>
-                        <option>Oromia</option>
-                        <option>Sidama</option>
-                        <option>Somali</option>
-                        <option>South Ethiopia</option>
-                        <option>South West Ethiopia</option>
-                        <option>Tigray</option>
+                        <option value="" data-key="search_region_all">All Regions</option>
+                        <option data-key="region_addis_ababa">Addis Ababa</option>
+                        <option data-key="region_afar">Afar</option>
+                        <option data-key="region_amhara">Amhara</option>
+                        <option data-key="region_benishangul_gumuz">Benishangul-Gumuz</option>
+                        <option data-key="region_central_ethiopia">Central Ethiopia</option>
+                        <option data-key="region_dire_dawa">Dire Dawa</option>
+                        <option data-key="region_gambela">Gambela</option>
+                        <option data-key="region_harari">Harari</option>
+                        <option data-key="region_oromia">Oromia</option>
+                        <option data-key="region_sidama">Sidama</option>
+                        <option data-key="region_somali">Somali</option>
+                        <option data-key="region_south_ethiopia">South Ethiopia</option>
+                        <option data-key="region_south_west_ethiopia">South West Ethiopia</option>
+                        <option data-key="region_tigray">Tigray</option>
                     </select>
                 </div>
                 <div class="search-group search-group-wide">
                     <label data-key="search_city">City / ከተማ</label>
-                    <input type="text" id="searchCity" placeholder="City or zone...">
+                    <input type="text" id="searchCity" data-placeholder-key="search_city_ph" placeholder="City or zone...">
                 </div>
                 <div class="search-actions">
                     <button onclick="loadPublicFeed()" class="search-btn" id="search-submit-btn">
@@ -171,7 +151,7 @@
         <div id="publicFeed" class="grid-container">
             <div class="loading-indicator loading-full">
                 <div class="spinner"></div>
-                <span>Accessing National Registry...</span>
+                <span data-key="public_searching_registry">Searching registry...</span>
             </div>
         </div>
     </div>
@@ -189,9 +169,9 @@
                 </div>
                 <div class="footer-col">
                     <h5 data-key="footer_links">Quick Links</h5>
-                    <a href="/user/report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Report a Case</a>
+                    <a href="/user/report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="btn_report">Report Missing Person</span></a>
                     <a href="#feed-section"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_footer_search_link">Search Database</span></a>
-                    <a href="/login.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Authority Login</a>
+                    <a href="/login.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_authority_login">Authority Login</span></a>
                 </div>
             </div>
             <div class="footer-bottom">

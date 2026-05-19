@@ -227,14 +227,6 @@ router.post('/login', async (req, res) => {
 
     const normalizedEmail = normalizeEmail(email);
 
-    if (!isValidGmail(normalizedEmail)) {
-      return res.status(400).json({ msg: 'Email must end with @gmail.com' });
-    }
-
-    if (!isStrongPassword(password)) {
-      return res.status(400).json({ msg: 'Password must be at least 8 characters and include both letters and numbers.' });
-    }
-
     const user = await store.findUserByEmail(normalizedEmail);
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
 

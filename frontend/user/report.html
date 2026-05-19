@@ -573,6 +573,16 @@
     <!-- Hero Section -->
     <div class="report-hero">
         <div class="container">
+            <div class="registry-alert-bar">
+                <div class="registry-alert-left">
+                    <span class="status-dot-red"></span>
+                    <span data-key="report_page_title">Official Missing Person Report</span>
+                </div>
+                <a href="/how-it-works.html" class="emergency-badge guide-badge-link">
+                    <i class="fas fa-circle-info"></i>
+                    <span data-key="home_quick_guide">How It Works?</span>
+                </a>
+            </div>
             <div class="report-hero-content">
                 <div class="report-hero-badge">
                     <i class="fas fa-exclamation-circle"></i>
@@ -634,17 +644,17 @@
                         </div>
                     </div>
                     <div class="form-group-modern">
-                        <label>Report ID / Official Verification Reference <span class="req">*</span></label>
-                        <input type="text" id="officialVerificationRef" placeholder="e.g. EFP-2026-11548 or 10/254/2016" required>
+                        <label data-key="report_official_ref_label">Report ID / Official Verification Reference <span class="req">*</span></label>
+                        <input type="text" id="officialVerificationRef" data-placeholder-key="report_official_ref_ph" placeholder="e.g. EFP-2026-11548 or 10/254/2016" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group-modern">
-                            <label>Police Station / District</label>
-                            <input type="text" id="policeDistrict" placeholder="e.g. Bole Sub-City Woreda 03">
+                            <label data-key="report_police_district_label">Police Station / District</label>
+                            <input type="text" id="policeDistrict" data-placeholder-key="report_police_district_ph" placeholder="e.g. Bole Sub-City Woreda 03">
                         </div>
                         <div class="form-group-modern">
-                            <label>Case File Number (CFN)</label>
-                            <input type="text" id="policeCaseNumber" placeholder="e.g. 10/254/2016">
+                            <label data-key="report_case_file_label">Case File Number (CFN)</label>
+                            <input type="text" id="policeCaseNumber" data-placeholder-key="report_case_file_ph" placeholder="e.g. 10/254/2016">
                         </div>
                     </div>
                 </div>
@@ -655,46 +665,46 @@
                         <div class="step-badge blue">3</div>
                         <div>
                             <h3 data-key="report_step3">Step 3: Last Known Location</h3>
-                            <p>Administrative region and precise location details</p>
+                            <p data-key="report_step3_desc">Administrative region and precise location details</p>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group-modern">
-                            <label>Region (Kilil) <span class="req">*</span></label>
+                            <label data-key="report_region_label">Region (Kilil) <span class="req">*</span></label>
                             <select id="regionInput">
-                                <option value="">Select Region</option>
-                                <option>Addis Ababa</option>
-                                <option>Afar</option>
-                                <option>Amhara</option>
-                                <option>Benishangul-Gumuz</option>
-                                <option>Central Ethiopia</option>
-                                <option>Dire Dawa</option>
-                                <option>Gambela</option>
-                                <option>Harari</option>
-                                <option>Oromia</option>
-                                <option>Sidama</option>
-                                <option>Somali</option>
-                                <option>South Ethiopia</option>
-                                <option>South West Ethiopia</option>
-                                <option>Tigray</option>
+                                <option value="" data-key="report_region_select">Select Region</option>
+                                <option data-key="region_addis_ababa">Addis Ababa</option>
+                                <option data-key="region_afar">Afar</option>
+                                <option data-key="region_amhara">Amhara</option>
+                                <option data-key="region_benishangul_gumuz">Benishangul-Gumuz</option>
+                                <option data-key="region_central_ethiopia">Central Ethiopia</option>
+                                <option data-key="region_dire_dawa">Dire Dawa</option>
+                                <option data-key="region_gambela">Gambela</option>
+                                <option data-key="region_harari">Harari</option>
+                                <option data-key="region_oromia">Oromia</option>
+                                <option data-key="region_sidama">Sidama</option>
+                                <option data-key="region_somali">Somali</option>
+                                <option data-key="region_south_ethiopia">South Ethiopia</option>
+                                <option data-key="region_south_west_ethiopia">South West Ethiopia</option>
+                                <option data-key="region_tigray">Tigray</option>
                             </select>
                         </div>
                         <div class="form-group-modern">
-                            <label>Zone / City Administration <span class="req">*</span></label>
-                            <input type="text" id="city" placeholder="e.g. North Shewa or Adama" required>
+                            <label data-key="report_city_label">Zone / City Administration <span class="req">*</span></label>
+                            <input type="text" id="city" data-placeholder-key="report_city_ph" placeholder="e.g. North Shewa or Adama" required>
                         </div>
                         <div class="form-group-modern">
-                            <label>Woreda (District)</label>
-                            <input type="text" id="woredaInput" placeholder="District Name">
+                            <label data-key="report_woreda_label">Woreda (District)</label>
+                            <input type="text" id="woredaInput" data-placeholder-key="report_woreda_ph" placeholder="District Name">
                         </div>
                         <div class="form-group-modern">
-                            <label>Kebele (Ward)</label>
-                            <input type="text" id="kebeleInput" placeholder="Kebele 01">
+                            <label data-key="report_kebele_label">Kebele (Ward)</label>
+                            <input type="text" id="kebeleInput" data-placeholder-key="report_kebele_ph" placeholder="Kebele 01">
                         </div>
                     </div>
                     <div class="form-group-modern">
-                        <label>Specific Location Details</label>
-                        <input type="text" id="lastSeenLocation" placeholder="Street name, landmark, house number">
+                        <label data-key="report_specific_location_label">Specific Location Details</label>
+                        <input type="text" id="lastSeenLocation" data-placeholder-key="report_specific_location_ph" placeholder="Street name, landmark, house number">
                     </div>
                 </div>
 
@@ -704,39 +714,39 @@
                         <div class="step-badge blue">4</div>
                         <div>
                             <h3 data-key="report_step4">Step 4: Subject Identification</h3>
-                            <p>Core information about the missing individual</p>
+                            <p data-key="report_step4_desc">Core information about the missing individual</p>
                         </div>
                     </div>
                     <div class="form-group-modern">
-                        <label>Full Legal Name (First–Middle–Last) <span class="req">*</span></label>
-                        <input type="text" id="fullName" class="uppercase-input" placeholder="FULL NAME IN CAPS" required>
+                        <label data-key="report_full_name_label">Full Legal Name (First-Middle-Last) <span class="req">*</span></label>
+                        <input type="text" id="fullName" class="uppercase-input" data-placeholder-key="report_full_name_ph" placeholder="FULL NAME IN CAPS" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group-modern">
-                            <label>Classification <span class="req">*</span></label>
+                            <label data-key="report_classification_label">Classification <span class="req">*</span></label>
                             <select id="classification" required>
-                                <option value="Endangered">Endangered</option>
-                                <option value="Involuntary">Involuntary (Abduction)</option>
-                                <option value="Disability">Disability (Mental/Physical)</option>
-                                <option value="Juvenile">Juvenile</option>
-                                <option value="Catastrophe">Catastrophe</option>
-                                <option value="Other" selected>Other</option>
+                                <option value="Endangered" data-key="report_class_endangered">Endangered</option>
+                                <option value="Involuntary" data-key="report_class_involuntary">Involuntary (Abduction)</option>
+                                <option value="Disability" data-key="report_class_disability">Disability (Mental/Physical)</option>
+                                <option value="Juvenile" data-key="report_class_juvenile">Juvenile</option>
+                                <option value="Catastrophe" data-key="report_class_catastrophe">Catastrophe</option>
+                                <option value="Other" selected data-key="report_class_other">Other</option>
                             </select>
                         </div>
                         <div class="form-group-modern">
-                            <label>Date Last Seen <span class="req">*</span></label>
+                            <label data-key="report_last_seen_date_label">Date Last Seen <span class="req">*</span></label>
                             <input type="date" id="lastSeenDate" required>
                         </div>
                         <div class="form-group-modern">
-                            <label>Age</label>
-                            <input type="number" id="age" placeholder="e.g. 25" min="0" max="120">
+                            <label data-key="report_age_label">Age</label>
+                            <input type="number" id="age" data-placeholder-key="report_age_ph" placeholder="e.g. 25" min="0" max="120">
                         </div>
                         <div class="form-group-modern">
-                            <label>Gender</label>
+                            <label data-key="report_gender_input_label">Gender</label>
                             <select id="gender">
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
+                                <option value="Male" data-key="male">Male</option>
+                                <option value="Female" data-key="female">Female</option>
+                                <option value="Other" data-key="report_gender_other">Other</option>
                             </select>
                         </div>
                     </div>
@@ -748,51 +758,51 @@
                         <div class="step-badge purple">5</div>
                         <div>
                             <h3 data-key="report_step5">Step 5: Physical Characteristics</h3>
-                            <p>Describe physical attributes to aid identification</p>
+                            <p data-key="report_step5_desc">Describe physical attributes to aid identification</p>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group-modern">
-                            <label>Height (cm)</label>
-                            <input type="number" id="height" placeholder="e.g. 175">
+                            <label data-key="report_height_input_label">Height (cm)</label>
+                            <input type="number" id="height" data-placeholder-key="report_height_ph" placeholder="e.g. 175">
                         </div>
                         <div class="form-group-modern">
-                            <label>Weight (kg)</label>
-                            <input type="number" id="weight" placeholder="e.g. 70">
+                            <label data-key="report_weight_input_label">Weight (kg)</label>
+                            <input type="number" id="weight" data-placeholder-key="report_weight_ph" placeholder="e.g. 70">
                         </div>
                         <div class="form-group-modern">
-                            <label>Eye Color</label>
+                            <label data-key="report_eye_color_input_label">Eye Color</label>
                             <select id="eyeColor">
-                                <option value="Unknown">Unknown</option>
-                                <option value="Black">Black</option>
-                                <option value="Brown">Brown</option>
-                                <option value="Blue">Blue</option>
-                                <option value="Green">Green</option>
-                                <option value="Hazel">Hazel</option>
-                                <option value="Grey">Grey</option>
+                                <option value="Unknown" data-key="report_color_unknown">Unknown</option>
+                                <option value="Black" data-key="report_color_black">Black</option>
+                                <option value="Brown" data-key="report_color_brown">Brown</option>
+                                <option value="Blue" data-key="report_color_blue">Blue</option>
+                                <option value="Green" data-key="report_color_green">Green</option>
+                                <option value="Hazel" data-key="report_color_hazel">Hazel</option>
+                                <option value="Grey" data-key="report_color_grey">Grey</option>
                             </select>
                         </div>
                         <div class="form-group-modern">
-                            <label>Hair Color</label>
+                            <label data-key="report_hair_color_input_label">Hair Color</label>
                             <select id="hairColor">
-                                <option value="Unknown">Unknown</option>
-                                <option value="Black">Black</option>
-                                <option value="Brown">Brown</option>
-                                <option value="Blonde">Blonde</option>
-                                <option value="Red">Red</option>
-                                <option value="Grey">Grey</option>
-                                <option value="White">White</option>
-                                <option value="Bald">Bald</option>
+                                <option value="Unknown" data-key="report_color_unknown">Unknown</option>
+                                <option value="Black" data-key="report_color_black">Black</option>
+                                <option value="Brown" data-key="report_color_brown">Brown</option>
+                                <option value="Blonde" data-key="report_color_blonde">Blonde</option>
+                                <option value="Red" data-key="report_color_red">Red</option>
+                                <option value="Grey" data-key="report_color_grey">Grey</option>
+                                <option value="White" data-key="report_color_white">White</option>
+                                <option value="Bald" data-key="report_color_bald">Bald</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group-modern">
-                        <label>Distinguishing Marks</label>
-                        <textarea id="distinguishingMarks" rows="2" placeholder="Scars, tattoos, birthmarks, piercings, deformities..."></textarea>
+                        <label data-key="report_distinguishing_marks_label">Distinguishing Marks</label>
+                        <textarea id="distinguishingMarks" rows="2" data-placeholder-key="report_distinguishing_marks_ph" placeholder="Scars, tattoos, birthmarks, piercings, deformities..."></textarea>
                     </div>
                     <div class="form-group-modern">
-                        <label>Circumstances &amp; Clothing</label>
-                        <textarea id="description" rows="3" placeholder="Description of clothing worn, circumstances of disappearance..."></textarea>
+                        <label data-key="report_circumstances_label">Circumstances &amp; Clothing</label>
+                        <textarea id="description" rows="3" data-placeholder-key="report_circumstances_ph" placeholder="Description of clothing worn, circumstances of disappearance..."></textarea>
                     </div>
                 </div>
 
@@ -802,16 +812,16 @@
                         <div class="step-badge green">6</div>
                         <div>
                             <h3 data-key="report_step6">Step 6: Vehicle &amp; Social Media</h3>
-                            <p>Additional context that may aid the investigation</p>
+                            <p data-key="report_step6_desc">Additional context that may aid the investigation</p>
                         </div>
                     </div>
                     <div class="form-group-modern">
-                        <label>Vehicle Information (if applicable)</label>
-                        <textarea id="vehicleInformation" rows="2" placeholder="Make, Model, Color, License Plate Number..."></textarea>
+                        <label data-key="report_vehicle_info_label">Vehicle Information (if applicable)</label>
+                        <textarea id="vehicleInformation" rows="2" data-placeholder-key="report_vehicle_info_ph" placeholder="Make, Model, Color, License Plate Number..."></textarea>
                     </div>
                     <div class="form-group-modern">
-                        <label>Social Media Accounts</label>
-                        <textarea id="socialMediaAccounts" rows="2" placeholder="Facebook URL, Instagram Handle, Twitter, etc..."></textarea>
+                        <label data-key="report_social_accounts_label">Social Media Accounts</label>
+                        <textarea id="socialMediaAccounts" rows="2" data-placeholder-key="report_social_accounts_ph" placeholder="Facebook URL, Instagram Handle, Twitter, etc..."></textarea>
                     </div>
                 </div>
 
@@ -869,10 +879,10 @@
                         </div>
                     </div>
                     <div class="form-group-modern">
-                        <label>Contact Phone <span class="req">*</span></label>
+                        <label data-key="report_contact_phone_label">Contact Phone <span class="req">*</span></label>
                         <div class="input-icon-wrap">
                             <i class="fas fa-phone input-leading-icon"></i>
-                            <input type="text" id="contactPhone" required placeholder="+251 9XX XXX XXXX" class="input-with-leading-icon">
+                            <input type="text" id="contactPhone" required data-placeholder-key="report_contact_phone_ph" placeholder="+251 9XX XXX XXXX" class="input-with-leading-icon">
                         </div>
                     </div>
                     <label class="legal-check-label legal-check-spaced">
