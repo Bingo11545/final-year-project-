@@ -67,8 +67,8 @@
                         <span class="stat-label" data-key="stat_active_label">Active Cases</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">AI</span>
-                        <span class="stat-label" data-key="stat_ai_label">Powered Matching</span>
+                        <span class="stat-number" id="stat-found">—</span>
+                        <span class="stat-label" data-key="stat_found_label">Found Case</span>
                     </div>
                 </div>
             </div>
@@ -189,8 +189,12 @@
         // Load stats counts
         async function loadStats() {
             try {
-                const missing = await apiCall('/people?status=Missing');
+                const [missing, found] = await Promise.all([
+                    apiCall('/people?status=Missing'),
+                    apiCall('/people?status=Found')
+                ]);
                 document.getElementById('stat-active').textContent = missing.length || '0';
+                document.getElementById('stat-found').textContent = found.length || '0';
             } catch(e) { /* silent fail */ }
         }
 

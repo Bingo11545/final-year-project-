@@ -72,6 +72,8 @@ function applyFilters(people, query) {
   if (query.status) result = result.filter((p) => p.status === query.status);
   if (query.name) result = result.filter((p) => (p.fullName || '').toLowerCase().includes(String(query.name).toLowerCase()));
   if (query.city) result = result.filter((p) => (p.city || '').toLowerCase().includes(String(query.city).toLowerCase()));
+  if (query.gender) result = result.filter((p) => String(p.gender || '').toLowerCase() === String(query.gender).toLowerCase());
+  if (query.region) result = result.filter((p) => String(p.region || '').toLowerCase().includes(String(query.region).toLowerCase()));
 
   if (query.minAge || query.maxAge) {
     const minAge = query.minAge ? Number(query.minAge) : -Infinity;

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Find Missing Person Dashboard — Browse and manage active missing persons cases.">
+    <meta name="description" content="Find Missing Person - National Missing Persons Identification platform powered by AI for reporting and searching cases across Ethiopia.">
     <base href="/">
-    <title>Dashboard — Find Missing Person</title>
+    <title>Find Missing Person — National Missing Persons System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="theme.js"></script>
@@ -21,6 +21,8 @@
                 Find Missing <span class="highlight">Person</span>
             </a>
         </div>
+
+        <div class="nav-links"></div>
 
         <div class="nav-tools">
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Light Mode" aria-label="Toggle day/night mode">
@@ -39,7 +41,7 @@
             <div class="registry-alert-bar">
                 <div class="registry-alert-left">
                     <span class="status-dot-red"></span>
-                    <span data-key="dashboard_subtitle_live">Live national registry - updated in real time</span>
+                    <span data-key="public_registry_subtitle">Live updates from the EFP nationwide registry</span>
                 </div>
                 <a href="/how-it-works.html" class="emergency-badge guide-badge-link">
                     <i class="fas fa-circle-info"></i>
@@ -50,16 +52,16 @@
             <div class="hero-content">
                 <div class="hero-badge">
                     <span class="hero-dot"></span>
-                    <span data-key="dashboard_badge">Personal Case Center</span>
+                    <span data-key="subtitle">Ethiopian Federal Police Commission</span>
                 </div>
-                <h1 data-key="dashboard_title_main">Track Your Active Missing Person Reports</h1>
-                <p class="subtitle" data-key="dashboard_tagline_main">Review your reported cases, filter active records, and open the official process guide from one place.</p>
+                <h1 data-key="title">National Missing Persons Identification System</h1>
+                <p class="subtitle" data-key="tagline">A unified AI platform for reporting, searching, and locating missing individuals across Ethiopia.</p>
                 <div class="hero-actions">
-                    <a href="/user/report.html" class="btn btn-danger">
+                    <a href="/user/report.html" class="btn btn-danger" id="btn-report-hero">
                         <i class="fas fa-exclamation-circle"></i>
                         <span data-key="btn_report">Report Missing Person</span>
                     </a>
-                    <a href="/how-it-works.html" class="btn btn-secondary">
+                    <a href="/how-it-works.html" class="btn btn-secondary" id="btn-search-hero">
                         <i class="fas fa-circle-info"></i>
                         <span data-key="home_quick_guide">How It Works?</span>
                     </a>
@@ -67,11 +69,11 @@
                 <div class="hero-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="dashboard-case-count">0</span>
-                        <span class="stat-label" data-key="dashboard_stat_reported">Cases You Reported</span>
+                        <span class="stat-label" data-key="stat_active_label">Active Cases</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">LIVE</span>
-                        <span class="stat-label" data-key="dashboard_stat_live">Live Registry View</span>
+                        <span class="stat-number" id="dashboard-found-count">0</span>
+                        <span class="stat-label" data-key="stat_found_label">Found Case</span>
                     </div>
                 </div>
             </div>
@@ -80,7 +82,7 @@
 
     <div class="container search-mt">
         <div class="search-container">
-            <h2><i class="fas fa-search meta-icon-blue"></i><span data-key="dashboard_search_title">Search Your Active Cases</span></h2>
+            <h2><i class="fas fa-search meta-icon-blue"></i><span data-key="search_title">Search National Registry</span></h2>
             <div class="search-row">
                 <div class="search-group search-group-wide">
                     <label data-key="search_name">Name / ID</label>
@@ -88,23 +90,54 @@
                         <i class="fas fa-user input-icon"></i>
                         <input
                             type="text"
-                            id="search"
-                            data-placeholder-key="search_placeholder"
-                            placeholder="Search name..."
-                            onkeyup="loadPeople()"
+                            id="searchName"
+                            data-placeholder-key="search_name_ph"
+                            placeholder="Search by full name or ID..."
                         >
                     </div>
                 </div>
                 <div class="search-group">
-                    <label data-key="filters_label">Filters</label>
-                    <select id="filterStatus" onchange="loadPeople()">
-                        <option value="Missing" data-key="status_missing">Missing</option>
+                    <label data-key="search_gender">Gender</label>
+                    <select id="searchGender">
+                        <option value="" data-key="search_any">Any</option>
+                        <option value="Male" data-key="male">Male</option>
+                        <option value="Female" data-key="female">Female</option>
                     </select>
                 </div>
+                <div class="search-group">
+                    <label data-key="search_age">Age / እድሜ</label>
+                    <input type="number" id="searchMinAge" placeholder="Age..." min="0" max="120">
+                </div>
+            </div>
+            <div class="search-row">
+                <div class="search-group search-group-wide">
+                    <label data-key="search_region">Region / ክልል</label>
+                    <select id="searchRegion">
+                        <option value="" data-key="search_region_all">All Regions</option>
+                        <option data-key="region_addis_ababa">Addis Ababa</option>
+                        <option data-key="region_afar">Afar</option>
+                        <option data-key="region_amhara">Amhara</option>
+                        <option data-key="region_benishangul_gumuz">Benishangul-Gumuz</option>
+                        <option data-key="region_central_ethiopia">Central Ethiopia</option>
+                        <option data-key="region_dire_dawa">Dire Dawa</option>
+                        <option data-key="region_gambela">Gambela</option>
+                        <option data-key="region_harari">Harari</option>
+                        <option data-key="region_oromia">Oromia</option>
+                        <option data-key="region_sidama">Sidama</option>
+                        <option data-key="region_somali">Somali</option>
+                        <option data-key="region_south_ethiopia">South Ethiopia</option>
+                        <option data-key="region_south_west_ethiopia">South West Ethiopia</option>
+                        <option data-key="region_tigray">Tigray</option>
+                    </select>
+                </div>
+                <div class="search-group search-group-wide">
+                    <label data-key="search_city">City / ከተማ</label>
+                    <input type="text" id="searchCity" data-placeholder-key="search_city_ph" placeholder="City or zone...">
+                </div>
                 <div class="search-actions">
-                    <button onclick="loadPeople()" class="search-btn">
-                        <i class="fas fa-sync-alt"></i>
-                        <span data-key="refresh">Refresh</span>
+                    <button onclick="loadPeople()" class="search-btn" id="search-submit-btn">
+                        <i class="fas fa-arrow-right"></i>
+                        <span data-key="btn_search">Search</span>
                     </button>
                 </div>
             </div>
@@ -119,14 +152,14 @@
         <div class="section-header">
             <h2 class="section-title-modern">
                 <span class="status-dot-red"></span>
-                <span data-key="section_active">Active Cases</span>
+                <span data-key="section_active">Active Investigations</span>
             </h2>
-            <span class="section-subtitle" data-key="dashboard_subtitle_live">Live national registry - updated in real time</span>
+            <span class="section-subtitle" data-key="public_registry_subtitle">Live updates from the EFP nationwide registry</span>
         </div>
         <div id="listContainer" class="grid-container" style="margin-bottom:4rem;">
             <div class="loading-indicator loading-full">
                 <div class="spinner"></div>
-                <span data-key="loading">Loading cases...</span>
+                <span data-key="public_searching_registry">Searching registry...</span>
             </div>
         </div>
     </div>
@@ -144,8 +177,8 @@
                 <div class="footer-col">
                     <h5 data-key="footer_links">Quick Links</h5>
                     <a href="/user/report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="btn_report">Report Missing Person</span></a>
-                    <a href="/how-it-works.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="home_quick_guide">How It Works?</span></a>
-                    <a href="/index.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_footer_search_link">Search Database</span></a>
+                    <a href="#feed-section"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_footer_search_link">Search Database</span></a>
+                    <a href="/login.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_authority_login">Authority Login</span></a>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -171,22 +204,35 @@
         changeLanguage(savedLang);
 
         async function loadPeople() {
-            const status = document.getElementById('filterStatus').value;
-            const search = document.getElementById('search').value;
+            const search = document.getElementById('searchName').value;
+            const gender = document.getElementById('searchGender').value;
+            const minAge = document.getElementById('searchMinAge').value;
+            const region = document.getElementById('searchRegion').value;
+            const city = document.getElementById('searchCity').value;
             let url = `/people/with-mine?`;
-            if (status) url += `status=${status}&`;
+            url += `status=Missing&`;
             if (search) url += `name=${encodeURIComponent(search)}`;
+            if (gender) url += `${url.endsWith('?') ? '' : '&'}gender=${encodeURIComponent(gender)}`;
+            if (minAge) url += `${url.endsWith('?') ? '' : '&'}minAge=${encodeURIComponent(minAge)}`;
+            if (region) url += `${url.endsWith('?') ? '' : '&'}region=${encodeURIComponent(region)}`;
+            if (city) url += `${url.endsWith('?') ? '' : '&'}city=${encodeURIComponent(city)}`;
 
             const container = document.getElementById('listContainer');
             const lang = localStorage.getItem('preferredLanguage') || 'en';
             const t = translations[lang] || translations['en'];
 
-            container.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>${t.loading || 'Loading...'}</span></div>`;
+            container.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${t.public_searching_registry || 'Searching registry...'}</span></div>`;
 
             try {
-                const people = (await apiCall(url)).filter((person) => person.status !== 'Found');
+                const [peopleResponse, foundResponse] = await Promise.all([
+                    apiCall(url),
+                    apiCall('/people/with-mine?status=Found')
+                ]);
+                const people = peopleResponse.filter((person) => person.status !== 'Found');
                 const caseCount = document.getElementById('dashboard-case-count');
+                const foundCount = document.getElementById('dashboard-found-count');
                 if (caseCount) caseCount.textContent = String(people.length);
+                if (foundCount) foundCount.textContent = String(foundResponse.length || 0);
                 container.innerHTML = '';
 
                 if (people.length === 0) {
@@ -198,18 +244,12 @@
                     return;
                 }
 
-                const grid = document.createElement('div');
-                grid.className = 'grid-container';
-
                 people.forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'person-card';
                     const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
 
-                    const statusText = t[`status_${p.status ? p.status.toLowerCase() : ''}`] || p.status || '';
                     const genderText = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';
-                    const badgeClass = p.status === 'Found' ? 'status-Found' : 'status-Missing';
-
                     const classTag = p.classification
                         ? `<span class="classification-tag">${p.classification}</span>`
                         : '';
@@ -225,46 +265,37 @@
                         <img src="${imgUrl}" alt="${p.fullName}"
                             onerror="this.src='https://via.placeholder.com/260x220/131c35/4a5568?text=No+Photo'">
                         <div class="info">
-                            <h3>${p.fullName}</h3>
+                            <h4>${p.fullName}</h4>
                             <div class="chip-row">
-                                <span class="status-badge ${badgeClass}">${statusText}</span>
+                                <span class="status-badge status-Active">${t.status_missing || 'Missing'}</span>
                                 ${classTag}
                                 ${moderationTag}
                             </div>
                             <div class="card-meta">
-                                <span>
-                                    <i class="fas fa-birthday-cake meta-icon-blue"></i>
-                                    <strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull;
-                                    <strong>${t.gender_label || 'Gender'}:</strong> ${genderText}
-                                </span>
-                                <span>
-                                    <i class="fas fa-map-marker-alt meta-icon-red"></i>
-                                    <strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.lastSeenLocation || (t.unknown || 'Unknown')}
-                                </span>
-                                <span>
-                                    <i class="fas fa-calendar-alt meta-icon-muted"></i>
-                                    ${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : 'N/A'}
-                                </span>
+                                <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull; ${genderText}</span>
+                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.city || p.lastSeenLocation || (t.unknown || 'Unknown')}</span>
+                                <span><i class="fas fa-calendar meta-icon-muted"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : (t.public_date_unknown || 'Date unknown')}</span>
                             </div>
                             <div class="card-actions">
-                                <a href="/user/case.html?id=${p._id}"
+                                <button onclick="window.location.href='/user/case.html?id=${p._id}'"
                                     class="action-ghost">
-                                    <i class="fas fa-user" style="font-size:0.7rem;"></i>
-                                    ${t.btn_view_case || 'View'}
-                                </a>
+                                    ${t.btn_view_case || 'View Profile'}
+                                </button>
+                                <button onclick="window.location.href='/user/case.html?id=${p._id}'"
+                                    class="action-primary">
+                                    ${t.dashboard_open_case || 'Open Case'}
+                                </button>
                             </div>
                         </div>
                     `;
-                    grid.appendChild(card);
+                    container.appendChild(card);
                 });
-
-                container.appendChild(grid);
 
             } catch (err) {
                 container.innerHTML = `
-                    <div class="error-state">
+                    <div class="error-state loading-full">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>${t.error_loading_data || 'Error loading data. Please try again.'}</p>
+                        <p>${t.public_connection_failed || 'Connection failed. Please try again.'}</p>
                     </div>`;
             }
         }
