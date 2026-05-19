@@ -143,6 +143,221 @@ if (!window.__toastAlertBridgeInitialized) {
     window.__toastAlertBridgeInitialized = true;
 }
 
+// --- Enhanced Loading State Management ---
+
+/**
+ * Set a button to loading state with spinner
+ * @param {HTMLElement} button - The button element
+ * @param {string} text - Loading text (optional)
+ */
+function setButtonLoading(button, text = 'Loading...') {
+    if (!button) return;
+    button.disabled = true;
+    const originalHTML = button.innerHTML;
+    button.dataset.originalHTML = originalHTML;
+    button.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:8px;"></div>${text}`;
+    button.classList.add('btn-loading');
+}
+
+/**
+ * Reset button from loading state
+ * @param {HTMLElement} button - The button element
+ */
+function resetButtonLoading(button) {
+    if (!button) return;
+    button.disabled = false;
+    if (button.dataset.originalHTML) {
+        button.innerHTML = button.dataset.originalHTML;
+    }
+    button.classList.remove('btn-loading');
+}
+
+/**
+ * Show loading overlay
+ * @param {string} message - Optional loading message
+ */
+function showLoadingOverlay(message = 'Loading...') {
+    let overlay = document.getElementById('loading-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="loading-box">
+                <div class="spinner" style="width:32px;height:32px;border-width:3px;"></div>
+                <div class="loading-box-text">${message}</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    overlay.classList.add('active');
+}
+
+/**
+ * Hide loading overlay
+ */
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+}
+
+/**
+ * Validate form inputs
+ * @param {string|HTMLElement} formSelector - Form selector or element
+ * @param {Object} rules - Validation rules: { fieldName: { required: true, pattern: /regex/, minLength: 8 } }
+ * @returns {boolean}
+ */
+function validateForm(formSelector, rules = {}) {
+    const form = typeof formSelector === 'string'
+        ? document.querySelector(formSelector)
+        : formSelector;
+
+    if (!form) return false;
+
+    let isValid = true;
+    const inputs = form.querySelectorAll('input, select, textarea');
+
+    inputs.forEach(input => {
+        const fieldName = input.name || input.id;
+        const rule = rules[fieldName];
+        let error = null;
+
+        // Check required
+        if (rule?.required && !input.value.trim()) {
+            error = `${fieldName} is required`;
+            isValid = false;
+        }
+
+        // Check pattern
+        if (!error && rule?.pattern && !rule.pattern.test(input.value)) {
+            error = `${fieldName} format is invalid`;
+            isValid = false;
+        }
+
+        // Check minLength
+        if (!error && rule?.minLength && input.value.length < rule.minLength) {
+            error = `${fieldName} must be at least ${rule.minLength} characters`;
+            isValid = false;
+        }
+
+        // Check maxLength
+        if (!error && rule?.maxLength && input.value.length > rule.maxLength) {
+            error = `${fieldName} must not exceed ${rule.maxLength} characters`;
+            isValid = false;
+        }
+
+        // Update UI
+        const group = input.closest('.form-group');
+        if (group) {
+            group.classList.remove('has-error', 'has-success');
+            let errorEl = group.querySelector('.error-text');
+            if (error) {
+                group.classList.add('has-error');
+                if (!errorEl) {
+                    errorEl = document.createElement('div');
+                    errorEl.className = 'error-text';
+                    group.appendChild(errorEl);
+                }
+                errorEl.textContent = error;
+            } else {
+                if (errorEl) errorEl.remove();
+            }
+        }
+    });
+
+    return isValid;
+}
+
+/**
+ * Clear form errors
+ * @param {string|HTMLElement} formSelector - Form selector or element
+ */
+function clearFormErrors(formSelector) {
+    const form = typeof formSelector === 'string'
+        ? document.querySelector(formSelector)
+        : formSelector;
+
+    if (!form) return;
+
+    const groups = form.querySelectorAll('.form-group.has-error, .form-group.has-success');
+    groups.forEach(group => {
+        group.classList.remove('has-error', 'has-success');
+        const errorEl = group.querySelector('.error-text');
+        const successEl = group.querySelector('.success-text');
+        if (errorEl) errorEl.remove();
+        if (successEl) successEl.remove();
+    });
+}
+
+/**
+ * Display form errors from API response
+ * @param {Object|string} errors - Error object or message
+ * @param {string|HTMLElement} formSelector - Form selector or element
+ */
+function displayFormErrors(errors, formSelector) {
+    const form = typeof formSelector === 'string'
+        ? document.querySelector(formSelector)
+        : formSelector;
+
+    if (!form) return;
+
+    if (typeof errors === 'string') {
+        showToast(errors, 'error');
+        return;
+    }
+
+    Object.keys(errors).forEach(fieldName => {
+        const input = form.querySelector(`[name="${fieldName}"], #${fieldName}`);
+        if (input) {
+            const group = input.closest('.form-group');
+            if (group) {
+                group.classList.add('has-error');
+                let errorEl = group.querySelector('.error-text');
+                if (!errorEl) {
+                    errorEl = document.createElement('div');
+                    errorEl.className = 'error-text';
+                    group.appendChild(errorEl);
+                }
+                errorEl.textContent = errors[fieldName];
+            }
+        }
+    });
+}
+
+/**
+ * Mark form field as successful
+ * @param {HTMLElement} input - Input element
+ * @param {string} message - Success message
+ */
+function markFieldSuccess(input, message = 'Valid') {
+    const group = input.closest('.form-group');
+    if (!group) return;
+    group.classList.remove('has-error');
+    group.classList.add('has-success');
+    let successEl = group.querySelector('.success-text');
+    if (!successEl) {
+        successEl = document.createElement('div');
+        successEl.className = 'success-text';
+        group.appendChild(successEl);
+    }
+    successEl.textContent = message;
+}
+
+/**
+ * Disable all inputs in form
+ * @param {HTMLElement} form - Form element
+ * @param {boolean} disabled - Whether to disable
+ */
+function setFormDisabled(form, disabled = true) {
+    if (!form) return;
+    const inputs = form.querySelectorAll('input, button, select, textarea');
+    inputs.forEach(el => {
+        el.disabled = disabled;
+    });
+}
+
 // --- UI Utils ---
 function updateNav() {
     const navRight = document.getElementById('nav-right');

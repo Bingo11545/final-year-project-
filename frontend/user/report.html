@@ -826,17 +826,27 @@
                     </div>
 
                     <div class="upload-zone" id="photo-upload-zone">
-                        <input type="file" id="image" accept="image/*" required onchange="handlePhotoUpload(event)">
+                        <input type="file" id="image" accept="image/*" required onchange="handlePhotoUpload(event)" aria-label="Upload biometric photo">
                         <div class="upload-zone-icon">
-                            <i class="fas fa-camera"></i>
+                            <i class="fas fa-camera" aria-hidden="true"></i>
                         </div>
                         <p><strong>Click or drag to upload photo</strong></p>
                         <small>Must show a clear human face · JPG, PNG, WEBP · Max 10MB</small>
                     </div>
 
+                    <!-- Upload Progress -->
+                    <div id="upload-progress" class="upload-progress" role="status" aria-live="polite" aria-label="Upload progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progress-percentage">0%</span> • <span id="progress-status">Initializing...</span>
+                        </div>
+                    </div>
+
                     <!-- Preview -->
                     <div id="photo-preview-container">
-                        <img id="photo-preview-img" src="" alt="Preview">
+                        <img id="photo-preview-img" src="" alt="Photo preview">
                         <div id="ai-validation-status" class="ai-validation-status ai-status-checking">
                             <div class="spinner spinner-14"></div>
                             <span id="ai-status-text">AI is verifying the photo contains a human face...</span>
