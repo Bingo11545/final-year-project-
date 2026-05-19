@@ -701,7 +701,7 @@ nav {
    ============================================================ */
 .hero-section {
     position: relative;
-    min-height: 72vh;
+    min-height: 60vh;
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -747,7 +747,7 @@ nav {
 .hero-content {
     position: relative;
     z-index: 2;
-    padding: 3.75rem 0 4.5rem;
+    padding: 2.9rem 0 3.45rem;
     width: 100%;
 }
 
@@ -764,17 +764,17 @@ nav {
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.15rem;
     backdrop-filter: blur(10px);
 }
 
 .hero-section h1 {
     font-family: var(--font-heading);
-    font-size: clamp(2.35rem, 5vw, 4.1rem);
+    font-size: clamp(2.1rem, 4.6vw, 3.7rem);
     font-weight: 800;
     line-height: 1.15;
     color: var(--text-primary);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     letter-spacing: -1px;
 }
 
@@ -786,10 +786,10 @@ nav {
 }
 
 .hero-section .subtitle {
-    font-size: 1.03rem;
+    font-size: 0.98rem;
     color: var(--text-secondary);
     max-width: 720px;
-    margin-bottom: 2.2rem;
+    margin-bottom: 1.7rem;
     line-height: 1.7;
 }
 
@@ -863,8 +863,8 @@ nav {
 .hero-stats {
     display: flex;
     gap: 26px;
-    margin-top: 2.6rem;
-    padding-top: 1.4rem;
+    margin-top: 1.9rem;
+    padding-top: 1rem;
     border-top: 1px solid var(--border-subtle);
     flex-wrap: wrap;
 }
