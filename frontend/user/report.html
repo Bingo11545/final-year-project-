@@ -576,10 +576,10 @@
             <div class="report-hero-content">
                 <div class="report-hero-badge">
                     <i class="fas fa-exclamation-circle"></i>
-                    <span>Official Report Portal</span>
+                    <span id="report-badge-text">Official Report Portal</span>
                 </div>
-                <h1>Report a <span class="report-title-gradient">Missing Person</span></h1>
-                <p>Submit an official case to the National Registry. Every report is verified and cross-referenced by our AI matching system. Accurate details improve response speed and reunification outcomes.</p>
+                <h1><span id="report-hero-prefix">Report a</span> <span class="report-title-gradient" id="report-hero-highlight">Missing Person</span></h1>
+                <p id="report-hero-intro">Submit an official case to the National Registry. Every report is verified and cross-referenced by our AI matching system. Accurate details improve response speed and reunification outcomes.</p>
             </div>
         </div>
     </div>
@@ -589,7 +589,7 @@
         <!-- Intro Banner -->
         <div class="form-intro-banner">
             <div class="intro-icon"><i class="fas fa-clipboard-list"></i></div>
-            <p>
+            <p id="report-intro-notice">
                 <strong>Complete all required fields carefully.</strong> Accurate information significantly improves the chance of finding a missing person. All submitted data is encrypted and handled in accordance with Ethiopian Federal Police regulations.
             </p>
         </div>
@@ -598,8 +598,8 @@
         <div id="police-banner" class="police-banner hidden-block">
             <i class="fas fa-shield-alt"></i>
             <div>
-                <strong>Law Enforcement Mode Active</strong>
-                <span class="police-banner-note">This report will be automatically approved and published to the national registry.</span>
+                <strong id="report-police-mode-title">Law Enforcement Mode Active</strong>
+                <span class="police-banner-note" id="report-police-mode-note">This report will be automatically approved and published to the national registry.</span>
             </div>
         </div>
 
@@ -613,12 +613,12 @@
                     </div>
                     <div>
                         <h3 data-key="report_step1">Step 1: Legal Requirement</h3>
-                        <p>Mandatory under Proclamation No. 720/2011 - Federal Police Act</p>
+                        <p id="report-step1-desc">Mandatory under Proclamation No. 720/2011 - Federal Police Act</p>
                     </div>
                 </div>
                 <label class="legal-check-label">
                     <input type="checkbox" id="legalCheck" required>
-                    <span>I certify that this case has already been reported to the <strong>Ethiopian Federal Police</strong> or a regional police authority.</span>
+                    <span id="report-step1-certify">I certify that this case has already been reported to the <strong>Ethiopian Federal Police</strong> or a regional police authority.</span>
                 </label>
             </div>
 
@@ -630,7 +630,7 @@
                         <div class="step-badge indigo">2</div>
                         <div>
                             <h3 data-key="report_step2">Step 2: Official Verification Reference</h3>
-                            <p>Enter the police report ID or official verification reference linked to this case</p>
+                            <p id="report-step2-desc">Enter the police report ID or official verification reference linked to this case</p>
                         </div>
                     </div>
                     <div class="form-group-modern">
@@ -821,7 +821,7 @@
                         <div class="step-badge red">7</div>
                         <div>
                             <h3 data-key="report_step7">Step 7: Biometric Photo</h3>
-                            <p>Upload a clear, high-resolution facial photo — AI validated for identity matching</p>
+                            <p id="report-step7-desc">Upload a clear, high-resolution facial photo - AI validated for identity matching</p>
                         </div>
                     </div>
 
@@ -830,8 +830,8 @@
                         <div class="upload-zone-icon">
                             <i class="fas fa-camera" aria-hidden="true"></i>
                         </div>
-                        <p><strong>Click or drag to upload photo</strong></p>
-                        <small>Must show a clear human face · JPG, PNG, WEBP · Max 10MB</small>
+                        <p><strong id="report-upload-cta">Click or drag to upload photo</strong></p>
+                        <small id="report-upload-hint">Must show a clear human face - JPG, PNG, WEBP - Max 10MB</small>
                     </div>
 
                     <!-- Upload Progress -->
@@ -855,7 +855,7 @@
 
                     <div class="ai-info-box">
                         <i class="fas fa-microchip"></i>
-                        <span>Our AI system verifies that the uploaded image contains a clear human face before generating a facial template for secure matching in the national registry.</span>
+                        <span id="report-ai-info">Our AI system verifies that the uploaded image contains a clear human face before generating a facial template for secure matching in the national registry.</span>
                     </div>
                 </div>
 
@@ -865,7 +865,7 @@
                         <div class="step-badge indigo">8</div>
                         <div>
                             <h3 data-key="report_step8">Step 8: Reporter Information</h3>
-                            <p>Your contact details for case follow-up (kept confidential)</p>
+                            <p id="report-step8-desc">Your contact details for case follow-up (kept confidential)</p>
                         </div>
                     </div>
                     <div class="form-group-modern">
@@ -877,7 +877,7 @@
                     </div>
                     <label class="legal-check-label legal-check-spaced">
                         <input type="checkbox" id="isAnonymous">
-                        <span>Request Anonymity — my contact information will be withheld pending police approval.</span>
+                        <span id="report-anonymity-note">Request Anonymity - my contact information will be withheld pending police approval.</span>
                     </label>
                 </div>
 
@@ -885,13 +885,13 @@
 
                 <!-- SUBMIT -->
                 <div class="submit-area">
-                    <p>
+                    <p id="report-submit-note">
                         <i class="fas fa-lock secure-note-icon"></i>
                         Your report is encrypted and securely submitted to the Ethiopian Federal Police National Registry. All data is handled under strict confidentiality protocols.
                     </p>
                     <button type="submit" class="btn-submit-report" id="submit-btn">
                         <i class="fas fa-paper-plane"></i>
-                        <span>Submit to National Registry</span>
+                        <span id="report-submit-button-text">Submit to National Registry</span>
                     </button>
                 </div>
 
@@ -902,11 +902,65 @@
     <script src="translations.js"></script>
     <script src="app.js"></script>
     <script>
+        function reportText(key, fallback) {
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const active = (translations && translations[lang]) || translations.en;
+            return active[key] || fallback;
+        }
+
+        function applyReportTranslations() {
+            const textMap = [
+                ['report-badge-text', 'report_portal_badge', 'Official Report Portal'],
+                ['report-hero-prefix', 'report_hero_title_prefix', 'Report a'],
+                ['report-hero-highlight', 'report_hero_title_highlight', 'Missing Person'],
+                ['report-hero-intro', 'report_hero_intro', 'Submit an official case to the National Registry. Every report is verified and cross-referenced by our AI matching system. Accurate details improve response speed and reunification outcomes.'],
+                ['report-police-mode-title', 'report_police_mode_title', 'Law Enforcement Mode Active'],
+                ['report-police-mode-note', 'report_police_mode_note', 'This report will be automatically approved and published to the national registry.'],
+                ['report-step1-desc', 'report_step1_desc', 'Mandatory under Proclamation No. 720/2011 - Federal Police Act'],
+                ['report-step2-desc', 'report_step2_desc', 'Enter the police report ID or official verification reference linked to this case'],
+                ['report-step7-desc', 'report_step7_desc', 'Upload a clear, high-resolution facial photo - AI validated for identity matching'],
+                ['report-upload-cta', 'report_upload_cta', 'Click or drag to upload photo'],
+                ['report-upload-hint', 'report_upload_hint', 'Must show a clear human face - JPG, PNG, WEBP - Max 10MB'],
+                ['report-ai-info', 'report_ai_info', 'Our AI system verifies that the uploaded image contains a clear human face before generating a facial template for secure matching in the national registry.'],
+                ['report-step8-desc', 'report_step8_desc', 'Your contact details for case follow-up (kept confidential)'],
+                ['report-anonymity-note', 'report_anonymity_note', 'Request Anonymity - my contact information will be withheld pending police approval.'],
+                ['report-submit-button-text', 'report_submit_button', 'Submit to National Registry']
+            ];
+
+            textMap.forEach(([id, key, fallback]) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = reportText(key, fallback);
+            });
+
+            const introNotice = document.getElementById('report-intro-notice');
+            if (introNotice) {
+                introNotice.innerHTML = `<strong>${reportText('report_intro_notice', 'Complete all required fields carefully. Accurate information significantly improves the chance of finding a missing person. All submitted data is encrypted and handled in accordance with Ethiopian Federal Police regulations.')}</strong>`;
+            }
+
+            const certify = document.getElementById('report-step1-certify');
+            if (certify) {
+                certify.innerHTML = reportText('report_step1_certify', 'I certify that this case has already been reported to the Ethiopian Federal Police or a regional police authority.');
+            }
+
+            const submitNote = document.getElementById('report-submit-note');
+            if (submitNote) {
+                submitNote.innerHTML = `<i class="fas fa-lock secure-note-icon"></i> ${reportText('report_submit_secure_note', 'Your report is encrypted and securely submitted to the Ethiopian Federal Police National Registry. All data is handled under strict confidentiality protocols.')}`;
+            }
+
+            const progressStatus = document.getElementById('progress-status');
+            if (progressStatus) progressStatus.textContent = reportText('report_upload_progress_init', 'Initializing...');
+            const previewImg = document.getElementById('photo-preview-img');
+            if (previewImg) previewImg.alt = reportText('report_photo_preview_alt', 'Photo preview');
+            const aiStatus = document.getElementById('ai-status-text');
+            if (aiStatus) aiStatus.textContent = reportText('report_ai_verifying', 'AI is verifying the photo contains a human face...');
+        }
+
         if (!isLoggedIn()) {
             window.location.href = 'login.html';
         }
 
         updateNav();
+        applyReportTranslations();
 
         // Legal Check Interaction
         const legalCheck = document.getElementById('legalCheck');
@@ -953,14 +1007,14 @@
 
             // Validate file type
             if (!file.type.startsWith('image/')) {
-                showToast('Please upload a valid image file (JPG, PNG, or WEBP).', 'error');
+                showToast(reportText('report_invalid_image_type', 'Please upload a valid image file (JPG, PNG, or WEBP).'), 'error');
                 event.target.value = '';
                 return;
             }
 
             // Validate file size (10MB max)
             if (file.size > 10 * 1024 * 1024) {
-                showToast('File size exceeds 10MB. Please upload a smaller image.', 'error');
+                showToast(reportText('report_image_too_large', 'File size exceeds 10MB. Please upload a smaller image.'), 'error');
                 event.target.value = '';
                 return;
             }
@@ -975,13 +1029,13 @@
 
             previewContainer.style.display = 'block';
             statusDiv.className = 'ai-validation-status ai-status-checking';
-            statusDiv.innerHTML = `<div class="spinner spinner-14"></div><span>AI is verifying the photo contains a human face...</span>`;
+            statusDiv.innerHTML = `<div class="spinner spinner-14"></div><span>${reportText('report_ai_verifying', 'AI is verifying the photo contains a human face...')}</span>`;
             photoValidated = false;
 
             try {
                 await validateFaceImage(file, statusDiv);
             } catch (err) {
-                setValidationStatus(statusDiv, false, 'Validation error. Please upload a clear face photo.');
+                setValidationStatus(statusDiv, false, reportText('report_validation_error', 'Validation error. Please upload a clear face photo.'));
                 photoValidated = false;
             }
         }
@@ -1001,16 +1055,16 @@
                     if (result.is_human_face) {
                         const confidencePercent = Math.round((result.confidence || 0) * 100);
                         const userTier = confidencePercent >= 80
-                            ? 'High confidence'
-                            : (confidencePercent >= 50 ? 'Medium confidence' : 'Low confidence');
+                            ? reportText('report_ai_verified_high', 'Human face verified - High confidence')
+                            : (confidencePercent >= 50 ? reportText('report_ai_verified_medium', 'Human face verified - Medium confidence') : reportText('report_ai_verified_low', 'Human face verified - Low confidence'));
                         const confidenceMessage = isPolice
-                            ? `Human face verified - confidence: ${confidencePercent}%`
-                            : `Human face verified - ${userTier}`;
+                            ? `${reportText('report_ai_verified_police', 'Human face verified - confidence:')} ${confidencePercent}%`
+                            : userTier;
 
                         setValidationStatus(statusEl, true, `✓ ${confidenceMessage}`);
                         photoValidated = true;
                     } else {
-                        setValidationStatus(statusEl, false, '✗ No human face detected. The uploaded image must contain a clear, visible human face. Please try again with a proper photo of the missing person.');
+                        setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_no_face', 'No human face detected. The uploaded image must contain a clear, visible human face. Please try again with a proper photo of the missing person.')}`);
                         photoValidated = false;
                         document.getElementById('image').value = '';
                         setTimeout(() => {
@@ -1019,13 +1073,13 @@
                     }
                 } else {
                     // AI service returned an error (strict: reject)
-                    setValidationStatus(statusEl, false, '✗ AI verification service error. Please try again or contact support if the issue persists.');
+                    setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_service_error', 'AI verification service error. Please try again or contact support if the issue persists.')}`);
                     photoValidated = false;
                     document.getElementById('image').value = '';
                 }
             } catch (networkErr) {
                 // Service unreachable — STRICT: reject submission
-                setValidationStatus(statusEl, false, '✗ AI verification service is currently unavailable. Please try again in a few moments. A valid human face photo is required.');
+                setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_service_unavailable', 'AI verification service is currently unavailable. Please try again in a few moments. A valid human face photo is required.')}`);
                 photoValidated = false;
                 document.getElementById('image').value = '';
             }
@@ -1129,7 +1183,7 @@
             } catch (err) {
                 console.error(err);
                 showToast(`Submission error: ${err.message}`, 'error', 5500);
-                btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>Submit to National Registry</span>`;
+                btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>${reportText('report_submit_button', 'Submit to National Registry')}</span>`;
                 btn.disabled = false;
             }
         });

@@ -57,10 +57,6 @@
                         <span class="stat-label" data-key="stat_active_label">Active Cases</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number" id="stat-found">—</span>
-                        <span class="stat-label" data-key="stat_found_label">Persons Found</span>
-                    </div>
-                    <div class="stat-item">
                         <span class="stat-number">AI</span>
                         <span class="stat-label" data-key="stat_ai_label">Powered Matching</span>
                     </div>
@@ -170,7 +166,7 @@
                 <span class="status-dot-red"></span>
                 <span data-key="section_active">Active Investigations</span>
             </h2>
-            <span class="section-subtitle">Live updates from the EFP nationwide registry</span>
+            <span class="section-subtitle" data-key="public_registry_subtitle">Live updates from the EFP nationwide registry</span>
         </div>
         <div id="publicFeed" class="grid-container">
             <div class="loading-indicator loading-full">
@@ -194,7 +190,7 @@
                 <div class="footer-col">
                     <h5 data-key="footer_links">Quick Links</h5>
                     <a href="/user/report.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Report a Case</a>
-                    <a href="#feed-section"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Search Database</a>
+                    <a href="#feed-section"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i><span data-key="public_footer_search_link">Search Database</span></a>
                     <a href="/login.html"><i class="fas fa-chevron-right" style="font-size:0.65rem; margin-right:6px;"></i>Authority Login</a>
                 </div>
             </div>
@@ -214,15 +210,15 @@
         async function loadStats() {
             try {
                 const missing = await apiCall('/people?status=Missing');
-                const found = await apiCall('/people?status=Found');
                 document.getElementById('stat-active').textContent = missing.length || '0';
-                document.getElementById('stat-found').textContent = found.length || '0';
             } catch(e) { /* silent fail */ }
         }
 
         async function loadPublicFeed() {
             const container = document.getElementById('publicFeed');
-            container.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>Searching registry...</span></div>`;
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const t = translations[lang] || translations['en'];
+            container.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${t.public_searching_registry || 'Searching registry...'}</span></div>`;
 
             const name = document.getElementById('searchName').value;
             const region = document.getElementById('searchRegion').value;
@@ -241,7 +237,7 @@
                 if (people.length === 0) {
                     container.innerHTML = `<div class="empty-state loading-full" style="padding:4rem;">
                         <i class="fas fa-search"></i>
-                        <p style="font-size:1rem;">No active cases in the national registry match your criteria.</p>
+                        <p style="font-size:1rem;">${t.public_no_active_matches || 'No active cases in the national registry match your criteria.'}</p>
                     </div>`;
                     return;
                 }
@@ -250,8 +246,9 @@
                     const card = document.createElement('div');
                     card.className = 'person-card';
                     const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
-                    const caseBadge = p.policeCaseNumber ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> Case ${p.policeCaseNumber}</div>` : '';
+                    const caseBadge = p.policeCaseNumber ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> ${t.public_case_prefix || 'Case'} ${p.policeCaseNumber}</div>` : '';
                     const classTag = p.classification ? `<span class="classification-tag">${p.classification}</span>` : '';
+                    const genderText = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';
 
                     card.innerHTML = `
                         ${caseBadge}
@@ -259,22 +256,22 @@
                         <div class="info">
                             <h4>${p.fullName}</h4>
                             <div class="chip-row">
-                                <span class="status-badge status-Active">Missing</span>
+                                <span class="status-badge status-Active">${t.status_missing || 'Missing'}</span>
                                 ${classTag}
                             </div>
                             <div class="card-meta">
-                                <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>Age:</strong> ${p.age || 'N/A'} &bull; ${p.gender || 'N/A'}</span>
-                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>Last Seen:</strong> ${p.city || p.lastSeenLocation || 'Unknown'}</span>
-                                <span><i class="fas fa-calendar meta-icon-muted"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : 'Date unknown'}</span>
+                                <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull; ${genderText}</span>
+                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.city || p.lastSeenLocation || (t.unknown || 'Unknown')}</span>
+                                <span><i class="fas fa-calendar meta-icon-muted"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : (t.public_date_unknown || 'Date unknown')}</span>
                             </div>
                             <div class="card-actions">
                                 <button onclick="window.location.href='/user/case.html?id=${p._id}'"
                                     class="action-ghost">
-                                    View Profile
+                                    ${t.btn_view_case || 'View Profile'}
                                 </button>
                                 <button onclick="window.location.href='/user/case.html?id=${p._id}&action=report'"
                                     class="action-primary">
-                                    Send Tip
+                                    ${t.public_send_tip || 'Send Tip'}
                                 </button>
                             </div>
                         </div>
@@ -284,7 +281,7 @@
             } catch (error) {
                 container.innerHTML = `<div class="error-state loading-full">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p>Connection failed. Please try again.</p>
+                    <p>${t.public_connection_failed || 'Connection failed. Please try again.'}</p>
                 </div>`;
             }
         }

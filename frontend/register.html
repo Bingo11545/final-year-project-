@@ -667,7 +667,7 @@
                         <label data-key="register_email_address">Email Address</label>
                         <div class="input-with-icon">
                             <i class="fas fa-envelope"></i>
-                            <input type="email" id="email" data-placeholder-key="email_placeholder" placeholder="your@email.com" required>
+                            <input type="email" id="email" data-placeholder-key="email_placeholder" placeholder="your@gmail.com" required>
                         </div>
                     </div>
 
@@ -676,18 +676,21 @@
                         <label data-key="password">Password</label>
                         <div class="input-with-icon" style="position:relative;">
                             <i class="fas fa-key"></i>
-                            <input type="password" id="password" data-placeholder-key="register_password_ph" placeholder="Create a strong password" required id="password">
-                            <button type="button" onclick="togglePassword()" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" id="pwd-toggle">
-                                <i class="fas fa-eye" id="pwd-eye"></i>
+                            <input type="password" id="password" data-placeholder-key="register_password_ph" placeholder="Create a strong password" required style="padding-right:42px;">
+                            <button type="button" onclick="togglePasswordVisibility('password', 'register-password-eye')" aria-label="Show or hide password" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" id="pwd-toggle">
+                                <i class="fas fa-eye" id="register-password-eye"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="rform-group">
                         <label data-key="confirm_password">Confirm Password</label>
-                        <div class="input-with-icon">
+                        <div class="input-with-icon" style="position:relative;">
                             <i class="fas fa-check-double"></i>
-                            <input type="password" id="confirmPassword" data-placeholder-key="register_confirm_password_ph" placeholder="Re-enter your password" required>
+                            <input type="password" id="confirmPassword" data-placeholder-key="register_confirm_password_ph" placeholder="Re-enter your password" required style="padding-right:42px;">
+                            <button type="button" onclick="togglePasswordVisibility('confirmPassword', 'register-confirm-password-eye')" aria-label="Show or hide confirm password" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;">
+                                <i class="fas fa-eye" id="register-confirm-password-eye"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -872,18 +875,6 @@
             profilePhotoUploaded = true;
         }
 
-        function togglePassword() {
-            const pwd = document.getElementById('password');
-            const eye = document.getElementById('pwd-eye');
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                eye.className = 'fas fa-eye-slash';
-            } else {
-                pwd.type = 'password';
-                eye.className = 'fas fa-eye';
-            }
-        }
-
         // ── Document Upload Validation (Manual Admin Review) ──
         async function handleIdUpload(event) {
             const file = event.target.files[0];
@@ -929,12 +920,21 @@
 
             const role = currentRole;
             const needsVerification = (role === 'law_enforcement' || role === 'authorized_org');
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             let validationError = null;
 
-            if (password !== confirmPassword) {
+            if (!isValidGmail(email)) {
+                validationError = getLocalText('auth_email_gmail_only', 'Email must end with @gmail.com');
+            }
+
+            if (!validationError && !isStrongPassword(password)) {
+                validationError = getPasswordRuleMessage();
+            }
+
+            if (!validationError && password !== confirmPassword) {
                 validationError = getLocalText('register_password_mismatch', 'Password and Confirm Password do not match.');
             }
 
@@ -970,7 +970,7 @@
             try {
                 const formData = new FormData();
                 formData.append('username', document.getElementById('username').value);
-                formData.append('email', document.getElementById('email').value);
+                formData.append('email', email);
                 formData.append('password', document.getElementById('password').value);
                 formData.append('role', role);
                 formData.append('organizationName', document.getElementById('organizationName').value || '');
@@ -996,7 +996,7 @@
                     errEl.style.background = 'rgba(34,197,94,0.12)';
                     errEl.style.borderColor = 'rgba(34,197,94,0.25)';
                     errEl.textContent = data.msg || getLocalText('register_pending_registration', 'Registration submitted and pending system admin approval.');
-                    showToast('Registration submitted for approval!', 'success');
+                    showToast(getLocalText('auth_register_submitted', 'Registration submitted for approval!'), 'success');
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 2500);
@@ -1004,17 +1004,17 @@
                 }
 
                 localStorage.setItem('token', data.token);
-                showToast('Account created successfully!', 'success');
+                showToast(getLocalText('auth_register_success', 'Account created successfully!'), 'success');
                 setTimeout(() => {
                     window.location.href = data.redirectPath || '/user/dashboard.html';
                 }, 800);
             } catch (err) {
-                errEl.textContent = err.message;
+                errEl.textContent = localizeAuthMessage(err.message);
                 errEl.style.display = 'block';
                 errEl.style.background = 'rgba(239,68,68,0.12)';
                 errEl.style.color = '#f87171';
                 errEl.style.borderColor = 'rgba(239,68,68,0.25)';
-                showToast(err.message, 'error');
+                showToast(localizeAuthMessage(err.message), 'error');
                 resetButtonLoading(btn);
                 setFormDisabled(form, false);
             }

@@ -49,7 +49,7 @@
                     <label for="email" data-key="email">Email</label>
                     <div style="position:relative;">
                         <i class="fas fa-envelope" aria-hidden="true" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
-                        <input type="email" id="email" name="email" data-placeholder-key="email_placeholder" placeholder="your@email.com" required aria-label="Email address" aria-describedby="email-error" style="padding-left:38px;">
+                        <input type="email" id="email" name="email" data-placeholder-key="email_placeholder" placeholder="your@gmail.com" required aria-label="Email address" aria-describedby="email-error" style="padding-left:38px;">
                         <div id="email-error" class="error-text" style="display:none;"></div>
                     </div>
                 </div>
@@ -57,7 +57,10 @@
                     <label for="password" data-key="password">Password</label>
                     <div style="position:relative;">
                         <i class="fas fa-key" aria-hidden="true" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
-                        <input type="password" id="password" name="password" data-placeholder-key="password_placeholder" placeholder="••••••••" required aria-label="Password" aria-describedby="password-error" style="padding-left:38px;">
+                        <input type="password" id="password" name="password" data-placeholder-key="password_placeholder" placeholder="••••••••" required aria-label="Password" aria-describedby="password-error" style="padding-left:38px; padding-right:42px;">
+                        <button type="button" onclick="togglePasswordVisibility('password', 'login-password-eye')" aria-label="Show or hide password" style="position:absolute; right:13px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem; padding:0;">
+                            <i class="fas fa-eye" id="login-password-eye" aria-hidden="true"></i>
+                        </button>
                         <div id="password-error" class="error-text" style="display:none;"></div>
                     </div>
                 </div>
@@ -85,6 +88,7 @@
             const btn = document.getElementById('submit-btn');
             const errEl = document.getElementById('error-msg');
             const form = document.getElementById('loginForm');
+            const t = getActiveTranslations();
             
             // Clear previous errors
             errEl.style.display = 'none';
@@ -96,11 +100,11 @@
 
             let isValid = true;
             if (!email) {
-                document.getElementById('email-error').textContent = 'Email is required';
+                document.getElementById('email-error').textContent = `${t.email || 'Email'} is required`;
                 document.getElementById('email-error').style.display = 'block';
                 isValid = false;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                document.getElementById('email-error').textContent = 'Please enter a valid email';
+            } else if (!isValidGmail(email)) {
+                document.getElementById('email-error').textContent = t.auth_email_gmail_only || 'Email must end with @gmail.com';
                 document.getElementById('email-error').style.display = 'block';
                 isValid = false;
             } else {
@@ -108,11 +112,11 @@
             }
 
             if (!password) {
-                document.getElementById('password-error').textContent = 'Password is required';
+                document.getElementById('password-error').textContent = t.auth_password_required || 'Password is required';
                 document.getElementById('password-error').style.display = 'block';
                 isValid = false;
-            } else if (password.length < 6) {
-                document.getElementById('password-error').textContent = 'Password must be at least 6 characters';
+            } else if (!isStrongPassword(password)) {
+                document.getElementById('password-error').textContent = getPasswordRuleMessage();
                 document.getElementById('password-error').style.display = 'block';
                 isValid = false;
             } else {
@@ -120,13 +124,10 @@
             }
 
             if (!isValid) {
-                showToast('Please fix the errors below', 'error');
+                showToast(t.auth_fix_errors || 'Please fix the errors below', 'error');
                 return;
             }
 
-            const lang = localStorage.getItem('preferredLanguage') || 'en';
-            const t = (translations && translations[lang]) || translations.en;
-            
             setButtonLoading(btn, t.signing_in || 'Signing in...');
 
             try {
@@ -135,27 +136,27 @@
                     password
                 });
                 localStorage.setItem('token', data.token);
-                showToast('Login successful!', 'success');
+                showToast(t.auth_login_success || 'Login successful!', 'success');
                 setTimeout(() => {
                     window.location.href = data.redirectPath || '/user/dashboard.html';
                 }, 800);
             } catch (err) {
-                errEl.textContent = err.message || 'Login failed. Please try again.';
+                errEl.textContent = localizeAuthMessage(err.message || 'Login failed. Please try again.');
                 errEl.style.display = 'block';
-                showToast(err.message, 'error');
+                showToast(localizeAuthMessage(err.message), 'error');
                 resetButtonLoading(btn);
             }
         });
 
         // Real-time validation
         document.getElementById('email').addEventListener('blur', function() {
-            if (this.value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)) {
+            if (this.value && isValidGmail(this.value)) {
                 document.getElementById('email-error').style.display = 'none';
             }
         });
 
         document.getElementById('password').addEventListener('blur', function() {
-            if (this.value && this.value.length >= 6) {
+            if (this.value && isStrongPassword(this.value)) {
                 document.getElementById('password-error').style.display = 'none';
             }
         });

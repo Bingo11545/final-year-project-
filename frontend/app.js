@@ -39,6 +39,50 @@ function isLoggedIn() {
     return !!getToken();
 }
 
+function isValidGmail(email) {
+    return /^[^\s@]+@gmail\.com$/i.test(String(email || '').trim());
+}
+
+function getActiveTranslations() {
+    const lang = localStorage.getItem('preferredLanguage') || 'en';
+    return (typeof translations !== 'undefined' && translations[lang]) || (typeof translations !== 'undefined' ? translations.en : {});
+}
+
+function isStrongPassword(password) {
+    return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''));
+}
+
+function getPasswordRuleMessage() {
+    const t = getActiveTranslations();
+    return t.auth_password_rule || 'Password must be at least 8 characters and include both letters and numbers.';
+}
+
+function localizeAuthMessage(message) {
+    const t = getActiveTranslations();
+    const normalized = String(message || '').trim();
+    const messageMap = {
+        'Email must end with @gmail.com': t.auth_email_gmail_only,
+        'Password is required': t.auth_password_required,
+        'Password must be at least 8 characters and include both letters and numbers.': t.auth_password_rule,
+        'Please fix the errors below': t.auth_fix_errors,
+        'Login successful!': t.auth_login_success,
+        'Registration submitted for approval!': t.auth_register_submitted,
+        'Account created successfully!': t.auth_register_success
+    };
+
+    return messageMap[normalized] || normalized;
+}
+
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (!input || !icon) return;
+
+    const nextType = input.type === 'password' ? 'text' : 'password';
+    input.type = nextType;
+    icon.className = nextType === 'text' ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
 function logout() {
     localStorage.removeItem('token');
     window.location.href = '/index.html';

@@ -338,7 +338,7 @@
                     <h3><i class="fas fa-bullhorn"></i> <span data-key="tip_title">Send a Tip or Provide Update</span></h3>
                     <p data-key="tip_desc">Do you have information about this person? Submitting a tip effectively sends your information to the investigating agency.</p>
                     <textarea id="tipMessage" rows="4" style="margin-bottom:10px;" data-placeholder-key="tip_placeholder" placeholder="Describe what you saw, when, and where..."></textarea>
-                    <input type="text" id="tipContact" placeholder="Your contact info (optional)" style="margin-bottom:10px;">
+                    <input type="text" id="tipContact" data-placeholder-key="case_contact_placeholder" placeholder="Your contact info (optional)" style="margin-bottom:10px;">
                     <button class="btn btn-danger" onclick="submitTip()" data-key="tip_submit">Submit Tip to Police</button>
                     <p class="tip-note" data-key="tip_emergency">* In emergencies, contact your local emergency services immediately.</p>
                 </div>
@@ -389,21 +389,21 @@
                 document.getElementById('p-gender').textContent = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';
                 
                 // New Fields
-                document.getElementById('p-classification').textContent = p.classification || 'Missing';
-                document.getElementById('p-height').textContent = p.height ? `${p.height} cm` : 'Unknown';
-                document.getElementById('p-weight').textContent = p.weight ? `${p.weight} kg` : 'Unknown';
-                document.getElementById('p-eyes').textContent = p.eyeColor || 'Unknown';
-                document.getElementById('p-hair').textContent = p.hairColor || 'Unknown';
-                document.getElementById('p-race').textContent = p.race || 'Unknown';
-                document.getElementById('p-marks').textContent = p.distinguishingMarks || 'None noted.';
+                document.getElementById('p-classification').textContent = p.classification || (t.status_missing || 'Missing');
+                document.getElementById('p-height').textContent = p.height ? `${p.height} cm` : (t.unknown || 'Unknown');
+                document.getElementById('p-weight').textContent = p.weight ? `${p.weight} kg` : (t.unknown || 'Unknown');
+                document.getElementById('p-eyes').textContent = p.eyeColor || (t.unknown || 'Unknown');
+                document.getElementById('p-hair').textContent = p.hairColor || (t.unknown || 'Unknown');
+                document.getElementById('p-race').textContent = p.race || (t.unknown || 'Unknown');
+                document.getElementById('p-marks').textContent = p.distinguishingMarks || caseText('case_none_noted', 'None noted.');
 
                 document.getElementById('p-date').textContent = new Date(p.lastSeenDate).toLocaleDateString();
                 document.getElementById('p-location').textContent = p.lastSeenLocation || p.city;
-                document.getElementById('p-case').textContent = p.policeCaseNumber || 'Pending';
+                document.getElementById('p-case').textContent = p.policeCaseNumber || caseText('case_pending', 'Pending');
                 document.getElementById('p-district').textContent = p.policeDistrict || 'N/A';
-                document.getElementById('p-desc').textContent = p.description || 'No description provided.';
-                document.getElementById('p-vehicle').textContent = p.vehicleInformation || 'None Listed';
-                document.getElementById('p-social').textContent = p.socialMediaAccounts || 'None Listed';
+                document.getElementById('p-desc').textContent = p.description || caseText('case_no_description', 'No description provided.');
+                document.getElementById('p-vehicle').textContent = p.vehicleInformation || caseText('case_none_listed', 'None Listed');
+                document.getElementById('p-social').textContent = p.socialMediaAccounts || caseText('case_none_listed', 'None Listed');
                 
                 const statusBadge = document.getElementById('p-status');
                 const isActive = p.status === 'Missing';

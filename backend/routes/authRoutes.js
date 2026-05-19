@@ -35,6 +35,18 @@ function stripSensitiveUser(user) {
   return clone;
 }
 
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function isValidGmail(email) {
+  return /^[^\s@]+@gmail\.com$/i.test(normalizeEmail(email));
+}
+
+function isStrongPassword(password) {
+  return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''));
+}
+
 async function ensureSystemAdminAccount() {
   const adminEmail = SYSTEM_ADMIN_EMAIL.toLowerCase();
   const existing = await store.findUserByEmail(adminEmail);
@@ -97,7 +109,17 @@ router.post(
   try {
     await ensureSystemAdminAccount();
 
-    const existing = await store.findUserByEmail(email);
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidGmail(normalizedEmail)) {
+      return res.status(400).json({ msg: 'Email must end with @gmail.com' });
+    }
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ msg: 'Password must be at least 8 characters and include both letters and numbers.' });
+    }
+
+    const existing = await store.findUserByEmail(normalizedEmail);
     if (existing) {
       return res.status(400).json({ msg: 'User already exists' });
     }
@@ -145,7 +167,7 @@ router.post(
 
     const user = await store.createUser({
       username,
-      email,
+      email: normalizedEmail,
       password: passwordHash,
       role,
       organizationName: organizationName || '',
@@ -203,7 +225,17 @@ router.post('/login', async (req, res) => {
   try {
     await ensureSystemAdminAccount();
 
-    const user = await store.findUserByEmail(email);
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidGmail(normalizedEmail)) {
+      return res.status(400).json({ msg: 'Email must end with @gmail.com' });
+    }
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ msg: 'Password must be at least 8 characters and include both letters and numbers.' });
+    }
+
+    const user = await store.findUserByEmail(normalizedEmail);
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
 
     const ok = await bcrypt.compare(password, user.password || '');
@@ -325,7 +357,12 @@ router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
 
 router.post('/forgotpassword', async (req, res) => {
   try {
-    const user = await store.findUserByEmail(req.body.email);
+    const normalizedEmail = normalizeEmail(req.body.email);
+    if (!isValidGmail(normalizedEmail)) {
+      return res.status(400).json({ msg: 'Email must end with @gmail.com' });
+    }
+
+    const user = await store.findUserByEmail(normalizedEmail);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
     const resetToken = crypto.randomBytes(20).toString('hex');
@@ -356,6 +393,10 @@ router.post('/forgotpassword', async (req, res) => {
 
 router.post('/resetpassword/:resettoken', async (req, res) => {
   try {
+    if (!isStrongPassword(req.body.password)) {
+      return res.status(400).json({ msg: 'Password must be at least 8 characters and include both letters and numbers.' });
+    }
+
     const resetPasswordToken = crypto.createHash('sha256').update(req.params.resettoken).digest('hex');
     const users = await store.listUsers((u) =>
       u.resetPasswordToken === resetPasswordToken && Number(u.resetPasswordExpire || 0) > Date.now()

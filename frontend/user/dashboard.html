@@ -46,7 +46,7 @@
                         <span class="status-dot-red" style="margin-right:10px; vertical-align:middle;"></span>
                         <span data-key="section_active">Active Cases</span>
                     </h1>
-                    <p class="dashboard-subtitle">Live national registry — updated in real time</p>
+                    <p class="dashboard-subtitle" data-key="dashboard_subtitle_live">Live national registry - updated in real time</p>
                 </div>
                 <a href="/user/report.html" class="btn btn-danger btn-sm" id="btn-new-report">
                     <i class="fas fa-plus"></i>
@@ -59,7 +59,7 @@
         <div class="filter-bar">
             <div class="filter-label-wrap">
                 <i class="fas fa-filter" style="color:var(--accent-blue); font-size:0.9rem;"></i>
-                <span class="filter-label">Filters</span>
+                <span class="filter-label" data-key="filters_label">Filters</span>
             </div>
             <div class="filter-divider"></div>
 
@@ -76,14 +76,12 @@
             </div>
 
             <select id="filterStatus" onchange="loadPeople()" style="flex:1; min-width:160px; max-width:220px;">
-                <option value="" data-key="status_all">All Statuses</option>
                 <option value="Missing" data-key="status_missing">Missing</option>
-                <option value="Found" data-key="status_found">Found</option>
             </select>
 
             <button onclick="loadPeople()" class="btn btn-sm" style="flex-shrink:0; padding:9px 20px;">
                 <i class="fas fa-sync-alt"></i>
-                <span>Refresh</span>
+                <span data-key="refresh">Refresh</span>
             </button>
         </div>
 
@@ -135,7 +133,7 @@
             container.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>${t.loading || 'Loading...'}</span></div>`;
 
             try {
-                const people = await apiCall(url);
+                const people = (await apiCall(url)).filter((person) => person.status !== 'Found');
                 container.innerHTML = '';
 
                 if (people.length === 0) {
@@ -163,10 +161,10 @@
                         ? `<span class="classification-tag">${p.classification}</span>`
                         : '';
                     const moderationTag = p.isApproved === false
-                        ? `<span class="classification-tag pending-tag">Pending Review</span>`
+                        ? `<span class="classification-tag pending-tag">${t.pending_review || 'Pending Review'}</span>`
                         : '';
                     const caseBar = p.policeCaseNumber
-                        ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> Case ${p.policeCaseNumber}</div>`
+                        ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> ${t.public_case_prefix || 'Case'} ${p.policeCaseNumber}</div>`
                         : '';
 
                     card.innerHTML = `
@@ -188,7 +186,7 @@
                                 </span>
                                 <span>
                                     <i class="fas fa-map-marker-alt meta-icon-red"></i>
-                                    <strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.lastSeenLocation || 'Unknown'}
+                                    <strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.lastSeenLocation || (t.unknown || 'Unknown')}
                                 </span>
                                 <span>
                                     <i class="fas fa-calendar-alt meta-icon-muted"></i>
@@ -200,11 +198,6 @@
                                     class="action-ghost">
                                     <i class="fas fa-user" style="font-size:0.7rem;"></i>
                                     ${t.btn_view_case || 'View'}
-                                </a>
-                                <a href="/user/case.html?id=${p._id}&action=report"
-                                    class="action-success">
-                                    <i class="fas fa-check" style="font-size:0.7rem;"></i>
-                                    ${t.btn_found || 'Found!'}
                                 </a>
                             </div>
                         </div>
@@ -218,7 +211,7 @@
                 container.innerHTML = `
                     <div class="error-state">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>Error loading data. Please try again.</p>
+                        <p>${t.error_loading_data || 'Error loading data. Please try again.'}</p>
                     </div>`;
             }
         }
