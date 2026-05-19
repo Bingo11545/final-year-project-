@@ -8,6 +8,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="../theme.js"></script>
     <style>
+        .admin-section-block {
+            margin-top: 1.4rem;
+        }
+
+        .admin-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 0.9rem;
+        }
+
+        .admin-section-head h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+        }
+
+        [data-theme="light"] .admin-section-head h3 {
+            color: #0f172a;
+        }
+
+        .admin-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+        }
+
+        .admin-review-columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 18px;
+        }
+
         .admin-user-card {
             display: grid;
             grid-template-columns: 140px 1fr;
@@ -16,6 +51,70 @@
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
             padding: 18px;
+        }
+
+        .admin-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .admin-status-approved {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .admin-status-rejected {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .admin-status-pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .admin-case-log {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .admin-case-log-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .admin-case-log-card h4 {
+            margin: 0 0 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        [data-theme="light"] .admin-case-log-card h4 {
+            color: #0f172a;
+        }
+
+        .admin-case-log-meta {
+            display: grid;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        [data-theme="light"] .admin-case-log-meta {
+            color: #374151;
         }
 
         .admin-user-photo {
@@ -96,10 +195,60 @@
 
         <p class="text-muted" style="margin-bottom:1.2rem;" data-key="admin_desc">Review ID documents and approve or reject law enforcement and authorized organization registrations.</p>
 
-        <div id="pending-list" class="grid-container">
-            <div class="loading-indicator loading-full">
-                <div class="spinner"></div>
-                <span data-key="admin_loading">Loading pending registrations...</span>
+        <div class="admin-section-block">
+            <div class="admin-section-head">
+                <h3 data-key="admin_pending_title">Pending Requests</h3>
+            </div>
+            <div id="pending-list" class="grid-container">
+                <div class="loading-indicator loading-full">
+                    <div class="spinner"></div>
+                    <span data-key="admin_loading">Loading pending registrations...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section-block">
+            <div class="admin-section-head">
+                <h3 data-key="admin_reviewed_title">Reviewed Requests</h3>
+            </div>
+            <div class="admin-review-columns">
+                <div>
+                    <div class="admin-section-head">
+                        <h3 data-key="admin_approved_list_title">Approved Requests</h3>
+                    </div>
+                    <div id="approved-list" class="grid-container">
+                        <div class="loading-indicator loading-full">
+                            <div class="spinner"></div>
+                            <span data-key="admin_loading_history">Loading review history...</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="admin-section-head">
+                        <h3 data-key="admin_rejected_list_title">Declined Requests</h3>
+                    </div>
+                    <div id="rejected-list" class="grid-container">
+                        <div class="loading-indicator loading-full">
+                            <div class="spinner"></div>
+                            <span data-key="admin_loading_history">Loading review history...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section-block">
+            <div class="admin-section-head">
+                <div>
+                    <h3 data-key="admin_case_log_title">Police-Approved Case Posts</h3>
+                    <p class="text-muted" style="margin:6px 0 0;" data-key="admin_case_log_desc">See which police admin approved each published case.</p>
+                </div>
+            </div>
+            <div id="case-approval-log" class="admin-case-log">
+                <div class="loading-indicator loading-full">
+                    <div class="spinner"></div>
+                    <span data-key="admin_loading_history">Loading review history...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -122,67 +271,145 @@
 
         const na = () => getAdminText('not_available', 'N/A');
 
-        if (getUserRole() !== 'admin') {
+        if (!IS_FORCED_PUBLIC_VIEW && getUserRole() !== 'admin') {
             window.location.href = '../login.html';
         }
 
-        async function loadPendingRegistrations() {
-            const listEl = document.getElementById('pending-list');
-            listEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading', 'Loading pending registrations...')}</span></div>`;
+        function roleLabel(role) {
+            if (role === 'law_enforcement') return 'Law Enforcement';
+            if (role === 'authorized_org') return 'Authorized Organization';
+            if (role === 'admin') return 'Admin';
+            return role || na();
+        }
+
+        function formatDate(value) {
+            if (!value) return na();
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? na() : date.toLocaleString();
+        }
+
+        function createUserCard(u, mode = 'pending') {
+            const card = document.createElement('div');
+            card.className = 'admin-user-card';
+
+            const docLink = u.verificationDocument
+                ? `${BACKEND_ORIGIN}/${u.verificationDocument}`
+                : '';
+
+            const profilePhoto = u.profilePhoto
+                ? `${BACKEND_ORIGIN}/${u.profilePhoto}`
+                : '';
+
+            const safePhoto = profilePhoto || 'https://via.placeholder.com/320x360?text=No+Photo';
+            const statusClass = mode === 'approved' ? 'admin-status-approved' : (mode === 'rejected' ? 'admin-status-rejected' : 'admin-status-pending');
+            const statusLabel = mode === 'approved'
+                ? getAdminText('admin_approved_list_title', 'Approved Requests')
+                : (mode === 'rejected' ? getAdminText('admin_rejected_list_title', 'Declined Requests') : getAdminText('admin_pending_title', 'Pending Requests'));
+
+            const reviewMeta = mode === 'pending'
+                ? ''
+                : `
+                    <span><strong>${getAdminText('admin_reviewed_by', 'Reviewed By')}:</strong> ${u.verificationReviewedByName || na()}</span>
+                    <span><strong>${getAdminText('admin_reviewed_at', 'Reviewed At')}:</strong> ${formatDate(u.verificationReviewedAt)}</span>
+                    ${mode === 'rejected' ? `<span><strong>${getAdminText('admin_rejection_reason', 'Reason')}:</strong> ${u.verificationRejectionReason || na()}</span>` : ''}
+                `;
+
+            const actions = mode === 'pending'
+                ? `
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-sm" style="background:#16a34a; border:none;" onclick="approveRegistration('${u._id}')">
+                            <i class="fas fa-check"></i><span>${getAdminText('admin_approve', 'Approve')}</span>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectRegistration('${u._id}')">
+                            <i class="fas fa-xmark"></i><span>${getAdminText('admin_reject', 'Reject')}</span>
+                        </button>
+                    </div>
+                `
+                : '';
+
+            card.innerHTML = `
+                <img src="${safePhoto}" alt="${u.username} photo" class="admin-user-photo" onclick="openPhotoModal('${safePhoto}')">
+                <div class="info" style="padding-top:4px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                        <h3 style="margin:0; font-size:1.25rem;">${u.username}</h3>
+                        <span class="admin-status-pill ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div class="admin-user-meta">
+                        <span><strong>${getAdminText('admin_email', 'Email')}:</strong> ${u.email}</span>
+                        <span><strong>${getAdminText('admin_role', 'Role')}:</strong> ${roleLabel(u.role)}</span>
+                        <span><strong>${getAdminText('admin_org', 'Organization')}:</strong> ${u.organizationName || na()}</span>
+                        <span><strong>${getAdminText('admin_station', 'Station')}:</strong> ${u.station || na()}</span>
+                        <span><strong>${getAdminText('admin_dob', 'Date of Birth')}:</strong> ${u.dateOfBirth || na()}</span>
+                        <span><strong>${getAdminText('admin_id_service', 'ID / Service Number')}:</strong> ${u.idNumber || na()}</span>
+                        <span><strong>${getAdminText('admin_submitted', 'Submitted')}:</strong> ${formatDate(u.createdAt)}</span>
+                        ${reviewMeta}
+                    </div>
+                    ${docLink ? `<a href="${docLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="margin-bottom:10px; display:inline-flex;"><i class="fas fa-file-alt"></i><span>${getAdminText('admin_view_id_doc', 'View ID Document')}</span></a>` : `<p class="error-inline">${getAdminText('admin_no_doc', 'No document uploaded')}</p>`}
+                    ${actions}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function renderRegistrationList(containerId, users, emptyKey, emptyFallback, mode) {
+            const listEl = document.getElementById(containerId);
+            if (!users.length) {
+                listEl.innerHTML = `<div class="empty-state loading-full">${getAdminText(emptyKey, emptyFallback)}</div>`;
+                return;
+            }
+
+            listEl.innerHTML = '';
+            users.forEach((user) => listEl.appendChild(createUserCard(user, mode)));
+        }
+
+        function renderCaseApprovalLog(cases) {
+            const logEl = document.getElementById('case-approval-log');
+            if (!cases.length) {
+                logEl.innerHTML = `<div class="empty-state loading-full">${getAdminText('admin_case_log_empty', 'No police-approved case posts recorded yet.')}</div>`;
+                return;
+            }
+
+            logEl.innerHTML = cases.map((person) => `
+                <div class="admin-case-log-card">
+                    <h4>${person.fullName || na()}</h4>
+                    <div class="admin-case-log-meta">
+                        <span><strong>${getAdminText('admin_case_name', 'Case')}:</strong> ${person.policeCaseNumber || person.officialVerificationRef || na()}</span>
+                        <span><strong>${getAdminText('admin_case_approved_by', 'Approved By')}:</strong> ${person.approvedByName || na()}</span>
+                        <span><strong>${getAdminText('admin_case_approved_at', 'Approved At')}:</strong> ${formatDate(person.approvedAt)}</span>
+                        <span><strong>${getAdminText('admin_case_reported_by', 'Reported By')}:</strong> ${person.reportedBy?.username || na()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadAdminDashboard() {
+            const pendingEl = document.getElementById('pending-list');
+            const approvedEl = document.getElementById('approved-list');
+            const rejectedEl = document.getElementById('rejected-list');
+            const caseLogEl = document.getElementById('case-approval-log');
+
+            pendingEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading', 'Loading pending registrations...')}</span></div>`;
+            approvedEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
+            rejectedEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
+            caseLogEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
 
             try {
-                const users = await apiCall('/auth/pending-registrations');
+                const [summary, caseLog] = await Promise.all([
+                    apiCall('/auth/registration-review-summary'),
+                    apiCall('/people/admin/approval-log')
+                ]);
 
-                if (!users.length) {
-                    listEl.innerHTML = `<div class="empty-state loading-full">${getAdminText('admin_no_pending', 'No pending registrations.')}</div>`;
-                    return;
-                }
-
-                listEl.innerHTML = '';
-
-                users.forEach((u) => {
-                    const card = document.createElement('div');
-                    card.className = 'admin-user-card';
-
-                    const docLink = u.verificationDocument
-                        ? `${BACKEND_ORIGIN}/${u.verificationDocument}`
-                        : '';
-
-                    const profilePhoto = u.profilePhoto
-                        ? `${BACKEND_ORIGIN}/${u.profilePhoto}`
-                        : '';
-
-                    const safePhoto = profilePhoto || 'https://via.placeholder.com/320x360?text=No+Photo';
-
-                    card.innerHTML = `
-                        <img src="${safePhoto}" alt="${u.username} photo" class="admin-user-photo" onclick="openPhotoModal('${safePhoto}')">
-                        <div class="info" style="padding-top:4px;">
-                            <h3 style="margin-bottom:8px; font-size:1.25rem;">${u.username}</h3>
-                            <div class="admin-user-meta">
-                                <span><strong>${getAdminText('admin_email', 'Email')}:</strong> ${u.email}</span>
-                                <span><strong>${getAdminText('admin_role', 'Role')}:</strong> ${u.role}</span>
-                                <span><strong>${getAdminText('admin_org', 'Organization')}:</strong> ${u.organizationName || na()}</span>
-                                <span><strong>${getAdminText('admin_station', 'Station')}:</strong> ${u.station || na()}</span>
-                                <span><strong>${getAdminText('admin_dob', 'Date of Birth')}:</strong> ${u.dateOfBirth || na()}</span>
-                                <span><strong>${getAdminText('admin_id_service', 'ID / Service Number')}:</strong> ${u.idNumber || na()}</span>
-                                <span><strong>${getAdminText('admin_submitted', 'Submitted')}:</strong> ${new Date(u.createdAt).toLocaleString()}</span>
-                            </div>
-                            ${docLink ? `<a href="${docLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="margin-bottom:10px; display:inline-flex;"><i class="fas fa-file-alt"></i><span>${getAdminText('admin_view_id_doc', 'View ID Document')}</span></a>` : `<p class="error-inline">${getAdminText('admin_no_doc', 'No document uploaded')}</p>`}
-                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                <button class="btn btn-sm" style="background:#16a34a; border:none;" onclick="approveRegistration('${u._id}')">
-                                    <i class="fas fa-check"></i><span>${getAdminText('admin_approve', 'Approve')}</span>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="rejectRegistration('${u._id}')">
-                                    <i class="fas fa-xmark"></i><span>${getAdminText('admin_reject', 'Reject')}</span>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-
-                    listEl.appendChild(card);
-                });
+                renderRegistrationList('pending-list', summary.pending || [], 'admin_no_pending', 'No pending registrations.', 'pending');
+                renderRegistrationList('approved-list', summary.approved || [], 'admin_no_approved', 'No approved requests yet.', 'approved');
+                renderRegistrationList('rejected-list', summary.rejected || [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+                renderCaseApprovalLog(caseLog || []);
             } catch (err) {
-                listEl.innerHTML = `<div class="error-state loading-full">${getAdminText('admin_load_failed', 'Failed to load pending registrations')}: ${err.message}</div>`;
+                const failText = `${getAdminText('admin_load_failed', 'Failed to load pending registrations')}: ${err.message}`;
+                pendingEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                approvedEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                rejectedEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                caseLogEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
             }
         }
 
@@ -190,7 +417,7 @@
             try {
                 await apiCall(`/auth/registrations/${userId}/approve`, 'PUT', {});
                 showToast(getAdminText('admin_approved_success', 'Registration approved. User has been notified.'), 'success');
-                loadPendingRegistrations();
+                loadAdminDashboard();
             } catch (err) {
                 showToast(`${getAdminText('admin_approve_failed', 'Approve failed')}: ${err.message}`, 'error');
             }
@@ -202,7 +429,7 @@
             try {
                 await apiCall(`/auth/registrations/${userId}/reject`, 'PUT', { reason });
                 showToast(getAdminText('admin_rejected_success', 'Registration rejected. User has been notified to resubmit.'), 'success');
-                loadPendingRegistrations();
+                loadAdminDashboard();
             } catch (err) {
                 showToast(`${getAdminText('admin_reject_failed', 'Reject failed')}: ${err.message}`, 'error');
             }
@@ -222,7 +449,7 @@
             img.src = '';
         }
 
-        loadPendingRegistrations();
+        loadAdminDashboard();
         changeLanguage(localStorage.getItem('preferredLanguage') || 'en');
     </script>
 </body>

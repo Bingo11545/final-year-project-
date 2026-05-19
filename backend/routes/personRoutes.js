@@ -180,6 +180,29 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
+  try {
+    const users = await store.listUsers();
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+    const approvedPeople = await store.listPeople((p) => p.isApproved === true);
+
+    approvedPeople.sort((a, b) => new Date(b.approvedAt || b.updatedAt || 0) - new Date(a.approvedAt || a.updatedAt || 0));
+
+    const log = approvedPeople
+      .filter((person) => person.approvedBy || person.reportedBy)
+      .map((person) => ({
+        ...normalizePerson(person, userMap),
+        approvedByName: person.approvedByName || userMap[person.approvedBy]?.username || null,
+        approvedByRole: person.approvedByRole || userMap[person.approvedBy]?.role || null
+      }));
+
+    return res.json(log);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const person = await store.getPersonById(req.params.id);
@@ -400,7 +423,14 @@ router.put('/:id/approve', auth(), async (req, res) => {
     }
     const person = await store.getPersonById(req.params.id);
     if (!person) return res.status(404).json({ msg: 'Not found' });
-    const updated = await store.updatePerson(req.params.id, { isApproved: true });
+    const approver = await store.getUserById(req.user.id);
+    const updated = await store.updatePerson(req.params.id, {
+      isApproved: true,
+      approvedAt: new Date().toISOString(),
+      approvedBy: req.user.id,
+      approvedByName: approver?.username || 'Police Admin',
+      approvedByRole: req.user.role
+    });
     return res.json(updated);
   } catch (err) {
     console.error(err);

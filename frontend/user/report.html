@@ -626,13 +626,14 @@
                         <p id="report-step1-desc">Mandatory under Proclamation No. 720/2011 - Federal Police Act</p>
                     </div>
                 </div>
-                <label class="legal-check-label">
-                    <input type="checkbox" id="legalCheck" required>
+                <div class="legal-check-label legal-requirement-note">
+                    <i class="fas fa-circle-info"></i>
                     <span id="report-step1-certify">I certify that this case has already been reported to the <strong>Ethiopian Federal Police</strong> or a regional police authority.</span>
-                </label>
+                </div>
+                <div class="verify-hint" id="report-step1-requirement">To continue, enter the police report ID or official verification reference in Step 2. The report form is available immediately so the case details can be completed in the correct order.</div>
             </div>
 
-            <div id="mainForm" class="hidden-block">
+            <div id="mainForm">
 
                 <!-- STEP 2: POLICE RECORD (Law Enforcement Only) -->
                 <div id="step-official-record" class="report-card card-indigo">
@@ -927,6 +928,7 @@
                 ['report-police-mode-title', 'report_police_mode_title', 'Law Enforcement Mode Active'],
                 ['report-police-mode-note', 'report_police_mode_note', 'This report will be automatically approved and published to the national registry.'],
                 ['report-step1-desc', 'report_step1_desc', 'Mandatory under Proclamation No. 720/2011 - Federal Police Act'],
+                ['report-step1-requirement', 'report_step1_requirement', 'To continue, enter the police report ID or official verification reference in Step 2. The report form is available immediately so the case details can be completed in the correct order.'],
                 ['report-step2-desc', 'report_step2_desc', 'Enter the police report ID or official verification reference linked to this case'],
                 ['report-step7-desc', 'report_step7_desc', 'Upload a clear, high-resolution facial photo - AI validated for identity matching'],
                 ['report-upload-cta', 'report_upload_cta', 'Click or drag to upload photo'],
@@ -972,16 +974,8 @@
         updateNav();
         applyReportTranslations();
 
-        // Legal Check Interaction
-        const legalCheck = document.getElementById('legalCheck');
         const mainForm = document.getElementById('mainForm');
-
-        legalCheck.addEventListener('change', function () {
-            mainForm.style.display = this.checked ? 'block' : 'none';
-            if (this.checked) {
-                mainForm.style.animation = 'fadeIn 0.4s ease';
-            }
-        });
+        mainForm.style.display = 'block';
 
         // Police Role Logic
         const userRole = typeof getUserRole === 'function' ? getUserRole() : null;
@@ -1000,8 +994,6 @@
             const banner = document.getElementById('police-banner');
             if (banner) banner.style.display = 'flex';
 
-            legalCheck.checked = true;
-            legalCheck.dispatchEvent(new Event('change'));
         } else {
             officialStep.style.display = 'block';
             policeDistrictInput.required = false;
@@ -1117,11 +1109,6 @@
         // Form Submission
         document.getElementById('reportForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            if (!legalCheck.checked) {
-                showToast('You must confirm the legal reporting requirement before continuing.', 'warning');
-                return;
-            }
 
             if (!officialVerificationRefInput.value.trim()) {
                 showToast('Please provide a report ID or official verification reference.', 'warning');

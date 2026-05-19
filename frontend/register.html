@@ -35,7 +35,7 @@
         }
 
         [data-theme="light"] .register-panel-left {
-            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 60%, #2563eb 100%);
+            background: linear-gradient(135deg, #163b8f 0%, #1d4ed8 60%, #3b82f6 100%);
         }
 
         .register-panel-left::before {
@@ -150,6 +150,12 @@
             background: var(--bg-base);
         }
 
+        [data-theme="light"] .register-panel-right {
+            background:
+                radial-gradient(circle at top right, rgba(59,130,246,0.08), transparent 38%),
+                linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+        }
+
         @media (max-width: 900px) {
             .register-panel-right {
                 width: 100%;
@@ -160,6 +166,15 @@
         .register-box {
             width: 100%;
             max-width: 440px;
+        }
+
+        [data-theme="light"] .register-box {
+            background: rgba(255,255,255,0.82);
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 22px;
+            padding: 1.4rem 1.35rem 1.5rem;
+            box-shadow: 0 18px 45px rgba(15,23,42,0.08);
+            backdrop-filter: blur(8px);
         }
 
         /* Mobile nav-like header */
@@ -215,6 +230,11 @@
 
         [data-theme="light"] .register-header p { color: #374151; }
 
+        [data-theme="light"] .quick-guide-card {
+            background: rgba(255,255,255,0.9);
+            border-color: rgba(15,23,42,0.08);
+        }
+
         /* Role tabs */
         .role-tabs {
             display: flex;
@@ -243,12 +263,16 @@
             border-radius: 8px;
             cursor: pointer;
             color: var(--text-muted);
-            font-size: 0.72rem;
+            font-size: 0.76rem;
             font-family: var(--font-body);
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.04em;
             text-transform: uppercase;
             transition: all 0.2s;
+        }
+
+        [data-theme="light"] .role-tab-btn {
+            color: #475569;
         }
 
         .role-tab-btn i { font-size: 1rem; margin-bottom: 2px; }
@@ -282,6 +306,38 @@
 
         [data-theme="light"] .rform-group label { color: #374151 !important; }
 
+        [data-theme="light"] .input-with-icon i {
+            color: #475569;
+        }
+
+        [data-theme="light"] .input-with-icon input,
+        [data-theme="light"] #dateOfBirth,
+        [data-theme="light"] #organizationName,
+        [data-theme="light"] #station,
+        [data-theme="light"] #idNumber {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+        }
+
+        [data-theme="light"] .input-with-icon input::placeholder,
+        [data-theme="light"] #dateOfBirth::placeholder,
+        [data-theme="light"] #organizationName::placeholder,
+        [data-theme="light"] #station::placeholder,
+        [data-theme="light"] #idNumber::placeholder {
+            color: #64748b;
+        }
+
+        [data-theme="light"] .input-with-icon input:focus,
+        [data-theme="light"] #dateOfBirth:focus,
+        [data-theme="light"] #organizationName:focus,
+        [data-theme="light"] #station:focus,
+        [data-theme="light"] #idNumber:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+        }
+
         .input-with-icon { position: relative; }
 
         .input-with-icon i {
@@ -298,23 +354,7 @@
         }
 
         /* Error message */
-        .reg-error {
-            display: none;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.25);
-            border-left: 4px solid #ef4444;
-            color: #f87171;
-            padding: 12px 15px;
-            border-radius: 10px;
-            font-size: 0.875rem;
-            margin-bottom: 1.25rem;
-            line-height: 1.5;
-        }
-
-        [data-theme="light"] .reg-error {
-            background: rgba(220,38,38,0.06);
-            color: #b91c1c;
-        }
+        .reg-error { display: none !important; }
 
         /* ID Verification section */
         .verify-section {
@@ -670,7 +710,7 @@
                 </div>
 
                 <!-- Error -->
-                <div id="error-msg" class="reg-error"></div>
+                <div id="error-msg" class="reg-error" aria-hidden="true"></div>
 
                 <form id="registerForm">
                     <input type="hidden" id="role" value="public_user">
@@ -980,8 +1020,6 @@
             }
 
             if (validationError) {
-                errEl.textContent = validationError;
-                errEl.style.display = 'block';
                 showToast(validationError, 'error');
                 return;
             }
@@ -1013,12 +1051,7 @@
                     resetButtonLoading(btn);
                     btn.innerHTML = `<i class="fas fa-clock"></i> <span>${getLocalText('register_pending_admin_approval', 'Pending Admin Approval')}</span>`;
                     btn.disabled = true;
-                    errEl.style.display = 'block';
-                    errEl.style.color = '#16a34a';
-                    errEl.style.background = 'rgba(34,197,94,0.12)';
-                    errEl.style.borderColor = 'rgba(34,197,94,0.25)';
-                    errEl.textContent = data.msg || getLocalText('register_pending_registration', 'Registration submitted and pending system admin approval.');
-                    showToast(getLocalText('auth_register_submitted', 'Registration submitted for approval!'), 'success');
+                    showToast(data.msg || getLocalText('auth_register_submitted', 'Registration submitted for approval!'), 'success', 5200);
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 2500);
@@ -1031,11 +1064,6 @@
                     window.location.href = data.redirectPath || '/user/dashboard.html';
                 }, 800);
             } catch (err) {
-                errEl.textContent = localizeAuthMessage(err.message);
-                errEl.style.display = 'block';
-                errEl.style.background = 'rgba(239,68,68,0.12)';
-                errEl.style.color = '#f87171';
-                errEl.style.borderColor = 'rgba(239,68,68,0.25)';
                 showToast(localizeAuthMessage(err.message), 'error');
                 resetButtonLoading(btn);
                 setFormDisabled(form, false);

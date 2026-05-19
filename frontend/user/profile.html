@@ -234,7 +234,7 @@
 
         document.getElementById('tipForm').addEventListener('submit', async(e) => {
             e.preventDefault();
-            alert("Thank you. Your tip has been submitted to our system and will be reviewed.");
+            showToast('Thank you. Your tip has been submitted to our system and will be reviewed.', 'success');
             document.getElementById('tipForm').reset();
             // In a real app, this would POST to /api/people/:id/tips
         });

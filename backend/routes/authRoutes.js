@@ -272,9 +272,39 @@ router.get('/pending-registrations', auth(['admin']), async (req, res) => {
   }
 });
 
+router.get('/registration-review-summary', auth(['admin']), async (req, res) => {
+  try {
+    const reviewedUsers = await store.listUsers((u) =>
+      ['law_enforcement', 'authorized_org'].includes(u.role) && ['pending', 'approved', 'rejected'].includes(u.verificationStatus)
+    );
+
+    const pending = reviewedUsers
+      .filter((u) => u.verificationStatus === 'pending')
+      .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+
+    const approved = reviewedUsers
+      .filter((u) => u.verificationStatus === 'approved')
+      .sort((a, b) => new Date(b.verificationReviewedAt || b.updatedAt || 0) - new Date(a.verificationReviewedAt || a.updatedAt || 0));
+
+    const rejected = reviewedUsers
+      .filter((u) => u.verificationStatus === 'rejected')
+      .sort((a, b) => new Date(b.verificationReviewedAt || b.updatedAt || 0) - new Date(a.verificationReviewedAt || a.updatedAt || 0));
+
+    return res.json({
+      pending: pending.map(stripSensitiveUser),
+      approved: approved.map(stripSensitiveUser),
+      rejected: rejected.map(stripSensitiveUser)
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 router.put('/registrations/:id/approve', auth(['admin']), async (req, res) => {
   try {
     const user = await store.getUserById(req.params.id);
+    const reviewer = await store.getUserById(req.user.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
     if (!['law_enforcement', 'authorized_org'].includes(user.role)) {
@@ -284,7 +314,10 @@ router.put('/registrations/:id/approve', auth(['admin']), async (req, res) => {
     await store.updateUser(user._id, {
       isVerified: true,
       verificationStatus: 'approved',
-      verificationRejectionReason: ''
+      verificationRejectionReason: '',
+      verificationReviewedAt: new Date().toISOString(),
+      verificationReviewedBy: req.user.id,
+      verificationReviewedByName: reviewer?.username || 'System Admin'
     });
 
     await store.createNotification({
@@ -313,6 +346,7 @@ router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
   try {
     const reason = (req.body.reason || '').trim();
     const user = await store.getUserById(req.params.id);
+    const reviewer = await store.getUserById(req.user.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
     if (!['law_enforcement', 'authorized_org'].includes(user.role)) {
@@ -322,7 +356,10 @@ router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
     await store.updateUser(user._id, {
       isVerified: false,
       verificationStatus: 'rejected',
-      verificationRejectionReason: reason
+      verificationRejectionReason: reason,
+      verificationReviewedAt: new Date().toISOString(),
+      verificationReviewedBy: req.user.id,
+      verificationReviewedByName: reviewer?.username || 'System Admin'
     });
 
     await store.createNotification({

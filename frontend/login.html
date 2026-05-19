@@ -83,7 +83,7 @@
                 <p class="subtitle" style="color:var(--text-secondary); font-size:0.875rem; margin-top:0;" data-key="login_subtitle">Access the national registry system</p>
             </div>
 
-            <div id="error-msg" style="display:none; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25); color:#f87171; padding:11px 15px; border-radius:8px; font-size:0.875rem; margin-bottom:1rem; animation:fadeIn 0.3s ease-out;" role="alert" aria-live="polite"></div>
+            <div id="error-msg" style="display:none !important;" aria-hidden="true"></div>
 
             <form id="loginForm" novalidate>
                 <div class="form-group">
@@ -129,12 +129,10 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
-            const errEl = document.getElementById('error-msg');
             const form = document.getElementById('loginForm');
             const t = getActiveTranslations();
             
             // Clear previous errors
-            errEl.style.display = 'none';
             clearFormErrors(form);
 
             // Validate form
@@ -176,8 +174,6 @@
                     window.location.href = data.redirectPath || '/user/dashboard.html';
                 }, 800);
             } catch (err) {
-                errEl.textContent = localizeAuthMessage(err.message || 'Login failed. Please try again.');
-                errEl.style.display = 'block';
                 showToast(localizeAuthMessage(err.message), 'error');
                 resetButtonLoading(btn);
             }

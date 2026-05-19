@@ -52,6 +52,12 @@ function isStrongPassword(password) {
     return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''));
 }
 
+function getDashboardPath(role) {
+    if (role === 'admin') return '/system_admin/index.html';
+    if (role === 'law_enforcement') return '/police_admin/dashboard.html';
+    return '/user/dashboard.html';
+}
+
 function getPasswordRuleMessage() {
     const t = getActiveTranslations();
     return t.auth_password_rule || 'Password must be at least 8 characters and include both letters and numbers.';
@@ -407,11 +413,17 @@ function updateNav() {
     const navRight = document.getElementById('nav-right');
     if (!navRight) return;
 
-    if (isLoggedIn() && !IS_FORCED_PUBLIC_VIEW) {
-        const role = getUserRole();
-        const dashboardLink = role === 'admin'
-            ? '/system_admin/index.html'
-            : (role === 'law_enforcement' ? '/police_admin/dashboard.html' : '/user/dashboard.html');
+    const role = getUserRole();
+    const dashboardLink = getDashboardPath(role);
+
+    if (isLoggedIn() && IS_FORCED_PUBLIC_VIEW) {
+        stopNotificationPolling();
+        navRight.innerHTML = `
+            <span class="public-preview-pill" data-key="nav_public_preview">Public Preview</span>
+            <a href="${dashboardLink}" data-key="nav_return_dashboard">Return to Dashboard</a>
+            <a href="#" onclick="logout()" data-key="logout">Logout</a>
+        `;
+    } else if (isLoggedIn()) {
         const reportLink = '/user/report.html';
         const reportHtml = role === 'admin'
             ? ''

@@ -794,7 +794,7 @@
         }
 
         checkAuth();
-        if (getUserRole() !== 'law_enforcement' && getUserRole() !== 'admin') {
+        if (!IS_FORCED_PUBLIC_VIEW && getUserRole() !== 'law_enforcement' && getUserRole() !== 'admin') {
             window.location.href = '/user/dashboard.html';
         }
 
