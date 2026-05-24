@@ -69,21 +69,21 @@
         display: block;
         position: fixed;
         top: 0;
-        left: 0;
+        right: 0;
         bottom: 0;
         width: min(86vw, 320px);
         z-index: 1400;
         padding: 1rem 0.9rem 1.2rem;
         background: linear-gradient(165deg, #0b1223, #101b33);
-        border-right: 1px solid rgba(255, 255, 255, 0.11);
-        transform: translateX(-106%);
+        border-left: 1px solid rgba(255, 255, 255, 0.11);
+        transform: translateX(106%);
         transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
         overflow-y: auto;
     }
 
     [data-theme="light"] .fm-mobile-sidebar {
         background: linear-gradient(165deg, #ffffff, #f5f8ff);
-        border-right-color: rgba(0, 0, 0, 0.09);
+        border-left-color: rgba(0, 0, 0, 0.09);
     }
 
     .fm-mobile-sidebar.open {
