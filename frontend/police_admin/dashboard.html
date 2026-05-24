@@ -6,6 +6,7 @@
     <base href="/">
     <title>Law Enforcement Dashboard — Find Missing Person</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile-menu.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="theme.js"></script>
     <style>
@@ -589,7 +590,7 @@
 <body class="pd-wrapper">
 
     <!-- NAV -->
-    <nav>
+    <nav class="fm-desktop-nav">
         <div class="logo">
             <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
             <a href="index.html">
@@ -786,6 +787,7 @@
 
     <script src="translations.js"></script>
     <script src="app.js"></script>
+    <script src="mobile-menu.js"></script>
     <script>
         function policeText(key, fallback) {
             const lang = localStorage.getItem('preferredLanguage') || 'en';
