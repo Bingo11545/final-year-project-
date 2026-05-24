@@ -844,41 +844,6 @@
                 <div id="list-update-requests">
                     <div class="loading-indicator"><div class="spinner"></div><span>Loading update requests...</span></div>
                 </div>
-                <div class="pd-top-bar" style="margin-top: 1.25rem;">
-                    <div>
-                        <div class="pd-page-title" style="font-size:1.25rem;">
-                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-purple" style="width:38px;height:38px;">
-                                <i class="fas fa-clock-rotate-left"></i>
-                            </div>
-                            <span>Police/User Activity</span>
-                        </div>
-                        <div class="pd-page-sub">Recent activities on update requests, status changes, comments, and tips.</div>
-                    </div>
-                </div>
-                <div class="pd-filter-grid">
-                    <input id="police-activity-search" type="text" placeholder="Search action, actor, case name, details..." oninput="renderPoliceActivity()">
-                    <select id="police-activity-type" onchange="renderPoliceActivity()">
-                        <option value="all">All Actions</option>
-                        <option value="user-case-update-requested">Update Requested</option>
-                        <option value="user-update-approved">Update Approved</option>
-                        <option value="user-update-rejected">Update Rejected</option>
-                        <option value="case-comment-added">Comment Added</option>
-                        <option value="case-tip-added">Tip Added</option>
-                        <option value="case-status-updated">Status Updated</option>
-                    </select>
-                    <select id="police-activity-role" onchange="renderPoliceActivity()">
-                        <option value="all">All Actor Roles</option>
-                        <option value="user">User</option>
-                        <option value="law_enforcement">Police Admin</option>
-                        <option value="admin">System Admin</option>
-                        <option value="authorized_org">Authorized Org</option>
-                    </select>
-                    <button class="pd-btn pd-btn-view" onclick="resetPoliceActivityFilters()"><i class="fas fa-rotate-left"></i> Reset</button>
-                </div>
-                <div id="police-activity-summary" class="pd-filter-summary"></div>
-                <div id="list-police-activity">
-                    <div class="loading-indicator"><div class="spinner"></div><span>Loading activity...</span></div>
-                </div>
             </div>
 
             <!-- ACTIVE SECTION -->
@@ -959,7 +924,6 @@
 
         const selector = document.getElementById('languageSelector');
         let updateRequestCache = [];
-        let policeActivityCache = [];
         if (selector) {
             const savedLang = localStorage.getItem('preferredLanguage') || 'en';
             selector.value = savedLang;
@@ -1017,7 +981,6 @@
             if (tab === 'tips') loadTips();
             if (tab === 'update-requests') {
                 loadUpdateRequests();
-                loadPoliceActivity();
             }
             if (tab === 'my-reports') loadMyReports();
             if (tab === 'active' || tab === 'found') loadAllInternal();
@@ -1128,84 +1091,6 @@
                 }).join('');
         }
 
-        async function loadPoliceActivity() {
-            const container = document.getElementById('list-police-activity');
-            if (!container) return;
-
-            try {
-                policeActivityCache = await apiCall('/people/police/activity-log');
-                renderPoliceActivity();
-            } catch (e) {
-                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading</h3><p>${e.message}</p></div>`;
-            }
-        }
-
-        function actionLabel(type) {
-            const labels = {
-                'user-case-update-requested': 'User requested case update',
-                'user-update-approved': 'Police approved user update',
-                'user-update-rejected': 'Police rejected user update',
-                'case-comment-added': 'Comment added on case',
-                'case-tip-added': 'Tip added on case',
-                'police-case-updated': 'Police updated case data',
-                'case-status-updated': 'Case status changed'
-            };
-            return labels[type] || type || 'Activity';
-        }
-
-        function renderPoliceActivity() {
-            const container = document.getElementById('list-police-activity');
-            if (!container) return;
-
-            if (!Array.isArray(policeActivityCache) || !policeActivityCache.length) {
-                container.innerHTML = '<div class="pd-empty"><i class="fas fa-clock"></i><h3>No activity yet</h3><p>Recent police/user actions will appear here.</p></div>';
-                const summaryEl = document.getElementById('police-activity-summary');
-                if (summaryEl) summaryEl.textContent = 'Showing 0 activity record(s).';
-                return;
-            }
-
-            const query = String(document.getElementById('police-activity-search')?.value || '').trim().toLowerCase();
-            const typeFilter = document.getElementById('police-activity-type')?.value || 'all';
-            const roleFilter = document.getElementById('police-activity-role')?.value || 'all';
-
-            const filtered = policeActivityCache.filter((item) => {
-                const actor = item.actor || {};
-                const details = item.details || {};
-                const haystack = `${item.type || ''} ${actionLabel(item.type)} ${actor.username || ''} ${actor.role || ''} ${details.caseName || ''} ${JSON.stringify(details)}`.toLowerCase();
-                const queryPass = !query || haystack.includes(query);
-                const typePass = typeFilter === 'all' || item.type === typeFilter;
-                const rolePass = roleFilter === 'all' || String(actor.role || '').toLowerCase() === roleFilter;
-                return queryPass && typePass && rolePass;
-            });
-
-            const summaryEl = document.getElementById('police-activity-summary');
-            if (summaryEl) summaryEl.textContent = `Showing ${filtered.length} activity record(s).`;
-
-            if (!filtered.length) {
-                container.innerHTML = '<div class="pd-empty"><i class="fas fa-search"></i><h3>No activity matches filters</h3><p>Try changing filters.</p></div>';
-                return;
-            }
-
-            container.innerHTML = filtered.slice(0, 60).map((item) => {
-                    const actor = item.actor || {};
-                    const details = item.details || {};
-                    const caseName = details.caseName || details.personName || details.fullName || 'N/A';
-                    return `
-                        <div class="pd-case-card tip-c">
-                            <div class="tip-icon">🧾</div>
-                            <div class="pd-case-body">
-                                <div class="pd-case-name">${actionLabel(item.type)}</div>
-                                <div class="pd-case-meta">
-                                    <span><i class="fas fa-user"></i>${actor.username || item.actorName || 'Unknown'} (${actor.role || item.actorRole || 'unknown'})</span>
-                                    <span><i class="fas fa-calendar"></i>${new Date(item.createdAt || Date.now()).toLocaleString()}</span>
-                                    <span><i class="fas fa-file-alt"></i>Case: ${caseName}</span>
-                                </div>
-                                <div class="pd-case-desc">${JSON.stringify(details).slice(0, 220)}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-        }
 
         function resetUpdateRequestFilters() {
             const search = document.getElementById('update-req-search');
@@ -1215,16 +1100,6 @@
             if (field) field.value = 'all';
             if (role) role.value = 'all';
             renderUpdateRequests();
-        }
-
-        function resetPoliceActivityFilters() {
-            const search = document.getElementById('police-activity-search');
-            const type = document.getElementById('police-activity-type');
-            const role = document.getElementById('police-activity-role');
-            if (search) search.value = '';
-            if (type) type.value = 'all';
-            if (role) role.value = 'all';
-            renderPoliceActivity();
         }
 
         async function loadMyReports() {
