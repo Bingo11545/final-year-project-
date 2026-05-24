@@ -205,6 +205,46 @@
         }
         changeLanguage(savedLang);
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeRegExp(value) {
+            return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function highlightMatch(text, keyword) {
+            const plain = String(text || '');
+            const term = String(keyword || '').trim();
+            if (!term) return escapeHtml(plain);
+
+            return escapeHtml(plain).replace(
+                new RegExp(`(${escapeRegExp(term)})`, 'ig'),
+                '<mark class="admin-search-hit">$1</mark>'
+            );
+        }
+
+        function keywordScore(person, keyword) {
+            const term = String(keyword || '').toLowerCase().trim();
+            if (!term) return 0;
+
+            const fields = [
+                person.fullName,
+                person.policeCaseNumber,
+                person.city,
+                person.lastSeenLocation
+            ].map((v) => String(v || '').toLowerCase());
+
+            if (fields.some((v) => v.startsWith(term))) return 3;
+            if (fields.some((v) => v.includes(term))) return 1;
+            return 0;
+        }
+
         function bindDashboardSearchEvents() {
             const triggerSearch = (event) => {
                 if (event.key === 'Enter') {
@@ -252,13 +292,16 @@
                     apiCall('/people/with-mine?status=Found')
                 ]);
                 const people = peopleResponse.filter((person) => person.status !== 'Found');
+                const rankedPeople = search
+                    ? [...people].sort((a, b) => keywordScore(b, search) - keywordScore(a, search))
+                    : people;
                 const caseCount = document.getElementById('dashboard-case-count');
                 const foundCount = document.getElementById('dashboard-found-count');
-                if (caseCount) caseCount.textContent = String(people.length);
+                if (caseCount) caseCount.textContent = String(rankedPeople.length);
                 if (foundCount) foundCount.textContent = String(foundResponse.length || 0);
                 container.innerHTML = '';
 
-                if (people.length === 0) {
+                if (rankedPeople.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state" style="padding:5rem;">
                             <i class="fas fa-search" style="font-size:2.5rem;"></i>
@@ -267,7 +310,7 @@
                     return;
                 }
 
-                people.forEach(p => {
+                rankedPeople.forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'person-card';
                     const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
@@ -282,13 +325,14 @@
                     const caseBar = p.policeCaseNumber
                         ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> ${t.public_case_prefix || 'Case'} ${p.policeCaseNumber}</div>`
                         : '';
+                    const locationText = p.city || p.lastSeenLocation || (t.unknown || 'Unknown');
 
                     card.innerHTML = `
                         ${caseBar}
                         <img src="${imgUrl}" alt="${p.fullName}"
                             onerror="this.src='https://via.placeholder.com/260x220/131c35/4a5568?text=No+Photo'">
                         <div class="info">
-                            <h4>${p.fullName}</h4>
+                            <h4>${highlightMatch(p.fullName, search)}</h4>
                             <div class="chip-row">
                                 <span class="status-badge status-Active">${t.status_missing || 'Missing'}</span>
                                 ${classTag}
@@ -296,7 +340,7 @@
                             </div>
                             <div class="card-meta">
                                 <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull; ${genderText}</span>
-                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>${t.last_seen_label || 'Last Seen'}:</strong> ${p.city || p.lastSeenLocation || (t.unknown || 'Unknown')}</span>
+                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>${t.last_seen_label || 'Last Seen'}:</strong> ${highlightMatch(locationText, search)}</span>
                                 <span><i class="fas fa-calendar meta-icon-muted"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : (t.public_date_unknown || 'Date unknown')}</span>
                             </div>
                             <div class="card-actions">
