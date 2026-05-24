@@ -132,6 +132,11 @@
                         <i class="fas fa-arrow-right"></i>
                         <span data-key="btn_search">Search</span>
                     </button>
+                    <button onclick="triggerAdvancedImageSearch()" class="search-btn" type="button" id="image-search-btn" style="margin-top:8px;">
+                        <i class="fas fa-image"></i>
+                        <span>Advanced Image Search</span>
+                    </button>
+                    <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
                 </div>
             </div>
         </div>
@@ -258,6 +263,76 @@
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('change', loadPublicFeed);
             });
+
+            const imageInput = document.getElementById('imageSearchInput');
+            if (imageInput) {
+                imageInput.addEventListener('change', async (event) => {
+                    const file = event.target.files && event.target.files[0];
+                    if (!file) return;
+                    await loadPublicFeedByImage(file);
+                    imageInput.value = '';
+                });
+            }
+        }
+
+        function triggerAdvancedImageSearch() {
+            const input = document.getElementById('imageSearchInput');
+            if (input) input.click();
+        }
+
+        async function loadPublicFeedByImage(file) {
+            const container = document.getElementById('publicFeed');
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            const t = translations[lang] || translations['en'];
+            container.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>Searching similar faces...</span></div>`;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                const result = await apiCall('/people/search/image', 'POST', formData, true);
+                const people = result.matches || [];
+                container.innerHTML = '';
+
+                if (!people.length) {
+                    container.innerHTML = `<div class="empty-state loading-full" style="padding:4rem;"><i class="fas fa-image"></i><p style="font-size:1rem;">No similar cases found for this image.</p></div>`;
+                    return;
+                }
+
+                people.forEach((p) => {
+                    const card = document.createElement('div');
+                    card.className = 'person-card';
+                    const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
+                    const caseBadge = p.policeCaseNumber ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> ${t.public_case_prefix || 'Case'} ${p.policeCaseNumber}</div>` : '';
+                    const classTag = p.classification ? `<span class="classification-tag">${p.classification}</span>` : '';
+                    const genderText = t[p.gender ? p.gender.toLowerCase() : ''] || p.gender || 'N/A';
+                    const locationText = p.city || p.lastSeenLocation || (t.unknown || 'Unknown');
+
+                    card.innerHTML = `
+                        ${caseBadge}
+                        <img src="${imgUrl}" alt="${p.fullName}" onerror="this.src='https://via.placeholder.com/260x220/131c35/4a5568?text=No+Photo'">
+                        <div class="info">
+                            <h4>${escapeHtml(p.fullName)}</h4>
+                            <div class="chip-row">
+                                <span class="status-badge status-Active">${t.status_missing || 'Missing'}</span>
+                                ${classTag}
+                                <span class="classification-tag">Similarity ${(Number(p.similarity || 0) * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="card-meta">
+                                <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull; ${genderText}</span>
+                                <span><i class="fas fa-map-marker-alt meta-icon-red"></i><strong>${t.last_seen_label || 'Last Seen'}:</strong> ${escapeHtml(locationText)}</span>
+                                <span><i class="fas fa-calendar meta-icon-muted"></i>${p.lastSeenDate ? new Date(p.lastSeenDate).toLocaleDateString() : (t.public_date_unknown || 'Date unknown')}</span>
+                            </div>
+                            <div class="card-actions">
+                                <button onclick="window.location.href='/user/case.html?id=${p._id}'" class="action-ghost">${t.btn_view_case || 'View Profile'}</button>
+                                <button onclick="window.location.href='/user/case.html?id=${p._id}&action=report'" class="action-primary">${t.public_send_tip || 'Send Tip'}</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.innerHTML = `<div class="error-state loading-full"><i class="fas fa-exclamation-triangle"></i><p>${error.message || 'Image search failed. Please try again.'}</p></div>`;
+            }
         }
 
         async function loadPublicFeed() {

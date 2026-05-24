@@ -226,6 +226,30 @@ function applyFilters(people, query) {
   return result;
 }
 
+async function generateFaceEmbeddingFromFile(file) {
+  if (!process.env.AI_SERVICE_URL) {
+    throw new Error('AI face verification service is not configured.');
+  }
+
+  const formData = new FormData();
+  formData.append('image', file.buffer, {
+    filename: file.originalname || `image${path.extname(file.originalname || '.jpg')}`,
+    contentType: file.mimetype
+  });
+
+  const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/generate-embedding`, formData, {
+    headers: { ...formData.getHeaders() },
+    timeout: 20000
+  });
+
+  const embedding = aiResponse?.data?.embedding;
+  if (!Array.isArray(embedding) || !embedding.length) {
+    throw new Error('Failed to generate embedding for the uploaded image.');
+  }
+
+  return embedding;
+}
+
 router.get('/notifications', auth(), async (req, res) => {
   try {
     const unreadOnly = ['1', 'true', 'yes'].includes(String(req.query.unreadOnly || '').toLowerCase());
@@ -418,6 +442,44 @@ router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.post('/search/image', handleImageUpload, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ msg: 'Please upload an image file.' });
+    }
+
+    const queryEmbedding = await generateFaceEmbeddingFromFile(req.file);
+
+    const [users, people] = await Promise.all([
+      store.listUsers(),
+      store.listPeople((p) => p.status === 'Missing' && p.isApproved === true && Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length)
+    ]);
+
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+
+    const matches = people
+      .map((person) => ({
+        person: normalizePerson(person, userMap),
+        similarity: cosineSimilarity(queryEmbedding, person.faceEmbeddings || [])
+      }))
+      .filter((item) => Number.isFinite(item.similarity) && item.similarity > 0.45)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 20)
+      .map((item) => ({
+        ...item.person,
+        similarity: Number(item.similarity.toFixed(4))
+      }));
+
+    return res.json({
+      total: matches.length,
+      matches
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: err.message || 'Image search failed.' });
   }
 });
 
