@@ -231,12 +231,14 @@
             const description = (document.getElementById(`edit-desc-${reportId}`)?.value || '').trim();
             const city = (document.getElementById(`edit-city-${reportId}`)?.value || '').trim();
             const classification = (document.getElementById(`edit-class-${reportId}`)?.value || '').trim();
+            const reason = (document.getElementById(`edit-reason-${reportId}`)?.value || '').trim();
 
             try {
                 const result = await apiCall(`/people/${reportId}`, 'PUT', {
                     description,
                     city,
-                    classification
+                    classification,
+                    reason
                 });
 
                 if (result?.request) {
@@ -292,6 +294,10 @@
                                 <div>
                                     <label>Classification</label>
                                     <input id="edit-class-${r._id}" value="${e(r.classification || '')}">
+                                </div>
+                                <div style="grid-column: 1 / -1;">
+                                    <label>Update Request Message (for police review)</label>
+                                    <textarea id="edit-reason-${r._id}" rows="2" placeholder="Write what changed and why this update should be approved..."></textarea>
                                 </div>
                             </div>
 

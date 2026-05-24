@@ -667,6 +667,12 @@
                 <span class="badge" id="badge-tips">0</span>
             </div>
 
+            <div class="pd-nav-item" onclick="switchSection('update-requests')" id="nav-update-requests">
+                <div class="nav-icon"><i class="fas fa-user-edit"></i></div>
+                <span>Update Requests</span>
+                <span class="badge" id="badge-update-requests">0</span>
+            </div>
+
             <div class="pd-nav-item" onclick="switchSection('active')" id="nav-active">
                 <div class="nav-icon"><i class="fas fa-search"></i></div>
                 <span data-key="police_active_cases">Active Cases</span>
@@ -764,6 +770,38 @@
                 </div>
                 <div id="list-tips">
                     <div class="loading-indicator"><div class="spinner"></div><span data-key="police_loading_tips">Loading tips...</span></div>
+                </div>
+            </div>
+
+            <!-- UPDATE REQUESTS SECTION -->
+            <div id="sec-update-requests" class="pd-section">
+                <div class="pd-top-bar">
+                    <div>
+                        <div class="pd-page-title">
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-orange">
+                                <i class="fas fa-user-edit"></i>
+                            </div>
+                            <span>Update Requests</span>
+                        </div>
+                        <div class="pd-page-sub">User-submitted case update requests that require police admin approval.</div>
+                    </div>
+                </div>
+                <div id="list-update-requests">
+                    <div class="loading-indicator"><div class="spinner"></div><span>Loading update requests...</span></div>
+                </div>
+                <div class="pd-top-bar" style="margin-top: 1.25rem;">
+                    <div>
+                        <div class="pd-page-title" style="font-size:1.25rem;">
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-purple" style="width:38px;height:38px;">
+                                <i class="fas fa-clock-rotate-left"></i>
+                            </div>
+                            <span>Police/User Activity</span>
+                        </div>
+                        <div class="pd-page-sub">Recent activities on update requests, status changes, comments, and tips.</div>
+                    </div>
+                </div>
+                <div id="list-police-activity">
+                    <div class="loading-indicator"><div class="spinner"></div><span>Loading activity...</span></div>
                 </div>
             </div>
 
@@ -899,8 +937,108 @@
 
             if (tab === 'pending') loadPending();
             if (tab === 'tips') loadTips();
+            if (tab === 'update-requests') {
+                loadUpdateRequests();
+                loadPoliceActivity();
+            }
             if (tab === 'my-reports') loadMyReports();
             if (tab === 'active' || tab === 'found') loadAllInternal();
+        }
+
+        async function loadUpdateRequests() {
+            const container = document.getElementById('list-update-requests');
+            if (!container) return;
+
+            try {
+                const pendingUpdates = await apiCall('/people/update-requests/pending');
+                const badge = document.getElementById('badge-update-requests');
+                const total = pendingUpdates.length || 0;
+                if (badge) {
+                    if (total > 0) {
+                        badge.textContent = total;
+                        badge.classList.add('visible');
+                    } else {
+                        badge.classList.remove('visible');
+                    }
+                }
+
+                if (!total) {
+                    container.innerHTML = `<div class="pd-empty"><i class="fas fa-check-double"></i><h3>No pending update requests</h3><p>All user update requests have been reviewed.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = pendingUpdates.map((request) => {
+                    const person = request.person || {};
+                    const requester = request.requestedByUser || {};
+                    const image = person.images && person.images[0] ? `${IMG_URL_BASE}${person.images[0].url}` : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo';
+                    const patch = request.patch || {};
+                    const fields = Object.keys(patch).map((key) => `<div><strong>${key}:</strong> ${patch[key] || 'N/A'}</div>`).join('');
+
+                    return `
+                        <div class="pd-case-card pending">
+                            <img class="pd-case-img" src="${image}" alt="${person.fullName || 'Case'}">
+                            <div class="pd-case-body">
+                                <div class="pd-case-name">${person.fullName || 'Unknown Case'} - Update Request</div>
+                                <div class="pd-case-meta">
+                                    <span><i class="fas fa-user-edit"></i>Requested By: ${requester.username || 'Unknown'} (${requester.role || 'user'})</span>
+                                    <span><i class="fas fa-calendar"></i>${new Date(request.createdAt || Date.now()).toLocaleDateString()}</span>
+                                    <span><i class="fas fa-hashtag"></i>Request ID: ${request._id || 'N/A'}</span>
+                                </div>
+                                <div class="pd-case-desc">${request.reason || 'No request message provided.'}</div>
+                                <div class="pd-case-meta" style="display:grid; gap:4px; margin-top:8px;">${fields || '<div><strong>Fields:</strong> N/A</div>'}</div>
+                            </div>
+                            <div class="pd-case-actions">
+                                <button class="pd-btn pd-btn-approve" onclick="approveUserUpdateRequest('${request._id}')">
+                                    <i class="fas fa-check"></i> Approve Update
+                                </button>
+                                <button class="pd-btn pd-btn-revert" onclick="rejectUserUpdateRequest('${request._id}')">
+                                    <i class="fas fa-xmark"></i> Reject Update
+                                </button>
+                                <a href="/user/case.html?id=${person._id || ''}" class="pd-btn pd-btn-view">
+                                    <i class="fas fa-eye"></i> View Full
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading</h3><p>${e.message}</p></div>`;
+            }
+        }
+
+        async function loadPoliceActivity() {
+            const container = document.getElementById('list-police-activity');
+            if (!container) return;
+
+            try {
+                const activity = await apiCall('/people/police/activity-log');
+                if (!activity.length) {
+                    container.innerHTML = '<div class="pd-empty"><i class="fas fa-clock"></i><h3>No activity yet</h3><p>Recent police/user actions will appear here.</p></div>';
+                    return;
+                }
+
+                container.innerHTML = activity.slice(0, 40).map((item) => {
+                    const actor = item.actor || {};
+                    const details = item.details || {};
+                    const caseName = details.caseName || details.personName || details.fullName || 'N/A';
+                    return `
+                        <div class="pd-case-card tip-c">
+                            <div class="tip-icon">🧾</div>
+                            <div class="pd-case-body">
+                                <div class="pd-case-name">${item.type || 'activity'}</div>
+                                <div class="pd-case-meta">
+                                    <span><i class="fas fa-user"></i>${actor.username || item.actorName || 'Unknown'} (${actor.role || item.actorRole || 'unknown'})</span>
+                                    <span><i class="fas fa-calendar"></i>${new Date(item.createdAt || Date.now()).toLocaleString()}</span>
+                                    <span><i class="fas fa-file-alt"></i>Case: ${caseName}</span>
+                                </div>
+                                <div class="pd-case-desc">${JSON.stringify(details).slice(0, 180)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading</h3><p>${e.message}</p></div>`;
+            }
         }
 
         async function loadMyReports() {
@@ -1026,11 +1164,8 @@
         async function loadPending() {
             const container = document.getElementById('list-pending');
             try {
-                const [data, pendingUpdates] = await Promise.all([
-                    apiCall('/people/pending'),
-                    apiCall('/people/update-requests/pending')
-                ]);
-                const count = (data.length || 0) + (pendingUpdates.length || 0);
+                const data = await apiCall('/people/pending');
+                const count = data.length || 0;
                 document.getElementById('stat-pending').textContent = count;
                 const badge = document.getElementById('badge-pending');
                 if (count > 0) { badge.textContent = count; badge.classList.add('visible'); }
@@ -1068,43 +1203,7 @@
                     </div>
                 `).join('');
 
-                const pendingUpdateCards = (pendingUpdates || []).map((request) => {
-                    const person = request.person || {};
-                    const requester = request.requestedByUser || {};
-                    const image = person.images && person.images[0] ? `${IMG_URL_BASE}${person.images[0].url}` : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo';
-                    const patch = request.patch || {};
-                    const fields = Object.keys(patch).map((key) => `<div><strong>${key}:</strong> ${patch[key] || 'N/A'}</div>`).join('');
-
-                    return `
-                        <div class="pd-case-card pending">
-                            <img class="pd-case-img" src="${image}" alt="${person.fullName || 'Case'}">
-                            <div class="pd-case-body">
-                                <div class="pd-case-name">User Update Request ${person.fullName ? `- ${person.fullName}` : ''}</div>
-                                <div class="pd-case-meta">
-                                    <span><i class="fas fa-user-edit"></i>Requested By: ${requester.username || 'Unknown'} (${requester.role || 'user'})</span>
-                                    <span><i class="fas fa-calendar"></i>${new Date(request.createdAt || Date.now()).toLocaleDateString()}</span>
-                                    <span><i class="fas fa-hashtag"></i>Request ID: ${request._id || 'N/A'}</span>
-                                    <span><i class="fas fa-user"></i>${policeText('police_reported_by', 'Reported By')}: ${renderReporterInline(person)}</span>
-                                </div>
-                                <div class="pd-case-desc">${request.reason || 'No additional reason provided by user.'}</div>
-                                <div class="pd-case-meta" style="display:grid; gap:4px; margin-top:8px;">${fields || '<div><strong>Fields:</strong> N/A</div>'}</div>
-                            </div>
-                            <div class="pd-case-actions">
-                                <button class="pd-btn pd-btn-approve" onclick="approveUserUpdateRequest('${request._id}')">
-                                    <i class="fas fa-check"></i> Approve Update
-                                </button>
-                                <button class="pd-btn pd-btn-revert" onclick="rejectUserUpdateRequest('${request._id}')">
-                                    <i class="fas fa-xmark"></i> Reject Update
-                                </button>
-                                <a href="/user/case.html?id=${person._id || ''}" class="pd-btn pd-btn-view">
-                                    <i class="fas fa-eye"></i> ${policeText('police_view_full', 'View Full')}
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                container.innerHTML = `${pendingCaseCards}${pendingUpdateCards}`;
+                container.innerHTML = pendingCaseCards;
             } catch (e) {
                 container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>${policeText('police_error_loading', 'Error Loading')}</h3><p>${e.message}</p></div>`;
             }
@@ -1233,6 +1332,7 @@
         // Init
         loadOfficerName();
         loadPending();
+        loadUpdateRequests();
         loadAllInternal();
     </script>
 </body>

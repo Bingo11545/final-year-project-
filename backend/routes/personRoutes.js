@@ -994,4 +994,61 @@ router.get('/admin/activity-log', auth(['admin']), async (req, res) => {
   }
 });
 
+router.get('/police/activity-log', auth(), async (req, res) => {
+  try {
+    if (!['law_enforcement', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Access Denied' });
+    }
+
+    const allowedTypes = new Set([
+      'user-case-update-requested',
+      'user-update-approved',
+      'user-update-rejected',
+      'case-comment-added',
+      'case-tip-added',
+      'police-case-updated',
+      'case-status-updated'
+    ]);
+
+    const [users, activities] = await Promise.all([
+      store.listUsers(),
+      store.listActivityLogs((item) => allowedTypes.has(item.type))
+    ]);
+
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+
+    const enriched = activities
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 200)
+      .map((item) => {
+        const actor = userMap[item.actorId];
+        return {
+          ...item,
+          actor: actor
+            ? {
+                _id: actor._id,
+                username: actor.username,
+                role: actor.role,
+                email: actor.email || null,
+                profilePhoto: actor.profilePhoto || null,
+                organizationName: actor.organizationName || null
+              }
+            : {
+                _id: item.actorId || null,
+                username: item.actorName || 'Unknown User',
+                role: item.actorRole || 'unknown',
+                email: item.actorEmail || null,
+                profilePhoto: item.actorProfilePhoto || null,
+                organizationName: null
+              }
+        };
+      });
+
+    return res.json(enriched);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 module.exports = router;
