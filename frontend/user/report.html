@@ -633,21 +633,21 @@
         <form id="reportForm">
 
             <div class="form-progress" aria-label="Report step order">
-                <div class="progress-step active"><span class="step-num">1</span><span data-key="report_step1_short">Legal</span></div>
+                <div class="progress-step active" data-step-index="1"><span class="step-num">1</span><span data-key="report_step1_short">Legal</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">2</span><span data-key="report_step2_short">Reference</span></div>
+                <div class="progress-step" data-step-index="2"><span class="step-num">2</span><span data-key="report_step2_short">Reference</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">3</span><span data-key="report_step3_short">Location</span></div>
+                <div class="progress-step" data-step-index="3"><span class="step-num">3</span><span data-key="report_step3_short">Location</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">4</span><span data-key="report_step4_short">Subject</span></div>
+                <div class="progress-step" data-step-index="4"><span class="step-num">4</span><span data-key="report_step4_short">Subject</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">5</span><span data-key="report_step5_short">Physical</span></div>
+                <div class="progress-step" data-step-index="5"><span class="step-num">5</span><span data-key="report_step5_short">Physical</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">6</span><span data-key="report_step6_short">Context</span></div>
+                <div class="progress-step" data-step-index="6"><span class="step-num">6</span><span data-key="report_step6_short">Context</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">7</span><span data-key="report_step7_short">Photo</span></div>
+                <div class="progress-step" data-step-index="7"><span class="step-num">7</span><span data-key="report_step7_short">Photo</span></div>
                 <div class="progress-connector"></div>
-                <div class="progress-step active"><span class="step-num">8</span><span data-key="report_step8_short">Reporter</span></div>
+                <div class="progress-step" data-step-index="8"><span class="step-num">8</span><span data-key="report_step8_short">Reporter</span></div>
             </div>
             <p class="wizard-flow-note" data-key="report_wizard_order_note">Complete these steps in order. Step 1 legal certification is required before you can submit.</p>
 
@@ -1018,6 +1018,11 @@
         function syncLegalLockState(showToastMessage = false) {
             const unlocked = !!legalCertified.checked;
             mainForm.classList.toggle('main-form-locked', !unlocked);
+            document.querySelectorAll('.progress-step[data-step-index]').forEach((stepEl) => {
+                const stepNum = Number(stepEl.getAttribute('data-step-index') || 0);
+                const shouldActivate = unlocked ? stepNum >= 1 : stepNum === 1;
+                stepEl.classList.toggle('active', shouldActivate);
+            });
             if (!unlocked && showToastMessage) {
                 showToast(reportText('report_legal_required', 'You must complete Step 1 legal certification before submitting this report.'), 'warning');
             }
@@ -1119,8 +1124,13 @@
                         const confidenceBand = confidencePercent >= 80
                             ? reportText('report_ai_verified_high', 'High confidence')
                             : (confidencePercent >= 50 ? reportText('report_ai_verified_medium', 'Medium confidence') : reportText('report_ai_verified_low', 'Low confidence'));
+                        const qualityHint = confidencePercent >= 80
+                            ? reportText('report_ai_quality_high_hint', 'Image quality is strong for matching.')
+                            : (confidencePercent >= 50
+                                ? reportText('report_ai_quality_mid_hint', 'Image is acceptable, but a clearer face photo may improve matching.')
+                                : reportText('report_ai_quality_low_hint', 'Face is valid but low confidence. Consider uploading a clearer front-facing photo.'));
                         const confidenceMessage = `${reportText('report_ai_verified_police', 'Human face verified')} (${confidenceBand}) - ${confidencePercent}% · ${reportText('report_ai_faces_detected', 'Faces detected')}: ${facesDetected}`;
-                        setValidationStatus(statusEl, true, `✓ ${confidenceMessage} · ${reportText('report_ai_detector', 'Detector')}: ${detector}`);
+                        setValidationStatus(statusEl, true, `✓ ${confidenceMessage} · ${reportText('report_ai_detector', 'Detector')}: ${detector} · ${qualityHint}`);
                         photoValidated = true;
                         validatedPhotoFingerprint = getPhotoFingerprint(file);
                     } else {
@@ -1180,7 +1190,9 @@
                 return;
             }
 
-            if (!officialVerificationRefInput.value.trim()) {
+            const officialRefValue = officialVerificationRefInput.value.trim();
+            const caseFileValue = (document.getElementById('policeCaseNumber')?.value || '').trim();
+            if (!officialRefValue && !caseFileValue) {
                 showToast(reportText('report_official_ref_required', 'Please provide a report ID or official verification reference.'), 'warning');
                 officialVerificationRefInput.focus();
                 return;
