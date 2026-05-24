@@ -1279,6 +1279,8 @@
             const pendingFiltered = filterUsers(registrationSummaryData.pending, role, query);
             const approvedFiltered = filterUsers(registrationSummaryData.approved, role, query);
             const rejectedFiltered = filterUsers(registrationSummaryData.rejected, role, query);
+            const approvedPoliceOnly = approvedFiltered.filter((u) => u.role === 'law_enforcement');
+            const rejectedPoliceOnly = rejectedFiltered.filter((u) => u.role === 'law_enforcement');
 
             if (status === 'all' || status === 'pending') {
                 renderRegistrationList('pending-list', pendingFiltered, 'admin_no_pending', 'No pending registrations.', 'pending');
@@ -1287,15 +1289,15 @@
             }
 
             if (status === 'all' || status === 'approved') {
-                renderRegistrationList('reviewed-approved-list', approvedFiltered, 'admin_no_approved', 'No approved requests yet.', 'approved');
-                renderRegistrationList('approved-list', approvedFiltered, 'admin_no_approved', 'No approved requests yet.', 'approved');
+                renderRegistrationList('reviewed-approved-list', approvedPoliceOnly, 'admin_no_approved', 'No approved police admin requests yet.', 'approved');
+                renderRegistrationList('approved-list', approvedPoliceOnly, 'admin_no_approved', 'No approved police admin requests yet.', 'approved');
             } else {
                 renderRegistrationList('reviewed-approved-list', [], 'admin_no_approved', 'No approved requests yet.', 'approved');
                 renderRegistrationList('approved-list', [], 'admin_no_approved', 'No approved requests yet.', 'approved');
             }
 
             if (status === 'all' || status === 'rejected') {
-                renderRegistrationList('reviewed-rejected-list', rejectedFiltered, 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+                renderRegistrationList('reviewed-rejected-list', rejectedPoliceOnly, 'admin_no_rejected', 'No declined police admin requests yet.', 'rejected');
                 renderRegistrationList('rejected-list', rejectedFiltered, 'admin_no_rejected', 'No declined requests yet.', 'rejected');
             } else {
                 renderRegistrationList('reviewed-rejected-list', [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
