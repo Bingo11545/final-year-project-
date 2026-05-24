@@ -263,29 +263,42 @@ router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
           || explicitApprover?.role
           || (isPoliceAutoApproval ? reporterUser?.role : null)
           || null;
+        const approvalSource =
+          person.approvalSource
+          || (explicitApprover ? 'explicit-approver' : (isPoliceAutoApproval ? 'auto-approved-reporter' : 'legacy-record'));
         const approvedAt = person.approvedAt || (isPoliceAutoApproval ? person.createdAt : null) || person.updatedAt || person.createdAt || null;
         const approvedByEmail =
-          explicitApprover?.email
+          person.approvedByEmail
+          || explicitApprover?.email
           || (isPoliceAutoApproval ? reporterUser?.email : null)
           || null;
-        const approvedByUser = approvedByName
+        const approvedByNameFinal =
+          approvedByName
+          || (approvedByEmail ? approvedByEmail.split('@')[0] : null)
+          || null;
+        const approvedByRoleFinal = approvedByRole || (approvalSource === 'legacy-record' ? 'unknown' : null);
+        const approvedByUser = approvedByNameFinal
           ? {
               _id: approvedBy || null,
-              username: approvedByName,
-              role: approvedByRole || 'unknown',
+              username: approvedByNameFinal,
+              role: approvedByRoleFinal || 'unknown',
               email: approvedByEmail,
-              source: explicitApprover ? 'explicit-approver' : (isPoliceAutoApproval ? 'auto-approved-reporter' : 'legacy-record')
+              source: approvalSource
             }
           : null;
 
+        const caseDisplay = person.policeCaseNumber || person.officialVerificationRef || person._id || null;
+
         return {
           ...normalizePerson(person, userMap),
+          caseDisplay,
           approvedBy,
-          approvedByName,
-          approvedByRole,
+          approvedByName: approvedByNameFinal,
+          approvedByRole: approvedByRoleFinal,
           approvedAt,
           approvedByEmail,
-          approvedByUser
+          approvedByUser,
+          approvalSource
         };
       });
 
@@ -387,6 +400,8 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
       payload.approvedBy = req.user.id;
       payload.approvedByName = reporter?.username || 'Police Admin';
       payload.approvedByRole = reporter?.role || req.user.role;
+      payload.approvedByEmail = reporter?.email || null;
+      payload.approvalSource = 'auto-approved-reporter';
     }
 
     if (req.file) {
@@ -538,7 +553,9 @@ router.put('/:id/approve', auth(), async (req, res) => {
       approvedAt: new Date().toISOString(),
       approvedBy: req.user.id,
       approvedByName: approver?.username || 'Police Admin',
-      approvedByRole: req.user.role
+      approvedByRole: approver?.role || req.user.role,
+      approvedByEmail: approver?.email || null,
+      approvalSource: 'explicit-approver'
     });
     return res.json(updated);
   } catch (err) {

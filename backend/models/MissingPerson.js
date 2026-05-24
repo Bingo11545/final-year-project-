@@ -44,6 +44,18 @@ const missingPersonSchema = new mongoose.Schema({
   socialMediaAccounts: String, // URLs or Handles
   isAnonymous: { type: Boolean, default: false }, // For 'Found' reports
   isApproved: { type: Boolean, default: false }, // Moderation flag
+  approvedAt: Date,
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  approvedByName: String,
+  approvedByRole: String,
+  approvedByEmail: String,
+  approvalSource: {
+    type: String,
+    enum: ['explicit-approver', 'auto-approved-reporter', 'legacy-record']
+  },
   status: {
     type: String,
     enum: ['Missing', 'Found', 'Deceased', 'Resolved', 'Cold Case'],

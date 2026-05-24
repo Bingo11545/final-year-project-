@@ -546,13 +546,13 @@
                 <div class="admin-case-log-card">
                     <h4>${person.fullName || na()}</h4>
                     <div class="admin-case-log-meta">
-                        <span><strong>${getAdminText('admin_case_name', 'Case')}:</strong> ${person.policeCaseNumber || person.officialVerificationRef || na()}</span>
+                        <span><strong>${getAdminText('admin_case_name', 'Case')}:</strong> ${person.caseDisplay || person.policeCaseNumber || person.officialVerificationRef || person._id || na()}</span>
                         <span><strong>${getAdminText('admin_case_approved_by', 'Approved By')}:</strong> ${person.approvedByUser?.username || person.approvedByName || getAdminText('admin_case_legacy_approver', 'Legacy record')}</span>
                         <span><strong>${getAdminText('admin_case_approved_role', 'Approver Role')}:</strong> ${roleLabel(person.approvedByUser?.role || person.approvedByRole || '')}</span>
                         <span><strong>${getAdminText('admin_case_approved_email', 'Approver Email')}:</strong> ${person.approvedByUser?.email || person.approvedByEmail || na()}</span>
                         <span><strong>${getAdminText('admin_case_approved_id', 'Approver ID')}:</strong> ${person.approvedByUser?._id || person.approvedBy || na()}</span>
                         <span><strong>${getAdminText('admin_case_approved_at', 'Approved At')}:</strong> ${formatDate(person.approvedAt)}</span>
-                        <span><strong>${getAdminText('admin_case_approval_source', 'Approval Source')}:</strong> ${person.approvedByUser?.source || getAdminText('admin_case_approval_source_unknown', 'unknown')}</span>
+                        <span><strong>${getAdminText('admin_case_approval_source', 'Approval Source')}:</strong> ${person.approvedByUser?.source || person.approvalSource || getAdminText('admin_case_approval_source_unknown', 'unknown')}</span>
                         <span><strong>${getAdminText('admin_case_reported_by', 'Reported By')}:</strong> ${person.reportedBy?.username || na()}</span>
                     </div>
                 </div>
