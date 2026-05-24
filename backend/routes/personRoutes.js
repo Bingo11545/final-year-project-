@@ -116,10 +116,40 @@ function normalizePerson(person, userMap = {}) {
       _id: reporter._id,
       username: reporter.username,
       role: reporter.role,
-      isVerified: reporter.isVerified
+      isVerified: reporter.isVerified,
+      email: reporter.email || null,
+      profilePhoto: reporter.profilePhoto || null
     };
   }
   return mapped;
+}
+
+function buildChangeHistoryEntry({ person, patch, actor, actorId, changeType }) {
+  const oldValues = {};
+  const newValues = {};
+
+  Object.keys(patch || {}).forEach((key) => {
+    const oldValue = person[key];
+    const newValue = patch[key];
+    if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+      oldValues[key] = oldValue;
+      newValues[key] = newValue;
+    }
+  });
+
+  if (!Object.keys(newValues).length) return null;
+
+  return {
+    changeType: changeType || 'edit',
+    changedAt: new Date().toISOString(),
+    changedBy: actorId,
+    changedByName: actor?.username || 'Unknown User',
+    changedByRole: actor?.role || 'unknown',
+    changedByEmail: actor?.email || null,
+    changedByProfilePhoto: actor?.profilePhoto || null,
+    oldValues,
+    newValues
+  };
 }
 
 function applyFilters(people, query) {
@@ -153,8 +183,22 @@ function applyFilters(people, query) {
 
 router.get('/notifications', auth(), async (req, res) => {
   try {
+    const unreadOnly = ['1', 'true', 'yes'].includes(String(req.query.unreadOnly || '').toLowerCase());
     const notifications = await store.listNotificationsByUser(req.user.id);
-    return res.json(notifications);
+    return res.json(unreadOnly ? notifications.filter((n) => !n.isRead) : notifications);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.get('/my-reports', auth(), async (req, res) => {
+  try {
+    const users = await store.listUsers();
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+    const people = await store.listPeople((p) => String(p.reportedBy) === String(req.user.id));
+    people.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+    return res.json(people.map((p) => normalizePerson(p, userMap)));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server Error' });
@@ -283,6 +327,7 @@ router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
               username: approvedByNameFinal,
               role: approvedByRoleFinal || 'unknown',
               email: approvedByEmail,
+              profilePhoto: explicitApprover?.profilePhoto || (isPoliceAutoApproval ? reporterUser?.profilePhoto : null) || null,
               source: approvalSource
             }
           : null;
@@ -298,7 +343,24 @@ router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
           approvedAt,
           approvedByEmail,
           approvedByUser,
-          approvalSource
+          approvalSource,
+          changeHistory: Array.isArray(person.changeHistory)
+            ? person.changeHistory.map((entry) => {
+                const changedByUser = userMap[entry.changedBy];
+                return {
+                  ...entry,
+                  changedByUser: changedByUser
+                    ? {
+                        _id: changedByUser._id,
+                        username: changedByUser.username,
+                        role: changedByUser.role,
+                        email: changedByUser.email || null,
+                        profilePhoto: changedByUser.profilePhoto || null
+                      }
+                    : null
+                };
+              })
+            : []
         };
       });
 
@@ -532,6 +594,19 @@ router.put('/:id', auth(), async (req, res) => {
       if (req.body[key] !== undefined) patch[key] = req.body[key];
     }
 
+    const actor = await store.getUserById(req.user.id);
+    const entry = buildChangeHistoryEntry({
+      person,
+      patch,
+      actor,
+      actorId: req.user.id,
+      changeType: 'edit-report'
+    });
+
+    if (entry) {
+      patch.changeHistory = [...(Array.isArray(person.changeHistory) ? person.changeHistory : []), entry].slice(-40);
+    }
+
     const updated = await store.updatePerson(req.params.id, patch);
     return res.json(updated);
   } catch (err) {
@@ -548,7 +623,7 @@ router.put('/:id/approve', auth(), async (req, res) => {
     const person = await store.getPersonById(req.params.id);
     if (!person) return res.status(404).json({ msg: 'Not found' });
     const approver = await store.getUserById(req.user.id);
-    const updated = await store.updatePerson(req.params.id, {
+    const approvalPatch = {
       isApproved: true,
       approvedAt: new Date().toISOString(),
       approvedBy: req.user.id,
@@ -556,7 +631,19 @@ router.put('/:id/approve', auth(), async (req, res) => {
       approvedByRole: approver?.role || req.user.role,
       approvedByEmail: approver?.email || null,
       approvalSource: 'explicit-approver'
+    };
+    const approvalHistory = buildChangeHistoryEntry({
+      person,
+      patch: { isApproved: true },
+      actor: approver,
+      actorId: req.user.id,
+      changeType: 'approve-report'
     });
+    if (approvalHistory) {
+      approvalPatch.changeHistory = [...(Array.isArray(person.changeHistory) ? person.changeHistory : []), approvalHistory].slice(-40);
+    }
+
+    const updated = await store.updatePerson(req.params.id, approvalPatch);
     return res.json(updated);
   } catch (err) {
     console.error(err);
@@ -571,7 +658,19 @@ router.put('/:id/status', auth(), async (req, res) => {
     }
     const person = await store.getPersonById(req.params.id);
     if (!person) return res.status(404).json({ msg: 'Not found' });
-    const updated = await store.updatePerson(req.params.id, { status: req.body.status });
+    const actor = await store.getUserById(req.user.id);
+    const statusPatch = { status: req.body.status };
+    const statusHistory = buildChangeHistoryEntry({
+      person,
+      patch: statusPatch,
+      actor,
+      actorId: req.user.id,
+      changeType: 'status-update'
+    });
+    if (statusHistory) {
+      statusPatch.changeHistory = [...(Array.isArray(person.changeHistory) ? person.changeHistory : []), statusHistory].slice(-40);
+    }
+    const updated = await store.updatePerson(req.params.id, statusPatch);
     return res.json(updated);
   } catch (err) {
     console.error(err);

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Police My Reports - Find Missing Person</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile-menu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="theme.js"></script>
+    <style>
+        .pmr-wrap { padding: 2rem 0 3rem; }
+        .pmr-list { display: grid; gap: 16px; }
+        .pmr-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 16px;
+        }
+        .pmr-top {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+        .pmr-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+        .pmr-meta { display: grid; gap: 6px; }
+        .pmr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .pmr-grid input,
+        .pmr-grid select,
+        .pmr-grid textarea {
+            width: 100%;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px;
+            font: inherit;
+        }
+        .pmr-notes {
+            margin-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 12px;
+            display: grid;
+            gap: 8px;
+        }
+        .pmr-note {
+            border: 1px solid rgba(14,165,233,0.2);
+            background: rgba(14,165,233,0.08);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+        .pmr-note small { color: var(--text-muted); display: block; margin-top: 6px; }
+        @media (max-width: 700px) {
+            .pmr-top { grid-template-columns: 1fr; }
+            .pmr-img { height: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="fm-desktop-nav">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+            <a href="/index.html">Find Missing <span class="highlight">Person</span></a>
+        </div>
+        <div class="nav-tools">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><i class="fas fa-sun"></i></button>
+            <a href="/police_admin/dashboard.html" class="btn btn-sm">Police Dashboard</a>
+            <a href="/user/report.html" class="btn btn-danger btn-sm"><i class="fas fa-plus"></i> New Report</a>
+            <div id="nav-right"></div>
+        </div>
+    </nav>
+
+    <div class="container pmr-wrap">
+        <div class="section-header" style="margin-bottom:1rem;">
+            <h2 class="section-title-modern"><i class="fas fa-clipboard-list"></i> Police My Reports</h2>
+            <span class="section-subtitle">Review your submitted reports, edit case fields, and add comments/tips to each report.</span>
+        </div>
+        <div id="pmr-list" class="pmr-list">
+            <div class="loading-indicator loading-full"><div class="spinner"></div><span>Loading police reports...</span></div>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script>
+        updateNav();
+        checkAuth();
+        if (getUserRole() !== 'law_enforcement' && getUserRole() !== 'admin') {
+            window.location.href = '/user/dashboard.html';
+        }
+
+        function e(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function asDate(value) {
+            if (!value) return 'N/A';
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleString();
+        }
+
+        async function loadNotes(reportId) {
+            const holder = document.getElementById(`pmr-notes-${reportId}`);
+            if (!holder) return;
+            try {
+                const notes = await apiCall(`/tips/person/${reportId}`);
+                if (!notes.length) {
+                    holder.innerHTML = '<div class="text-muted">No comments/tips yet.</div>';
+                    return;
+                }
+                holder.innerHTML = notes.map((n) => `
+                    <div class="pmr-note">
+                        <div><strong>${e(n.noteType || 'comment')}:</strong> ${e(n.message)}</div>
+                        <small>${e(n.author?.username || n.reporterName || 'Unknown')} (${e(n.author?.role || 'user')}) • ${asDate(n.createdAt)}</small>
+                    </div>
+                `).join('');
+            } catch (err) {
+                holder.innerHTML = `<div class="text-muted">Failed to load notes: ${e(err.message)}</div>`;
+            }
+        }
+
+        async function submitNote(reportId) {
+            const message = (document.getElementById(`pmr-note-msg-${reportId}`)?.value || '').trim();
+            const noteType = document.getElementById(`pmr-note-type-${reportId}`)?.value || 'comment';
+            if (!message) {
+                showToast('Please enter a message first.', 'warning');
+                return;
+            }
+
+            try {
+                await apiCall(`/tips/person/${reportId}`, 'POST', { message, noteType });
+                document.getElementById(`pmr-note-msg-${reportId}`).value = '';
+                showToast('Note added.', 'success');
+                loadNotes(reportId);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function saveReport(reportId) {
+            const payload = {
+                fullName: (document.getElementById(`pmr-name-${reportId}`)?.value || '').trim(),
+                description: (document.getElementById(`pmr-desc-${reportId}`)?.value || '').trim(),
+                city: (document.getElementById(`pmr-city-${reportId}`)?.value || '').trim(),
+                classification: (document.getElementById(`pmr-class-${reportId}`)?.value || '').trim(),
+                policeCaseNumber: (document.getElementById(`pmr-case-${reportId}`)?.value || '').trim(),
+                status: document.getElementById(`pmr-status-${reportId}`)?.value || 'Missing'
+            };
+
+            try {
+                await apiCall(`/people/${reportId}`, 'PUT', payload);
+                showToast('Report updated.', 'success');
+                loadReports();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function loadReports() {
+            const list = document.getElementById('pmr-list');
+            list.innerHTML = '<div class="loading-indicator loading-full"><div class="spinner"></div><span>Loading police reports...</span></div>';
+
+            try {
+                const reports = await apiCall('/people/my-reports');
+                if (!reports.length) {
+                    list.innerHTML = '<div class="empty-state loading-full">No reports submitted from your account yet.</div>';
+                    return;
+                }
+
+                list.innerHTML = reports.map((r) => {
+                    const img = (r.images && r.images[0]) ? `${IMG_URL_BASE}${r.images[0].url}` : 'https://via.placeholder.com/360x220/131c35/4a5568?text=No+Photo';
+                    return `
+                        <article class="pmr-card">
+                            <div class="pmr-top">
+                                <img class="pmr-img" src="${img}" alt="${e(r.fullName)}">
+                                <div class="pmr-meta">
+                                    <span><strong>Submitted:</strong> ${asDate(r.createdAt)}</span>
+                                    <span><strong>Updated:</strong> ${asDate(r.updatedAt)}</span>
+                                    <span><strong>Approved:</strong> ${r.isApproved ? 'Yes' : 'No'}</span>
+                                    <span><strong>Case ID:</strong> ${e(r._id)}</span>
+                                </div>
+                            </div>
+
+                            <div class="pmr-grid">
+                                <div><label>Name</label><input id="pmr-name-${r._id}" value="${e(r.fullName || '')}"></div>
+                                <div><label>City</label><input id="pmr-city-${r._id}" value="${e(r.city || '')}"></div>
+                                <div><label>Classification</label><input id="pmr-class-${r._id}" value="${e(r.classification || '')}"></div>
+                                <div><label>Police Case #</label><input id="pmr-case-${r._id}" value="${e(r.policeCaseNumber || '')}"></div>
+                                <div>
+                                    <label>Status</label>
+                                    <select id="pmr-status-${r._id}">
+                                        <option value="Missing" ${r.status === 'Missing' ? 'selected' : ''}>Missing</option>
+                                        <option value="Found" ${r.status === 'Found' ? 'selected' : ''}>Found</option>
+                                        <option value="Resolved" ${r.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                                    </select>
+                                </div>
+                                <div style="grid-column:1/-1;"><label>Description</label><textarea id="pmr-desc-${r._id}" rows="3">${e(r.description || '')}</textarea></div>
+                            </div>
+
+                            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="btn btn-sm" onclick="saveReport('${r._id}')"><i class="fas fa-save"></i> Save Changes</button>
+                                <a class="btn btn-sm" href="/user/case.html?id=${r._id}"><i class="fas fa-eye"></i> Open Case</a>
+                            </div>
+
+                            <div class="pmr-grid" style="margin-top:10px;">
+                                <div style="grid-column:1/-1;"><label>Add Comment / Tip</label><textarea id="pmr-note-msg-${r._id}" rows="2" placeholder="Write new finding or update..."></textarea></div>
+                                <div>
+                                    <label>Type</label>
+                                    <select id="pmr-note-type-${r._id}">
+                                        <option value="comment">Comment</option>
+                                        <option value="tip">Tip</option>
+                                    </select>
+                                </div>
+                                <div><label>&nbsp;</label><button class="btn btn-sm" style="width:100%;" onclick="submitNote('${r._id}')"><i class="fas fa-paper-plane"></i> Add Note</button></div>
+                            </div>
+
+                            <div class="pmr-notes" id="pmr-notes-${r._id}"></div>
+                        </article>
+                    `;
+                }).join('');
+
+                reports.forEach((r) => loadNotes(r._id));
+            } catch (err) {
+                list.innerHTML = `<div class="error-state loading-full">Failed to load reports: ${e(err.message)}</div>`;
+            }
+        }
+
+        loadReports();
+    </script>
+</body>
+</html>

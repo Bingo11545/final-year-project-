@@ -490,9 +490,13 @@ function updateNav() {
         `;
     } else if (isLoggedIn()) {
         const reportLink = '/user/report.html';
+        const myReportsLink = role === 'law_enforcement' ? '/police_admin/my-reports.html' : '/user/my-reports.html';
         const reportHtml = role === 'admin'
             ? ''
             : `<a href="${reportLink}" data-key="nav_report">Report/Upload</a>`;
+        const myReportsHtml = role === 'admin'
+            ? ''
+            : `<a href="${myReportsLink}">My Reports</a>`;
         
         navRight.innerHTML = `
             <a href="${dashboardLink}" title="Dashboard" data-key="dashboard">Dashboard</a>
@@ -500,6 +504,7 @@ function updateNav() {
                 🔔 <span id="notif-count" style="display:none; background:red; color:white; border-radius:50%; padding:2px 5px; font-size:0.6rem; position:absolute; top:-5px; right:-5px;">0</span>
             </a>
             ${reportHtml}
+            ${myReportsHtml}
             <a href="#" onclick="logout()" data-key="logout">Logout</a>
             <!-- Notification Dropdown -->
             <div id="notif-dropdown" style="display:none; position:absolute; right:120px; top:50px; background:white; color:black; border:1px solid #ddd; width:300px; max-height:300px; overflow-y:auto; z-index:1000; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
@@ -529,12 +534,13 @@ async function checkNotifications() {
      }
 
      try {
-         const updates = await apiCall('/people/notifications');
+         const updates = await apiCall('/people/notifications?unreadOnly=1');
          const badge = document.getElementById('notif-count');
          const list = document.getElementById('notif-list');
          if(!badge || !list) return;
 
-         const unread = updates.filter(n => !n.isRead).length;
+         const unreadOnly = updates.filter(n => !n.isRead);
+         const unread = unreadOnly.length;
          if(unread > 0) {
              badge.innerText = unread;
              badge.style.display = 'inline-block';
@@ -542,15 +548,15 @@ async function checkNotifications() {
              badge.style.display = 'none';
          }
 
-         if(!updates.length) {
+         if(!unreadOnly.length) {
             list.innerHTML = '<div style="padding:10px; color:#6b7280; font-size:0.85rem;">No notifications yet.</div>';
             return;
          }
 
-         list.innerHTML = updates.map(u => {
+         list.innerHTML = unreadOnly.map(u => {
             const redirectTo = u.relatedPersonId ? `/user/case.html?id=${encodeURIComponent(u.relatedPersonId)}` : '/user/dashboard.html';
             return `
-                <a href="${redirectTo}" onclick="markNotificationRead('${u._id}')" style="display:block; text-decoration:none; color:inherit; padding:10px; border-bottom:1px solid #eee; font-size:0.9rem; ${u.isRead ? 'opacity:0.8;' : 'background:rgba(59,130,246,0.08);'}">
+                <a href="${redirectTo}" onclick="markNotificationRead('${u._id}')" style="display:block; text-decoration:none; color:inherit; padding:10px; border-bottom:1px solid #eee; font-size:0.9rem; background:rgba(59,130,246,0.08);">
                     ${u.message}<br><span style="font-size:0.72rem; color:grey;">${new Date(u.createdAt).toLocaleString()}</span>
                 </a>
             `;
@@ -579,6 +585,7 @@ async function markNotificationRead(notificationId) {
     if (!notificationId) return;
     try {
         await apiCall(`/people/notifications/${notificationId}/read`, 'PUT', {});
+        checkNotifications();
     } catch (e) {
         console.log('Failed to mark notification as read');
     }

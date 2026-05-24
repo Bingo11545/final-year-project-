@@ -271,6 +271,44 @@
             font-size: 0.9rem;
         }
 
+        .admin-case-history {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-subtle);
+            display: grid;
+            gap: 8px;
+        }
+
+        .admin-case-history-item {
+            background: rgba(59,130,246,0.08);
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+
+        .admin-case-history-item pre {
+            margin: 6px 0 0;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(15,23,42,0.45);
+            overflow-x: auto;
+            font-size: 0.78rem;
+            color: #dbeafe;
+            border: 1px solid rgba(148,163,184,0.25);
+        }
+
+        .admin-user-avatar-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            object-fit: cover;
+            vertical-align: middle;
+            margin-right: 6px;
+            border: 1px solid var(--border-subtle);
+            background: #0f172a;
+        }
+
         [data-theme="light"] .admin-case-log-meta {
             color: #374151;
         }
@@ -760,9 +798,58 @@
             return highlightTextWithQuery(value, currentRequestSearchQuery);
         }
 
-        function renderMetaLine(label, value, shouldHighlight = true) {
-            const rendered = shouldHighlight ? highlightText(value) : escapeHtml((value === undefined || value === null || value === '') ? na() : String(value));
+        function renderMetaLine(label, value, shouldHighlight = true, isRaw = false) {
+            let rendered = '';
+            if (isRaw) {
+                rendered = String(value || '');
+            } else {
+                rendered = shouldHighlight
+                    ? highlightText(value)
+                    : escapeHtml((value === undefined || value === null || value === '') ? na() : String(value));
+            }
             return `<span><strong>${label}:</strong> ${rendered}</span>`;
+        }
+
+        function renderActorInline(user, fallbackName) {
+            const name = user?.username || fallbackName || na();
+            const role = roleLabel(user?.role || '');
+            const email = user?.email || na();
+            const photo = user?.profilePhoto ? resolveMediaUrl(user.profilePhoto) : '';
+            const avatar = photo ? `<img src="${photo}" alt="${escapeHtml(name)}" class="admin-user-avatar-small">` : '';
+            return `${avatar}${highlightText(name)} (${highlightText(role)}) - ${highlightText(email)}`;
+        }
+
+        function renderChangeHistory(entries) {
+            if (!Array.isArray(entries) || !entries.length) {
+                return `<div class="admin-case-history"><span>${getAdminText('admin_case_no_updates', 'No update history yet.')}</span></div>`;
+            }
+
+            const sorted = [...entries].sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
+            const top = sorted.slice(0, 5);
+
+            return `
+                <div class="admin-case-history">
+                    ${top.map((entry) => {
+                        const actor = entry.changedByUser || {
+                            username: entry.changedByName,
+                            role: entry.changedByRole,
+                            email: entry.changedByEmail,
+                            profilePhoto: entry.changedByProfilePhoto
+                        };
+                        const oldVals = escapeHtml(JSON.stringify(entry.oldValues || {}, null, 2));
+                        const newVals = escapeHtml(JSON.stringify(entry.newValues || {}, null, 2));
+                        return `
+                            <div class="admin-case-history-item">
+                                <div><strong>${getAdminText('admin_case_update_type', 'Update Type')}:</strong> ${highlightText(entry.changeType || 'edit')}</div>
+                                <div><strong>${getAdminText('admin_case_updated_by', 'Updated By')}:</strong> ${renderActorInline(actor, entry.changedByName)}</div>
+                                <div><strong>${getAdminText('admin_case_updated_at', 'Updated At')}:</strong> ${highlightText(formatDate(entry.changedAt))}</div>
+                                <div><strong>${getAdminText('admin_case_old_values', 'Old File')}:</strong><pre>${oldVals}</pre></div>
+                                <div><strong>${getAdminText('admin_case_new_values', 'Updated File')}:</strong><pre>${newVals}</pre></div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
         }
 
         function buildSearchBlob(person, field) {
@@ -1075,12 +1162,14 @@
                         ${renderMetaLine(getAdminText('admin_case_police_no', 'Police Case Number'), person.policeCaseNumber)}
                         ${renderMetaLine(getAdminText('admin_case_district', 'Police District'), person.policeDistrict)}
                         ${renderMetaLine(getAdminText('admin_case_approved_by', 'Approved By'), person.approvedByUser?.username || person.approvedByName || getAdminText('admin_case_legacy_approver', 'Legacy record'))}
+                        ${renderMetaLine(getAdminText('admin_case_approved_profile', 'Approver Profile'), renderActorInline(person.approvedByUser, person.approvedByName), false, true)}
                         ${renderMetaLine(getAdminText('admin_case_approved_role', 'Approver Role'), roleLabel(person.approvedByUser?.role || person.approvedByRole || ''))}
                         ${renderMetaLine(getAdminText('admin_case_approved_email', 'Approver Email'), person.approvedByUser?.email || person.approvedByEmail || na())}
                         ${renderMetaLine(getAdminText('admin_case_approved_id', 'Approver ID'), person.approvedByUser?._id || person.approvedBy || na())}
                         ${renderMetaLine(getAdminText('admin_case_approved_at', 'Approved At'), formatDate(person.approvedAt))}
                         ${renderMetaLine(getAdminText('admin_case_approval_source', 'Approval Source'), person.approvedByUser?.source || person.approvalSource || getAdminText('admin_case_approval_source_unknown', 'unknown'))}
                         ${renderMetaLine(getAdminText('admin_case_reported_by', 'Reported By'), person.reportedBy?.username || na())}
+                        ${renderMetaLine(getAdminText('admin_case_reporter_profile', 'Reporter Profile'), renderActorInline(person.reportedBy, person.reportedBy?.username), false, true)}
                         ${renderMetaLine(getAdminText('admin_case_reporter_role', 'Reporter Role'), roleLabel(person.reportedBy?.role || ''))}
                         ${renderMetaLine(getAdminText('admin_case_reporter_id', 'Reporter ID'), reporterId)}
                         ${renderMetaLine(getAdminText('admin_case_posted_at', 'Posted At'), formatDate(person.createdAt))}
@@ -1110,6 +1199,7 @@
                         ${renderMetaLine(getAdminText('admin_case_anonymous', 'Anonymous Report'), formatYesNo(person.isAnonymous))}
                         ${renderMetaLine(getAdminText('admin_case_photo', 'Posted Photo'), imageHtml ? getAdminText('admin_photo_visible', 'Visible in card') : na(), false)}
                     </div>
+                    ${renderChangeHistory(person.changeHistory)}
                 </div>
             `;
             }).join('');
