@@ -355,6 +355,37 @@
             gap: 14px;
         }
 
+        .admin-user-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .admin-user-count-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 12px;
+            display: grid;
+            gap: 4px;
+        }
+
+        .admin-user-count-num {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .admin-user-count-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+
         .admin-directory-card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -816,6 +847,12 @@
                             </button>
                         </div>
                         <div id="users-directory-summary" class="admin-user-directory-summary"></div>
+                        <div class="admin-user-count-grid" id="users-count-grid">
+                            <div class="admin-user-count-card"><span class="admin-user-count-num">-</span><span class="admin-user-count-label">Total Users</span></div>
+                            <div class="admin-user-count-card"><span class="admin-user-count-num">-</span><span class="admin-user-count-label">Police Admin</span></div>
+                            <div class="admin-user-count-card"><span class="admin-user-count-num">-</span><span class="admin-user-count-label">Authorized Org</span></div>
+                            <div class="admin-user-count-card"><span class="admin-user-count-num">-</span><span class="admin-user-count-label">System Admin</span></div>
+                        </div>
                         <div id="users-directory-list" class="admin-user-directory-list">
                             <div class="loading-indicator loading-full">
                                 <div class="spinner"></div>
@@ -1471,10 +1508,25 @@
         function renderUsersDirectory(users) {
             const holder = document.getElementById('users-directory-list');
             const summary = document.getElementById('users-directory-summary');
+            const countsEl = document.getElementById('users-count-grid');
             if (!holder || !summary) return;
 
             const visibleUsers = Array.isArray(users) ? users : [];
             summary.textContent = `Showing ${visibleUsers.length} account(s).`;
+
+            if (countsEl) {
+                const totalUsers = allUsersDirectoryItems.length;
+                const policeAdmins = allUsersDirectoryItems.filter((u) => u.role === 'law_enforcement').length;
+                const authorizedOrgs = allUsersDirectoryItems.filter((u) => u.role === 'authorized_org').length;
+                const systemAdmins = allUsersDirectoryItems.filter((u) => u.role === 'admin').length;
+
+                countsEl.innerHTML = `
+                    <div class="admin-user-count-card"><span class="admin-user-count-num">${totalUsers}</span><span class="admin-user-count-label">Total Users</span></div>
+                    <div class="admin-user-count-card"><span class="admin-user-count-num">${policeAdmins}</span><span class="admin-user-count-label">Police Admin</span></div>
+                    <div class="admin-user-count-card"><span class="admin-user-count-num">${authorizedOrgs}</span><span class="admin-user-count-label">Authorized Org</span></div>
+                    <div class="admin-user-count-card"><span class="admin-user-count-num">${systemAdmins}</span><span class="admin-user-count-label">System Admin</span></div>
+                `;
+            }
 
             if (!visibleUsers.length) {
                 holder.innerHTML = '<div class="empty-state loading-full">No users match your search.</div>';
