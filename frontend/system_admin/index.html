@@ -138,6 +138,8 @@
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
             padding: 18px;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .admin-user-card .info {
@@ -276,11 +278,20 @@
 
         .admin-user-meta {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            grid-template-columns: minmax(0, 1fr);
             gap: 10px 14px;
             margin: 8px 0 14px;
             font-size: 0.98rem;
             line-height: 1.5;
+            min-width: 0;
+        }
+
+        .admin-user-meta span {
+            display: block;
+            min-width: 0;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .admin-request-search {
@@ -319,6 +330,21 @@
         .admin-user-photo,
         .admin-doc-thumb {
             width: 100%;
+        }
+
+        .admin-user-doc-link {
+            display: inline-flex;
+            max-width: 100%;
+            white-space: normal;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .admin-user-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 0;
         }
 
         #pending-list.grid-container,
@@ -880,7 +906,7 @@
 
             const actions = mode === 'pending'
                 ? `
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div class="admin-user-actions">
                         <button class="btn btn-sm" style="background:#16a34a; border:none;" onclick="approveRegistration('${u._id}')">
                             <i class="fas fa-check"></i><span>${getAdminText('admin_approve', 'Approve')}</span>
                         </button>
@@ -911,7 +937,7 @@
                         <span><strong>${getAdminText('admin_submitted', 'Submitted')}:</strong> ${highlightRequestText(formatDate(u.createdAt))}</span>
                         ${reviewMeta}
                     </div>
-                    ${docLink ? `<a href="${docLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="margin-bottom:10px; display:inline-flex;"><i class="fas fa-file-alt"></i><span>${getAdminText('admin_view_id_doc', 'View ID Document')}</span></a>` : `<p class="error-inline">${getAdminText('admin_no_doc', 'No document uploaded')}</p>`}
+                    ${docLink ? `<a href="${docLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm admin-user-doc-link" style="margin-bottom:10px;"><i class="fas fa-file-alt"></i><span>${getAdminText('admin_view_id_doc', 'View ID Document')}</span></a>` : `<p class="error-inline">${getAdminText('admin_no_doc', 'No document uploaded')}</p>`}
                     ${actions}
                 </div>
             `;
