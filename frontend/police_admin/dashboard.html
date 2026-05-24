@@ -875,6 +875,19 @@
             return `<span class="pd-reporter-inline">${avatar}<span>${reporter.username || 'Unknown'} (${role})</span></span>`;
         }
 
+        function renderClaimantInline(tip) {
+            const author = tip?.author || null;
+            if (!author) {
+                const fallbackName = tip?.reporterName || tip?.contactInfo || policeText('police_anonymous', 'Anonymous');
+                return `<span class="pd-reporter-inline"><span>${fallbackName}</span></span>`;
+            }
+
+            const photo = author.profilePhoto ? `${IMG_URL_BASE}${author.profilePhoto}` : '';
+            const avatar = photo ? `<img src="${photo}" alt="${author.username || 'Claimant'}" class="pd-reporter-avatar">` : '';
+            const role = author.role || policeText('not_available', 'N/A');
+            return `<span class="pd-reporter-inline">${avatar}<span>${author.username || 'Unknown'} (${role})</span></span>`;
+        }
+
         function switchSection(tab) {
             document.querySelectorAll('.pd-nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('nav-' + tab).classList.add('active');
@@ -959,6 +972,7 @@
                             <div class="pd-case-meta">
                                 <span><i class="fas fa-phone"></i>${t.contactInfo || policeText('police_anonymous', 'Anonymous')}</span>
                                 <span><i class="fas fa-calendar"></i>${new Date(t.createdAt).toLocaleDateString()}</span>
+                                <span><i class="fas fa-user"></i>${policeText('police_claimed_by', 'Claimed By')}: ${renderClaimantInline(t)}</span>
                                 <span>
                                     ${t.status === 'Verified - Match'
                                         ? `<span class="verified-badge"><i class="fas fa-check"></i>${policeText('police_verified', 'VERIFIED')}</span>`
@@ -1112,6 +1126,7 @@
                                 <div class="pd-case-meta">
                                     <span class="verified-badge"><i class="fas fa-check-circle"></i>${p.status}</span>
                                     <span><i class="fas fa-calendar-check"></i>${policeText('police_resolved_on', 'Resolved')} ${new Date(p.updatedAt || Date.now()).toLocaleDateString()}</span>
+                                    <span><i class="fas fa-user"></i>${policeText('police_reported_by', 'Reported By')}: ${renderReporterInline(p)}</span>
                                 </div>
                             </div>
                             <div class="pd-case-actions">
