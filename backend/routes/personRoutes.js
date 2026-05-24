@@ -451,10 +451,18 @@ router.post('/search/image', handleImageUpload, async (req, res) => {
       return res.status(400).json({ msg: 'Please upload an image file.' });
     }
 
+    const faceValidation = await validateHumanFaceStrict(req.file);
+    if (!faceValidation.ok) {
+      return res.status(faceValidation.status || 400).json({
+        msg: faceValidation.msg,
+        aiValidation: faceValidation.ai || null
+      });
+    }
+
     const requestedMin = Number(req.query.minSimilarity);
     const minSimilarity = Number.isFinite(requestedMin)
-      ? Math.min(0.95, Math.max(0.55, requestedMin))
-      : 0.7;
+      ? Math.min(0.95, Math.max(0.7, requestedMin))
+      : 0.82;
 
     const queryEmbedding = await generateFaceEmbeddingFromFile(req.file);
 

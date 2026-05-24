@@ -10,6 +10,65 @@
     <link rel="stylesheet" href="mobile-menu.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="theme.js"></script>
+    <style>
+        .image-search-standalone {
+            margin-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+        .image-dropzone {
+            border: 2px dashed rgba(148, 163, 184, 0.35);
+            border-radius: 18px;
+            padding: 26px 16px;
+            background: rgba(15, 23, 42, 0.35);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .image-dropzone:hover,
+        .image-dropzone.dragover {
+            border-color: rgba(248, 113, 113, 0.7);
+            background: rgba(30, 41, 59, 0.55);
+        }
+        .image-dropzone-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 10px;
+            border-radius: 999px;
+            border: 2px solid rgba(248, 113, 113, 0.32);
+            color: #f87171;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            background: rgba(248, 113, 113, 0.08);
+        }
+        .image-dropzone-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        .image-dropzone-sub {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .image-file-selected {
+            color: var(--accent-teal);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        [data-theme="light"] .image-dropzone {
+            background: #f8fafc;
+            border-color: rgba(100, 116, 139, 0.35);
+        }
+        [data-theme="light"] .image-dropzone:hover,
+        [data-theme="light"] .image-dropzone.dragover {
+            background: #eef2ff;
+        }
+    </style>
 </head>
 <body>
 
@@ -143,20 +202,26 @@
                 </div>
             </div>
 
-            <div class="search-row" style="margin-top:12px; border-top:1px solid var(--border-subtle); padding-top:12px;">
-                <div class="search-group search-group-wide">
-                    <label>Advanced Image Search</label>
-                    <input type="file" id="imageSearchInputDashboard" accept="image/*">
+            <div class="image-search-standalone">
+                <label>Advanced Image Search</label>
+                <input type="file" id="imageSearchInputDashboard" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                <div class="image-dropzone" id="imageDropzoneDashboard">
+                    <div class="image-dropzone-icon"><i class="fas fa-camera"></i></div>
+                    <div class="image-dropzone-title">Click or drag to upload photo</div>
+                    <div class="image-dropzone-sub">Must show a clear human face - JPG, PNG, WEBP - Max 10MB</div>
                 </div>
-                <div class="search-group">
-                    <label>Min Similarity (%)</label>
-                    <input type="number" id="imageSearchMinSimilarityDashboard" min="55" max="95" step="1" value="70">
-                </div>
-                <div class="search-actions">
-                    <button onclick="triggerAdvancedImageSearchDashboard()" class="search-btn" type="button" id="image-search-btn-dashboard" style="margin-top:0;">
-                        <i class="fas fa-image"></i>
-                        <span>Search Similar Images</span>
-                    </button>
+                <div class="image-file-selected" id="imageFileSelectedDashboard"></div>
+                <div class="search-row" style="margin:0;">
+                    <div class="search-group">
+                        <label>Min Similarity (%)</label>
+                        <input type="number" id="imageSearchMinSimilarityDashboard" min="70" max="95" step="1" value="82">
+                    </div>
+                    <div class="search-actions">
+                        <button onclick="triggerAdvancedImageSearchDashboard()" class="search-btn" type="button" id="image-search-btn-dashboard" style="margin-top:0;">
+                            <i class="fas fa-image"></i>
+                            <span>Search Similar Images</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -280,6 +345,49 @@
                 if (el) el.addEventListener('change', loadPeople);
             });
 
+            setupImageDropzoneDashboard();
+        }
+
+        function setupImageDropzoneDashboard() {
+            const input = document.getElementById('imageSearchInputDashboard');
+            const zone = document.getElementById('imageDropzoneDashboard');
+            const selected = document.getElementById('imageFileSelectedDashboard');
+            if (!input || !zone) return;
+
+            const setFile = (file) => {
+                if (!file) return;
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                input.files = dt.files;
+                if (selected) selected.textContent = `Selected: ${file.name}`;
+            };
+
+            zone.addEventListener('click', () => input.click());
+            input.addEventListener('change', () => {
+                const file = input.files && input.files[0];
+                if (file && selected) selected.textContent = `Selected: ${file.name}`;
+            });
+
+            ['dragenter', 'dragover'].forEach((eventName) => {
+                zone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach((eventName) => {
+                zone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zone.classList.remove('dragover');
+                });
+            });
+
+            zone.addEventListener('drop', (e) => {
+                const file = e.dataTransfer?.files?.[0];
+                if (file) setFile(file);
+            });
         }
 
         function triggerAdvancedImageSearchDashboard() {
@@ -301,8 +409,8 @@
             try {
                 const formData = new FormData();
                 formData.append('image', file);
-                const minSimilarityPct = Number(document.getElementById('imageSearchMinSimilarityDashboard')?.value || 70);
-                const minSimilarity = Math.max(0.55, Math.min(0.95, minSimilarityPct / 100));
+                const minSimilarityPct = Number(document.getElementById('imageSearchMinSimilarityDashboard')?.value || 82);
+                const minSimilarity = Math.max(0.7, Math.min(0.95, minSimilarityPct / 100));
                 const result = await apiCall(`/people/search/image?minSimilarity=${minSimilarity}`, 'POST', formData, true);
                 const people = result.matches || [];
 
