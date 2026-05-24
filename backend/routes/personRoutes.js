@@ -53,6 +53,61 @@ function cosineSimilarity(vecA, vecB) {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB) || 1);
 }
 
+async function validateHumanFaceStrict(imageFile) {
+  if (!process.env.AI_SERVICE_URL) {
+    return {
+      ok: false,
+      status: 503,
+      msg: 'AI face verification service is not configured. Image submission is temporarily unavailable.'
+    };
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('image', imageFile.buffer, {
+      filename: imageFile.originalname || `image${path.extname(imageFile.originalname || '.jpg')}`,
+      contentType: imageFile.mimetype
+    });
+
+    const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/validate-face`, formData, {
+      headers: { ...formData.getHeaders() },
+      timeout: 15000
+    });
+
+    const result = aiResponse?.data || {};
+    if (!result.is_human_face) {
+      return {
+        ok: false,
+        status: 400,
+        msg: result.reason || 'Uploaded image was rejected. A clear human face is required.',
+        ai: {
+          is_human_face: false,
+          confidence: Number(result.confidence || 0),
+          faces_detected: Number(result.faces_detected || 0),
+          detector: result.detector || 'unknown'
+        }
+      };
+    }
+
+    return {
+      ok: true,
+      ai: {
+        is_human_face: true,
+        confidence: Number(result.confidence || 0),
+        faces_detected: Number(result.faces_detected || 0),
+        detector: result.detector || 'unknown'
+      }
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 503,
+      msg: 'AI verification service is unavailable. Please try again shortly.',
+      error: err?.message || 'AI request failed'
+    };
+  }
+}
+
 function normalizePerson(person, userMap = {}) {
   const mapped = { ...person };
   const reporter = userMap[person.reportedBy];
@@ -291,6 +346,14 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
     };
 
     if (req.file) {
+      const faceValidation = await validateHumanFaceStrict(req.file);
+      if (!faceValidation.ok) {
+        return res.status(faceValidation.status || 400).json({
+          msg: faceValidation.msg,
+          aiValidation: faceValidation.ai || null
+        });
+      }
+
       try {
         const formData = new FormData();
         formData.append('image', req.file.buffer, {

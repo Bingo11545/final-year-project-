@@ -20,19 +20,39 @@ const PUBLIC_PATHS_FOR_GUEST = new Set([
 let notificationPollTimer = null;
 
 // --- Auth Utils ---
+function parseTokenPayload(token) {
+    if (!token) return null;
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+        return null;
+    }
+}
+
+function isTokenExpired(token) {
+    const payload = parseTokenPayload(token);
+    if (!payload || !payload.exp) return false;
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    return nowInSeconds >= payload.exp;
+}
+
 function getToken() {
-    return localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    if (isTokenExpired(token)) {
+        localStorage.removeItem('token');
+        return null;
+    }
+
+    return token;
 }
 
 function getUserRole() {
     const token = getToken();
     if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.user.role;
-    } catch (e) {
-        return null;
-    }
+    const payload = parseTokenPayload(token);
+    return payload?.user?.role || null;
 }
 
 function isLoggedIn() {
@@ -130,7 +150,25 @@ async function apiCall(endpoint, method = 'GET', body = null, isFormData = false
     }
     
     if (!res.ok) {
-        throw new Error(data.msg || data.error || 'API Error');
+        const error = new Error(data.msg || data.error || 'API Error');
+        error.status = res.status;
+        error.payload = data;
+
+        if (res.status === 401) {
+            localStorage.removeItem('token');
+            stopNotificationPolling();
+
+            const path = decodeURIComponent(window.location.pathname || '/').replace(/^\/+|\/+$/g, '');
+            const currentPath = path || 'index';
+            const canonicalPath = currentPath.endsWith('.html') ? currentPath.slice(0, -5) : currentPath;
+            const publicAuthPages = new Set(['index', 'login', 'register', 'forgot_password', 'reset_password', 'user/case']);
+
+            if (!publicAuthPages.has(canonicalPath)) {
+                window.location.href = '/login.html';
+            }
+        }
+
+        throw error;
     }
     return data;
 }
@@ -458,6 +496,11 @@ function updateNav() {
 }
 
 async function checkNotifications() {
+     if (!isLoggedIn()) {
+         stopNotificationPolling();
+         return;
+     }
+
      try {
          const updates = await apiCall('/people/notifications');
          const badge = document.getElementById('notif-count');
@@ -485,7 +528,12 @@ async function checkNotifications() {
                 </a>
             `;
          }).join('');
-     } catch(e) { console.log("No notifications"); }
+     } catch(e) {
+         if (e && e.status === 401) {
+             stopNotificationPolling();
+             return;
+         }
+     }
 }
 
 function startNotificationPolling() {

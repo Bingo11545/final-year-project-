@@ -1002,6 +1002,11 @@
 
         // ── AI Photo Validation (STRICT — no fallback) ──
         let photoValidated = false;
+        let validatedPhotoFingerprint = null;
+
+        function getPhotoFingerprint(file) {
+            return file ? `${file.name}::${file.size}::${file.lastModified}` : null;
+        }
 
         async function handlePhotoUpload(event) {
             const file = event.target.files[0];
@@ -1033,12 +1038,14 @@
             statusDiv.className = 'ai-validation-status ai-status-checking';
             statusDiv.innerHTML = `<div class="spinner spinner-14"></div><span>${reportText('report_ai_verifying', 'AI is verifying the photo contains a human face...')}</span>`;
             photoValidated = false;
+            validatedPhotoFingerprint = null;
 
             try {
                 await validateFaceImage(file, statusDiv);
             } catch (err) {
                 setValidationStatus(statusDiv, false, reportText('report_validation_error', 'Validation error. Please upload a clear face photo.'));
                 photoValidated = false;
+                validatedPhotoFingerprint = null;
             }
         }
 
@@ -1065,9 +1072,14 @@
 
                         setValidationStatus(statusEl, true, `✓ ${confidenceMessage}`);
                         photoValidated = true;
+                        validatedPhotoFingerprint = getPhotoFingerprint(file);
                     } else {
-                        setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_no_face', 'No human face detected. The uploaded image must contain a clear, visible human face. Please try again with a proper photo of the missing person.')}`);
+                        const reason = result.reason || reportText('report_ai_no_face', 'No human face detected. The uploaded image must contain a clear, visible human face. Please try again with a proper photo of the missing person.');
+                        const faceCount = Number(result.faces_detected || 0);
+                        const detector = result.detector || 'unknown';
+                        setValidationStatus(statusEl, false, `✗ ${reason} (${reportText('report_ai_faces_detected', 'Faces detected')}: ${faceCount}, ${reportText('report_ai_detector', 'Detector')}: ${detector})`);
                         photoValidated = false;
+                        validatedPhotoFingerprint = null;
                         document.getElementById('image').value = '';
                         setTimeout(() => {
                             document.getElementById('photo-preview-container').style.display = 'none';
@@ -1077,12 +1089,14 @@
                     // AI service returned an error (strict: reject)
                     setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_service_error', 'AI verification service error. Please try again or contact support if the issue persists.')}`);
                     photoValidated = false;
+                    validatedPhotoFingerprint = null;
                     document.getElementById('image').value = '';
                 }
             } catch (networkErr) {
                 // Service unreachable — STRICT: reject submission
                 setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_service_unavailable', 'AI verification service is currently unavailable. Please try again in a few moments. A valid human face photo is required.')}`);
                 photoValidated = false;
+                validatedPhotoFingerprint = null;
                 document.getElementById('image').value = '';
             }
         }
@@ -1124,6 +1138,12 @@
 
             if (!photoValidated) {
                 showToast('The uploaded photo has not passed AI verification. Please upload a clear facial photo and wait for verification.', 'warning');
+                return;
+            }
+
+            const currentFingerprint = getPhotoFingerprint(imgInput.files[0]);
+            if (!validatedPhotoFingerprint || validatedPhotoFingerprint !== currentFingerprint) {
+                showToast('The selected photo changed after validation. Please wait for AI verification again before submitting.', 'warning');
                 return;
             }
 
