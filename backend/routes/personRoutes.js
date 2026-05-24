@@ -118,7 +118,8 @@ function normalizePerson(person, userMap = {}) {
       role: reporter.role,
       isVerified: reporter.isVerified,
       email: reporter.email || null,
-      profilePhoto: reporter.profilePhoto || null
+      profilePhoto: reporter.profilePhoto || null,
+      organizationName: reporter.organizationName || null
     };
   }
   return mapped;

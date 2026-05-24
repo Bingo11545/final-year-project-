@@ -872,7 +872,10 @@
             const photo = reporter.profilePhoto ? `${IMG_URL_BASE}${reporter.profilePhoto}` : '';
             const avatar = photo ? `<img src="${photo}" alt="${reporter.username || 'Reporter'}" class="pd-reporter-avatar">` : '';
             const role = reporter.role || policeText('not_available', 'N/A');
-            return `<span class="pd-reporter-inline">${avatar}<span>${reporter.username || 'Unknown'} (${role})</span></span>`;
+            const orgSuffix = reporter.role === 'authorized_org' && reporter.organizationName
+                ? ` - ${reporter.organizationName}`
+                : '';
+            return `<span class="pd-reporter-inline">${avatar}<span>${reporter.username || 'Unknown'} (${role})${orgSuffix}</span></span>`;
         }
 
         function renderClaimantInline(tip) {
