@@ -263,14 +263,29 @@ router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
           || explicitApprover?.role
           || (isPoliceAutoApproval ? reporterUser?.role : null)
           || null;
-        const approvedAt = person.approvedAt || (isPoliceAutoApproval ? person.createdAt : null) || null;
+        const approvedAt = person.approvedAt || (isPoliceAutoApproval ? person.createdAt : null) || person.updatedAt || person.createdAt || null;
+        const approvedByEmail =
+          explicitApprover?.email
+          || (isPoliceAutoApproval ? reporterUser?.email : null)
+          || null;
+        const approvedByUser = approvedByName
+          ? {
+              _id: approvedBy || null,
+              username: approvedByName,
+              role: approvedByRole || 'unknown',
+              email: approvedByEmail,
+              source: explicitApprover ? 'explicit-approver' : (isPoliceAutoApproval ? 'auto-approved-reporter' : 'legacy-record')
+            }
+          : null;
 
         return {
           ...normalizePerson(person, userMap),
           approvedBy,
           approvedByName,
           approvedByRole,
-          approvedAt
+          approvedAt,
+          approvedByEmail,
+          approvedByUser
         };
       });
 
