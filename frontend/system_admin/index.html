@@ -1465,11 +1465,23 @@
 
             activityEl.innerHTML = items.slice(0, 250).map((item) => {
                 const actor = item.actor || {};
-                const detailsObj = item.details || {};
-                const targetObj = item.target || {};
+                const normalizeObjectValue = (value) => {
+                    if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+                    if (typeof value === 'string') {
+                        try {
+                            const parsed = JSON.parse(value);
+                            return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : { value: parsed };
+                        } catch (e) {
+                            return { value };
+                        }
+                    }
+                    if (value === undefined || value === null) return {};
+                    return { value };
+                };
+
+                const detailsObj = normalizeObjectValue(item.details);
+                const targetObj = normalizeObjectValue(item.target);
                 const caseName = detailsObj.caseName || detailsObj.personName || detailsObj.fullName || 'N/A';
-                const details = escapeHtml(JSON.stringify(item.details || {}, null, 2));
-                const target = escapeHtml(JSON.stringify(item.target || {}, null, 2));
                 const action = escapeHtml(actionLabelForAdminActivity(item.type));
                 const renderObjectEntries = (obj) => {
                     const entries = Object.entries(obj || {});
@@ -1494,10 +1506,6 @@
                         ${renderObjectEntries(targetObj)}
                         <span><strong>Details:</strong></span>
                         ${renderObjectEntries(detailsObj)}
-                        <span><strong>Target (JSON):</strong></span>
-                        <pre>${target}</pre>
-                        <span><strong>Details (JSON):</strong></span>
-                        <pre>${details}</pre>
                     </div>
                 `;
             }).join('');
