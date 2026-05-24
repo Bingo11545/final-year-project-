@@ -60,6 +60,21 @@
             font-size: 0.9rem;
             font-weight: 600;
         }
+        .image-preview-wrap {
+            display: none;
+            justify-content: center;
+        }
+        .image-preview-wrap.show {
+            display: flex;
+        }
+        .image-preview {
+            width: 108px;
+            height: 108px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 8px 20px rgba(2, 6, 23, 0.25);
+        }
         [data-theme="light"] .image-dropzone {
             background: #f8fafc;
             border-color: rgba(100, 116, 139, 0.35);
@@ -210,6 +225,9 @@
                     <div class="image-dropzone-title">Click or drag to upload photo</div>
                     <div class="image-dropzone-sub">Must show a clear human face - JPG, PNG, WEBP - Max 10MB</div>
                 </div>
+                <div class="image-preview-wrap" id="imagePreviewWrapDashboard">
+                    <img id="imagePreviewDashboard" class="image-preview" alt="Selected face preview">
+                </div>
                 <div class="image-file-selected" id="imageFileSelectedDashboard"></div>
                 <div class="search-row" style="margin:0;">
                     <div class="search-group">
@@ -352,20 +370,58 @@
             const input = document.getElementById('imageSearchInputDashboard');
             const zone = document.getElementById('imageDropzoneDashboard');
             const selected = document.getElementById('imageFileSelectedDashboard');
+            const preview = document.getElementById('imagePreviewDashboard');
+            const previewWrap = document.getElementById('imagePreviewWrapDashboard');
             if (!input || !zone) return;
 
+            let previewUrl = '';
+
+            const clearSelection = () => {
+                input.value = '';
+                if (selected) selected.textContent = '';
+                if (previewWrap) previewWrap.classList.remove('show');
+                if (preview) preview.removeAttribute('src');
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    previewUrl = '';
+                }
+            };
+
+            const isValidImageFile = (file) => {
+                if (!file || !file.type || !file.type.startsWith('image/')) {
+                    showToast('Please upload a valid image file.', 'warning');
+                    return false;
+                }
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('Image must be 10MB or less.', 'warning');
+                    return false;
+                }
+                return true;
+            };
+
             const setFile = (file) => {
-                if (!file) return;
+                if (!isValidImageFile(file)) {
+                    clearSelection();
+                    return;
+                }
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 input.files = dt.files;
                 if (selected) selected.textContent = `Selected: ${file.name}`;
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                previewUrl = URL.createObjectURL(file);
+                if (preview) preview.src = previewUrl;
+                if (previewWrap) previewWrap.classList.add('show');
             };
 
             zone.addEventListener('click', () => input.click());
             input.addEventListener('change', () => {
                 const file = input.files && input.files[0];
-                if (file && selected) selected.textContent = `Selected: ${file.name}`;
+                if (file) {
+                    setFile(file);
+                } else {
+                    clearSelection();
+                }
             });
 
             ['dragenter', 'dragover'].forEach((eventName) => {
