@@ -1,4 +1,13 @@
 (function () {
+    function hasValidSession() {
+        if (typeof window.isLoggedIn === 'function') {
+            return window.isLoggedIn();
+        }
+
+        const token = localStorage.getItem('token');
+        return !!token;
+    }
+
     function createMobileMenu() {
         if (document.querySelector('.fm-mobile-topbar')) return;
 
@@ -23,6 +32,7 @@
         const sidebar = document.createElement('aside');
         sidebar.className = 'fm-mobile-sidebar';
         sidebar.id = 'fmMobileSidebar';
+        const loggedIn = hasValidSession();
         sidebar.innerHTML = `
             <div class="fm-mobile-menu-head">
                 <strong>Menu</strong>
@@ -45,9 +55,10 @@
                 <a class="fm-mobile-link" href="/user/report.html">
                     <span>Report / Upload</span>
                 </a>
-                <button type="button" class="fm-mobile-action" id="fmLogoutBtn">
-                    <span>Logout</span>
-                </button>
+                ${loggedIn
+                    ? `<button type="button" class="fm-mobile-action" id="fmLogoutBtn"><span>Logout</span></button>`
+                    : `<a class="fm-mobile-link" href="/login.html"><span>Login</span></a>
+                       <a class="fm-mobile-link" href="/register.html"><span>Register</span></a>`}
             </div>
         `;
 
