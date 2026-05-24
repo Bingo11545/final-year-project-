@@ -247,11 +247,32 @@ router.get('/admin/approval-log', auth(['admin']), async (req, res) => {
 
     const log = approvedPeople
       .filter((person) => person.approvedBy || person.reportedBy)
-      .map((person) => ({
-        ...normalizePerson(person, userMap),
-        approvedByName: person.approvedByName || userMap[person.approvedBy]?.username || null,
-        approvedByRole: person.approvedByRole || userMap[person.approvedBy]?.role || null
-      }));
+      .map((person) => {
+        const explicitApprover = userMap[person.approvedBy];
+        const reporterUser = userMap[person.reportedBy];
+        const isPoliceAutoApproval = ['law_enforcement', 'admin'].includes(reporterUser?.role || '');
+
+        const approvedBy = person.approvedBy || (isPoliceAutoApproval ? person.reportedBy : null);
+        const approvedByName =
+          person.approvedByName
+          || explicitApprover?.username
+          || (isPoliceAutoApproval ? reporterUser?.username : null)
+          || null;
+        const approvedByRole =
+          person.approvedByRole
+          || explicitApprover?.role
+          || (isPoliceAutoApproval ? reporterUser?.role : null)
+          || null;
+        const approvedAt = person.approvedAt || (isPoliceAutoApproval ? person.createdAt : null) || null;
+
+        return {
+          ...normalizePerson(person, userMap),
+          approvedBy,
+          approvedByName,
+          approvedByRole,
+          approvedAt
+        };
+      });
 
     return res.json(log);
   } catch (err) {
@@ -344,6 +365,14 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
       images: [],
       faceEmbeddings: []
     };
+
+    // Police/admin submissions are auto-approved and should appear in approval logs with actor/time.
+    if (isApproved) {
+      payload.approvedAt = new Date().toISOString();
+      payload.approvedBy = req.user.id;
+      payload.approvedByName = reporter?.username || 'Police Admin';
+      payload.approvedByRole = reporter?.role || req.user.role;
+    }
 
     if (req.file) {
       const faceValidation = await validateHumanFaceStrict(req.file);
