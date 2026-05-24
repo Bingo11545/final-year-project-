@@ -229,9 +229,11 @@ router.get('/pending', auth(), async (req, res) => {
     if (!['law_enforcement', 'admin'].includes(req.user.role)) {
       return res.status(403).json({ msg: 'Access Denied' });
     }
+    const users = await store.listUsers();
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
     const people = await store.listPeople((p) => !p.isApproved);
     people.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-    return res.json(people);
+    return res.json(people.map((p) => normalizePerson(p, userMap)));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server Error' });
@@ -244,9 +246,12 @@ router.get('/police/all', auth(), async (req, res) => {
       return res.status(403).json({ msg: 'Access Denied' });
     }
 
+    const users = await store.listUsers();
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+
     const people = await store.listPeople((p) => !req.query.status || p.status === req.query.status);
     people.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    return res.json(people);
+    return res.json(people.map((p) => normalizePerson(p, userMap)));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server Error' });

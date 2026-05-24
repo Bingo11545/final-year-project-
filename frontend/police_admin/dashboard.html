@@ -424,6 +424,23 @@
         .pd-case-meta span { display: flex; align-items: center; gap: 5px; }
         .pd-case-meta i { font-size: 0.72rem; color: var(--accent-blue); }
 
+        .pd-reporter-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .pd-reporter-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 1px solid var(--border-subtle);
+            background: #0f172a;
+            flex-shrink: 0;
+        }
+
         [data-theme="light"] .pd-case-meta i { color: #1d4ed8; }
 
         .pd-case-desc {
@@ -655,6 +672,11 @@
                 <span data-key="police_active_cases">Active Cases</span>
             </div>
 
+            <a href="/police_admin/my-reports.html" class="pd-nav-item" id="nav-my-reports">
+                <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
+                <span>My Reports</span>
+            </a>
+
             <div class="pd-nav-item" onclick="switchSection('found')" id="nav-found">
                 <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
                 <span data-key="police_found_resolved">Found / Resolved</span>
@@ -666,10 +688,6 @@
                 <a href="/user/report.html" class="pd-nav-item">
                     <div class="nav-icon nav-icon-danger"><i class="fas fa-plus"></i></div>
                     <span data-key="police_add_new_case">Add New Case</span>
-                </a>
-                <a href="/police_admin/my-reports.html" class="pd-nav-item">
-                    <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
-                    <span>My Reports</span>
                 </a>
                 <a href="/index.html?view=public" class="pd-nav-item">
                     <div class="nav-icon"><i class="fas fa-globe"></i></div>
@@ -815,16 +833,29 @@
             changeLanguage(savedLang);
         }
 
-        // Show username in sidebar
-        try {
-            const token = localStorage.getItem('token');
-            if (token) {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                if (payload.username) {
-                    document.getElementById('sidebar-username').textContent = payload.username;
+        async function loadOfficerName() {
+            try {
+                const me = await apiCall('/auth/me');
+                const sidebar = document.getElementById('sidebar-username');
+                if (sidebar && me?.username) {
+                    sidebar.textContent = me.username;
                 }
+            } catch (e) {
+                // Keep fallback "Officer" when profile fetch fails.
             }
-        } catch(e) {}
+        }
+
+        function renderReporterInline(person) {
+            const reporter = typeof person?.reportedBy === 'object' ? person.reportedBy : null;
+            if (!reporter) {
+                return policeText('not_available', 'N/A');
+            }
+
+            const photo = reporter.profilePhoto ? `${IMG_URL_BASE}${reporter.profilePhoto}` : '';
+            const avatar = photo ? `<img src="${photo}" alt="${reporter.username || 'Reporter'}" class="pd-reporter-avatar">` : '';
+            const role = reporter.role || policeText('not_available', 'N/A');
+            return `<span class="pd-reporter-inline">${avatar}<span>${reporter.username || 'Unknown'} (${role})</span></span>`;
+        }
 
         function switchSection(tab) {
             document.querySelectorAll('.pd-nav-item').forEach(el => el.classList.remove('active'));
@@ -941,6 +972,7 @@
                                 <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || policeText('police_unknown_location', 'Unknown location')}</span>
                                 <span><i class="fas fa-calendar"></i>${new Date(p.createdAt).toLocaleDateString()}</span>
                                 ${p.policeCaseNumber ? `<span><i class="fas fa-hashtag"></i>${p.policeCaseNumber}</span>` : ''}
+                                <span><i class="fas fa-user"></i>${policeText('police_reported_by', 'Reported By')}: ${renderReporterInline(p)}</span>
                             </div>
                             <div class="pd-case-desc">${p.description || policeText('police_no_additional_desc', 'No additional description provided.')}</div>
                         </div>
@@ -991,6 +1023,7 @@
                                 <div class="pd-case-meta">
                                     <span><i class="fas fa-map-marker-alt"></i>${p.lastSeenLocation || p.city || policeText('police_unknown', 'Unknown')}</span>
                                     ${p.policeCaseNumber ? `<span><i class="fas fa-hashtag"></i>${policeText('police_case_prefix', 'Case')} ${p.policeCaseNumber}</span>` : ''}
+                                    <span><i class="fas fa-user"></i>${policeText('police_reported_by', 'Reported By')}: ${renderReporterInline(p)}</span>
                                 </div>
                             </div>
                             <div class="pd-case-actions">
@@ -1055,6 +1088,7 @@
         }
 
         // Init
+        loadOfficerName();
         loadPending();
         loadAllInternal();
     </script>
