@@ -849,6 +849,7 @@
                             <input id="admin-activity-search" type="text" placeholder="Search action, actor, case, details..." oninput="applyActivityFiltersAndRender()">
                             <select id="admin-activity-type" onchange="applyActivityFiltersAndRender()">
                                 <option value="all">All Actions</option>
+                                <option value="case-approved">Case Approved (Missing Post)</option>
                                 <option value="user-case-update-requested">Update Requested</option>
                                 <option value="user-update-approved">Update Approved</option>
                                 <option value="user-update-rejected">Update Rejected</option>
@@ -1464,12 +1465,15 @@
 
             activityEl.innerHTML = items.slice(0, 250).map((item) => {
                 const actor = item.actor || {};
+                const detailsObj = item.details || {};
+                const caseName = detailsObj.caseName || detailsObj.personName || detailsObj.fullName || 'N/A';
                 const details = escapeHtml(JSON.stringify(item.details || {}, null, 2));
                 const target = escapeHtml(JSON.stringify(item.target || {}, null, 2));
                 const action = escapeHtml(actionLabelForAdminActivity(item.type));
                 return `
                     <div class="admin-activity-card">
                         <span><strong>What They Did:</strong> ${action}</span>
+                        <span><strong>Action Summary:</strong> ${escapeHtml(actionSummaryForAdminActivity(item.type, actor.username || item.actorName || na(), caseName))}</span>
                         <span><strong>Type:</strong> ${escapeHtml(item.type || na())}</span>
                         <span><strong>Actor:</strong> ${escapeHtml(actor.username || item.actorName || na())} (${escapeHtml(roleLabel(actor.role || item.actorRole || ''))})</span>
                         <span><strong>Email:</strong> ${escapeHtml(actor.email || item.actorEmail || na())}</span>
@@ -1494,11 +1498,18 @@
                 'case-tip-added': 'User or police added a case tip',
                 'police-case-updated': 'Police admin directly updated case fields',
                 'case-status-updated': 'Police admin changed case status',
-                'case-approved': 'Police admin approved case for posting',
+                'case-approved': 'Police approved missing person post',
                 'user-report-created': 'User created a new report',
                 'police-report-created': 'Police admin created a new report'
             };
             return labels[type] || type || 'Activity recorded';
+        }
+
+        function actionSummaryForAdminActivity(type, actorName, caseName) {
+            if (type === 'case-approved') {
+                return `${actorName} approved missing person post for ${caseName}.`;
+            }
+            return `${actorName} performed ${actionLabelForAdminActivity(type).toLowerCase()} on ${caseName}.`;
         }
 
         function applyActivityFiltersAndRender() {
