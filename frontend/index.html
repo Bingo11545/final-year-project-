@@ -132,11 +132,23 @@
                         <i class="fas fa-arrow-right"></i>
                         <span data-key="btn_search">Search</span>
                     </button>
-                    <button onclick="triggerAdvancedImageSearch()" class="search-btn" type="button" id="image-search-btn" style="margin-top:8px;">
+                </div>
+            </div>
+
+            <div class="search-row" style="margin-top:12px; border-top:1px solid var(--border-subtle); padding-top:12px;">
+                <div class="search-group search-group-wide">
+                    <label>Advanced Image Search</label>
+                    <input type="file" id="imageSearchInput" accept="image/*">
+                </div>
+                <div class="search-group">
+                    <label>Min Similarity (%)</label>
+                    <input type="number" id="imageSearchMinSimilarity" min="55" max="95" step="1" value="70">
+                </div>
+                <div class="search-actions">
+                    <button onclick="triggerAdvancedImageSearch()" class="search-btn" type="button" id="image-search-btn" style="margin-top:0;">
                         <i class="fas fa-image"></i>
-                        <span>Advanced Image Search</span>
+                        <span>Search Similar Images</span>
                     </button>
-                    <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
                 </div>
             </div>
         </div>
@@ -264,20 +276,16 @@
                 if (el) el.addEventListener('change', loadPublicFeed);
             });
 
-            const imageInput = document.getElementById('imageSearchInput');
-            if (imageInput) {
-                imageInput.addEventListener('change', async (event) => {
-                    const file = event.target.files && event.target.files[0];
-                    if (!file) return;
-                    await loadPublicFeedByImage(file);
-                    imageInput.value = '';
-                });
-            }
         }
 
         function triggerAdvancedImageSearch() {
             const input = document.getElementById('imageSearchInput');
-            if (input) input.click();
+            const file = input && input.files ? input.files[0] : null;
+            if (!file) {
+                showToast('Please choose an image first.', 'warning');
+                return;
+            }
+            loadPublicFeedByImage(file);
         }
 
         async function loadPublicFeedByImage(file) {
@@ -289,7 +297,9 @@
             try {
                 const formData = new FormData();
                 formData.append('image', file);
-                const result = await apiCall('/people/search/image', 'POST', formData, true);
+                const minSimilarityPct = Number(document.getElementById('imageSearchMinSimilarity')?.value || 70);
+                const minSimilarity = Math.max(0.55, Math.min(0.95, minSimilarityPct / 100));
+                const result = await apiCall(`/people/search/image?minSimilarity=${minSimilarity}`, 'POST', formData, true);
                 const people = result.matches || [];
                 container.innerHTML = '';
 
@@ -298,9 +308,13 @@
                     return;
                 }
 
-                people.forEach((p) => {
+                people.forEach((p, idx) => {
                     const card = document.createElement('div');
                     card.className = 'person-card';
+                    if (idx < 3) {
+                        card.style.border = '2px solid rgba(14,165,233,0.45)';
+                        card.style.boxShadow = '0 8px 24px rgba(14,165,233,0.18)';
+                    }
                     const imgUrl = p.images && p.images.length ? IMG_URL_BASE + p.images[0].url : '';
                     const caseBadge = p.policeCaseNumber ? `<div class="case-number-bar"><i class="fas fa-hashtag"></i> ${t.public_case_prefix || 'Case'} ${p.policeCaseNumber}</div>` : '';
                     const classTag = p.classification ? `<span class="classification-tag">${p.classification}</span>` : '';
@@ -315,7 +329,8 @@
                             <div class="chip-row">
                                 <span class="status-badge status-Active">${t.status_missing || 'Missing'}</span>
                                 ${classTag}
-                                <span class="classification-tag">Similarity ${(Number(p.similarity || 0) * 100).toFixed(1)}%</span>
+                                <span class="classification-tag" style="background:rgba(14,165,233,0.16); border:1px solid rgba(14,165,233,0.3);">Similarity ${(Number(p.similarity || 0) * 100).toFixed(1)}%</span>
+                                ${idx === 0 ? '<span class="classification-tag" style="background:rgba(34,197,94,0.16); border:1px solid rgba(34,197,94,0.3);">Best Match</span>' : ''}
                             </div>
                             <div class="card-meta">
                                 <span><i class="fas fa-birthday-cake meta-icon-blue"></i><strong>${t.age_label || 'Age'}:</strong> ${p.age || 'N/A'} &bull; ${genderText}</span>

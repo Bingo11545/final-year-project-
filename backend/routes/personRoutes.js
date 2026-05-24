@@ -451,6 +451,11 @@ router.post('/search/image', handleImageUpload, async (req, res) => {
       return res.status(400).json({ msg: 'Please upload an image file.' });
     }
 
+    const requestedMin = Number(req.query.minSimilarity);
+    const minSimilarity = Number.isFinite(requestedMin)
+      ? Math.min(0.95, Math.max(0.55, requestedMin))
+      : 0.7;
+
     const queryEmbedding = await generateFaceEmbeddingFromFile(req.file);
 
     const [users, people] = await Promise.all([
@@ -465,7 +470,7 @@ router.post('/search/image', handleImageUpload, async (req, res) => {
         person: normalizePerson(person, userMap),
         similarity: cosineSimilarity(queryEmbedding, person.faceEmbeddings || [])
       }))
-      .filter((item) => Number.isFinite(item.similarity) && item.similarity > 0.45)
+      .filter((item) => Number.isFinite(item.similarity) && item.similarity >= minSimilarity)
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, 20)
       .map((item) => ({
@@ -474,6 +479,7 @@ router.post('/search/image', handleImageUpload, async (req, res) => {
       }));
 
     return res.json({
+      minSimilarity,
       total: matches.length,
       matches
     });
