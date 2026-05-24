@@ -2653,17 +2653,63 @@ input[type="submit"]:disabled:hover,
 
 .toast {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
-    padding: 14px 18px;
+    padding: 12px 14px;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-card);
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     color: var(--text-primary);
     pointer-events: auto;
     animation: slideInUp 0.3s ease-out;
+}
+
+.toast i { margin-top: 2px; }
+
+.toast-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast-text {
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.toast-close {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.toast-close:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.08);
+}
+
+.toast-progress {
+    height: 3px;
+    width: 100%;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.35;
+    transform-origin: left center;
+    animation-name: toastProgressShrink;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
 }
 
 .toast.show {
@@ -2696,6 +2742,11 @@ input[type="submit"]:disabled:hover,
     }
 }
 
+@keyframes toastProgressShrink {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
 .toast-success {
     border-color: rgba(34,197,94,0.3);
     background: rgba(34,197,94,0.08);
@@ -2723,6 +2774,10 @@ input[type="submit"]:disabled:hover,
 [data-theme="light"] .toast {
     background: #ffffff;
     border-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .toast-close:hover {
+    background: rgba(0,0,0,0.06);
 }
 
 [data-theme="light"] .toast-success {

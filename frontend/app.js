@@ -185,8 +185,14 @@ function showToast(message, type = 'info', duration = 4200) {
         document.body.appendChild(container);
     }
 
+    const existingToasts = Array.from(container.querySelectorAll('.toast'));
+    if (existingToasts.length >= 4) {
+        existingToasts[0].remove();
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
     const iconByType = {
         success: 'fa-circle-check',
@@ -199,11 +205,29 @@ function showToast(message, type = 'info', duration = 4200) {
     icon.className = `fas ${iconByType[type] || iconByType.info}`;
     icon.setAttribute('aria-hidden', 'true');
 
+    const body = document.createElement('div');
+    body.className = 'toast-body';
+
     const text = document.createElement('span');
+    text.className = 'toast-text';
     text.textContent = String(message);
 
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Dismiss notification');
+    closeBtn.innerHTML = '<i class="fas fa-xmark" aria-hidden="true"></i>';
+
+    const progress = document.createElement('div');
+    progress.className = 'toast-progress';
+    progress.style.animationDuration = `${Math.max(1800, duration)}ms`;
+
+    body.appendChild(text);
+    body.appendChild(progress);
+
     toast.appendChild(icon);
-    toast.appendChild(text);
+    toast.appendChild(body);
+    toast.appendChild(closeBtn);
 
     container.appendChild(toast);
 
@@ -211,10 +235,13 @@ function showToast(message, type = 'info', duration = 4200) {
         toast.classList.add('show');
     });
 
-    setTimeout(() => {
+    const dismissToast = () => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 220);
-    }, Math.max(1800, duration));
+    };
+
+    closeBtn.addEventListener('click', dismissToast);
+    setTimeout(dismissToast, Math.max(1800, duration));
 }
 
 window.showToast = showToast;

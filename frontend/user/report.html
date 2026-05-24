@@ -549,6 +549,22 @@
         .secure-note-icon { color: var(--accent-blue); margin-right: 6px; }
         .spinner-14 { width: 14px; height: 14px; border-width: 2px; }
         .spinner-18 { width: 18px; height: 18px; border-width: 2px; }
+
+        .main-form-locked {
+            opacity: 0.55;
+            pointer-events: none;
+            user-select: none;
+            filter: saturate(0.8);
+            transition: var(--transition);
+        }
+
+        .wizard-flow-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0 0 1rem;
+        }
+
+        [data-theme="light"] .wizard-flow-note { color: #6b7280; }
     </style>
 </head>
 <body class="report-wrapper">
@@ -616,6 +632,25 @@
 
         <form id="reportForm">
 
+            <div class="form-progress" aria-label="Report step order">
+                <div class="progress-step active"><span class="step-num">1</span><span data-key="report_step1_short">Legal</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">2</span><span data-key="report_step2_short">Reference</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">3</span><span data-key="report_step3_short">Location</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">4</span><span data-key="report_step4_short">Subject</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">5</span><span data-key="report_step5_short">Physical</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">6</span><span data-key="report_step6_short">Context</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">7</span><span data-key="report_step7_short">Photo</span></div>
+                <div class="progress-connector"></div>
+                <div class="progress-step active"><span class="step-num">8</span><span data-key="report_step8_short">Reporter</span></div>
+            </div>
+            <p class="wizard-flow-note" data-key="report_wizard_order_note">Complete these steps in order. Step 1 legal certification is required before you can submit.</p>
+
             <!-- STEP 1: LEGAL CERTIFICATION -->
             <div class="legal-card">
                 <div class="report-card-header report-card-header-compact">
@@ -627,14 +662,14 @@
                         <p id="report-step1-desc">Mandatory under Proclamation No. 720/2011 - Federal Police Act</p>
                     </div>
                 </div>
-                <div class="legal-check-label legal-requirement-note">
-                    <i class="fas fa-circle-info"></i>
+                <label class="legal-check-label legal-requirement-note" for="legalCertified">
+                    <input type="checkbox" id="legalCertified" required>
                     <span id="report-step1-certify">I certify that this case has already been reported to the <strong>Ethiopian Federal Police</strong> or a regional police authority.</span>
-                </div>
+                </label>
                 <div class="verify-hint" id="report-step1-requirement">To continue, enter the police report ID or official verification reference in Step 2. The report form is available immediately so the case details can be completed in the correct order.</div>
             </div>
 
-            <div id="mainForm">
+            <div id="mainForm" class="main-form-locked">
 
                 <!-- STEP 2: POLICE RECORD (Law Enforcement Only) -->
                 <div id="step-official-record" class="report-card card-indigo">
@@ -977,7 +1012,21 @@
         applyReportTranslations();
 
         const mainForm = document.getElementById('mainForm');
+        const legalCertified = document.getElementById('legalCertified');
         mainForm.style.display = 'block';
+
+        function syncLegalLockState(showToastMessage = false) {
+            const unlocked = !!legalCertified.checked;
+            mainForm.classList.toggle('main-form-locked', !unlocked);
+            if (!unlocked && showToastMessage) {
+                showToast(reportText('report_legal_required', 'You must complete Step 1 legal certification before submitting this report.'), 'warning');
+            }
+        }
+
+        legalCertified.addEventListener('change', () => {
+            syncLegalLockState(false);
+        });
+        syncLegalLockState(false);
 
         // Police Role Logic
         const userRole = typeof getUserRole === 'function' ? getUserRole() : null;
@@ -1065,14 +1114,13 @@
                     const result = await response.json();
                     if (result.is_human_face) {
                         const confidencePercent = Math.round((result.confidence || 0) * 100);
-                        const userTier = confidencePercent >= 80
-                            ? reportText('report_ai_verified_high', 'Human face verified - High confidence')
-                            : (confidencePercent >= 50 ? reportText('report_ai_verified_medium', 'Human face verified - Medium confidence') : reportText('report_ai_verified_low', 'Human face verified - Low confidence'));
-                        const confidenceMessage = isPolice
-                            ? `${reportText('report_ai_verified_police', 'Human face verified - confidence:')} ${confidencePercent}%`
-                            : userTier;
-
-                        setValidationStatus(statusEl, true, `✓ ${confidenceMessage}`);
+                        const facesDetected = Number(result.faces_detected || 0);
+                        const detector = result.detector || 'unknown';
+                        const confidenceBand = confidencePercent >= 80
+                            ? reportText('report_ai_verified_high', 'High confidence')
+                            : (confidencePercent >= 50 ? reportText('report_ai_verified_medium', 'Medium confidence') : reportText('report_ai_verified_low', 'Low confidence'));
+                        const confidenceMessage = `${reportText('report_ai_verified_police', 'Human face verified')} (${confidenceBand}) - ${confidencePercent}% · ${reportText('report_ai_faces_detected', 'Faces detected')}: ${facesDetected}`;
+                        setValidationStatus(statusEl, true, `✓ ${confidenceMessage} · ${reportText('report_ai_detector', 'Detector')}: ${detector}`);
                         photoValidated = true;
                         validatedPhotoFingerprint = getPhotoFingerprint(file);
                     } else {
@@ -1126,31 +1174,37 @@
         document.getElementById('reportForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            if (!legalCertified.checked) {
+                syncLegalLockState(true);
+                legalCertified.focus();
+                return;
+            }
+
             if (!officialVerificationRefInput.value.trim()) {
-                showToast('Please provide a report ID or official verification reference.', 'warning');
+                showToast(reportText('report_official_ref_required', 'Please provide a report ID or official verification reference.'), 'warning');
                 officialVerificationRefInput.focus();
                 return;
             }
 
             const imgInput = document.getElementById('image');
             if (!imgInput.files[0]) {
-                showToast('Please upload a biometric photo of the missing person.', 'warning');
+                showToast(reportText('report_photo_required', 'Please upload a biometric photo of the missing person.'), 'warning');
                 return;
             }
 
             if (!photoValidated) {
-                showToast('The uploaded photo has not passed AI verification. Please upload a clear facial photo and wait for verification.', 'warning');
+                showToast(reportText('report_photo_not_validated', 'The uploaded photo has not passed AI verification. Please upload a clear facial photo and wait for verification.'), 'warning');
                 return;
             }
 
             const currentFingerprint = getPhotoFingerprint(imgInput.files[0]);
             if (!validatedPhotoFingerprint || validatedPhotoFingerprint !== currentFingerprint) {
-                showToast('The selected photo changed after validation. Please wait for AI verification again before submitting.', 'warning');
+                showToast(reportText('report_photo_changed_after_validation', 'The selected photo changed after validation. Please wait for AI verification again before submitting.'), 'warning');
                 return;
             }
 
             const btn = document.getElementById('submit-btn');
-            btn.innerHTML = `<div class="spinner spinner-18"></div><span>Encrypting &amp; Submitting...</span>`;
+            btn.innerHTML = `<div class="spinner spinner-18"></div><span>${reportText('report_submit_progress', 'Encrypting and submitting...')}</span>`;
             btn.disabled = true;
 
             const formData = new FormData();
@@ -1174,8 +1228,16 @@
             const kebele = document.getElementById('kebeleInput').value;
             const specificLoc = document.getElementById('lastSeenLocation').value;
 
+            formData.append('region', region);
             formData.append('city', zone_val);
-            const fullLocationString = `${specificLoc}, Kebele ${kebele}, Woreda ${woreda}, ${zone_val}, ${region}`;
+            const locationParts = [
+                specificLoc && specificLoc.trim(),
+                kebele && kebele.trim() ? `Kebele ${kebele.trim()}` : '',
+                woreda && woreda.trim() ? `Woreda ${woreda.trim()}` : '',
+                zone_val && zone_val.trim(),
+                region && region.trim()
+            ].filter(Boolean);
+            const fullLocationString = locationParts.join(', ');
             formData.append('lastSeenLocation', fullLocationString);
             formData.append('lastSeenDate', document.getElementById('lastSeenDate').value);
             formData.append('description', document.getElementById('description').value);
@@ -1194,14 +1256,14 @@
 
             try {
                 const response = await apiCall('/people', 'POST', formData, true);
-                showToast('Case successfully registered with the National Registry.', 'success');
+                showToast(reportText('report_submit_success', 'Case successfully registered with the National Registry.'), 'success');
                 const createdId = response && response.person && response.person._id;
                 window.location.href = createdId
                     ? `/user/case.html?id=${encodeURIComponent(createdId)}`
                     : '/user/dashboard.html';
             } catch (err) {
                 console.error(err);
-                showToast(`Submission error: ${err.message}`, 'error', 5500);
+                showToast(`${reportText('report_submit_error_prefix', 'Submission error')}: ${err.message}`, 'error', 5500);
                 btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>${reportText('report_submit_button', 'Submit to National Registry')}</span>`;
                 btn.disabled = false;
             }
