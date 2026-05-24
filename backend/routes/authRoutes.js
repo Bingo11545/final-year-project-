@@ -503,4 +503,17 @@ router.get('/me', auth(), async (req, res) => {
   }
 });
 
+router.get('/admin/users', auth(['admin']), async (req, res) => {
+  try {
+    const users = await store.listUsers();
+    const normalized = users
+      .map(stripSensitiveUser)
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return res.json(normalized);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 module.exports = router;

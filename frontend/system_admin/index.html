@@ -324,6 +324,62 @@
             border: 1px solid rgba(148,163,184,0.25);
         }
 
+        .admin-user-directory-controls {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+
+        .admin-user-directory-controls input,
+        .admin-user-directory-controls select {
+            width: 100%;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        .admin-user-directory-summary {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 12px;
+        }
+
+        .admin-user-directory-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .admin-directory-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .admin-reviewed-case-status-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .admin-reviewed-case-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            display: grid;
+            gap: 8px;
+        }
+
         .admin-user-avatar-small {
             width: 24px;
             height: 24px;
@@ -502,6 +558,10 @@
             .admin-case-search {
                 grid-template-columns: 1fr;
             }
+
+            .admin-user-directory-controls {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -580,6 +640,10 @@
                         <i class="fas fa-clock-rotate-left"></i>
                         <span>User and Police Activities</span>
                     </button>
+                    <button type="button" class="admin-nav-btn" id="admin-nav-users" onclick="switchAdminSection('users')">
+                        <i class="fas fa-users"></i>
+                        <span>All Users and Police Admin</span>
+                    </button>
                 </div>
             </aside>
 
@@ -625,6 +689,15 @@
                                         <span data-key="admin_loading_history">Loading review history...</span>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="admin-section-head" style="margin-top: 16px;">
+                            <h3>Found / Solved Cases and Who Marked Them</h3>
+                        </div>
+                        <div id="reviewed-case-status-list" class="admin-reviewed-case-status-list">
+                            <div class="loading-indicator loading-full">
+                                <div class="spinner"></div>
+                                <span data-key="admin_loading_history">Loading review history...</span>
                             </div>
                         </div>
                     </div>
@@ -720,6 +793,37 @@
                         </div>
                     </div>
                 </section>
+
+                <section class="admin-panel" id="admin-panel-users">
+                    <div class="admin-section-block">
+                        <div class="admin-section-head">
+                            <div>
+                                <h3>All Users and Police Admin</h3>
+                                <p class="text-muted" style="margin:6px 0 0;">Searchable list of every account, including users, law enforcement, authorized organizations, and admins.</p>
+                            </div>
+                        </div>
+                        <div class="admin-user-directory-controls">
+                            <input id="users-search-input" type="text" placeholder="Search name, email, role, organization, station..." oninput="onUsersSearchChange()">
+                            <select id="users-search-role" onchange="onUsersSearchChange()">
+                                <option value="all">All Roles</option>
+                                <option value="user">Users</option>
+                                <option value="law_enforcement">Police Admin</option>
+                                <option value="authorized_org">Authorized Organization</option>
+                                <option value="admin">System Admin</option>
+                            </select>
+                            <button class="btn btn-sm" type="button" onclick="resetUsersSearch()">
+                                <i class="fas fa-rotate-left"></i><span>Reset</span>
+                            </button>
+                        </div>
+                        <div id="users-directory-summary" class="admin-user-directory-summary"></div>
+                        <div id="users-directory-list" class="admin-user-directory-list">
+                            <div class="loading-indicator loading-full">
+                                <div class="spinner"></div>
+                                <span data-key="admin_loading_history">Loading review history...</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -744,8 +848,10 @@
         const na = () => getAdminText('not_available', 'N/A');
         let allCaseLogItems = [];
         let allActivityItems = [];
+        let allUsersDirectoryItems = [];
         let currentCaseSearchQuery = '';
         let currentRequestSearchQuery = '';
+        let currentUsersSearchQuery = '';
         let registrationSummaryData = {
             pending: [],
             approved: [],
@@ -1281,6 +1387,113 @@
             }).join('');
         }
 
+        function renderReviewedCaseStatusList(items) {
+            const holder = document.getElementById('reviewed-case-status-list');
+            if (!holder) return;
+
+            if (!Array.isArray(items) || !items.length) {
+                holder.innerHTML = '<div class="empty-state loading-full">No found/solved status updates available yet.</div>';
+                return;
+            }
+
+            const reviewed = [];
+            items.forEach((person) => {
+                const history = Array.isArray(person.changeHistory) ? [...person.changeHistory] : [];
+                history
+                  .filter((entry) => {
+                      const newStatus = String(entry?.newValues?.status || '').toLowerCase();
+                      return entry.changeType === 'status-update' && (newStatus === 'found' || newStatus === 'resolved');
+                  })
+                  .forEach((entry) => {
+                      reviewed.push({ person, entry });
+                  });
+            });
+
+            reviewed.sort((a, b) => new Date(b.entry.changedAt || 0) - new Date(a.entry.changedAt || 0));
+
+            if (!reviewed.length) {
+                holder.innerHTML = '<div class="empty-state loading-full">No found/solved status updates available yet.</div>';
+                return;
+            }
+
+            holder.innerHTML = reviewed.slice(0, 120).map(({ person, entry }) => {
+                const actor = entry.changedByUser || {
+                    username: entry.changedByName,
+                    role: entry.changedByRole,
+                    email: entry.changedByEmail
+                };
+                const newStatus = entry.newValues?.status || person.status || 'N/A';
+                return `
+                    <div class="admin-reviewed-case-card">
+                        <span><strong>Case:</strong> ${highlightText(person.caseDisplay || person.policeCaseNumber || person._id || na())}</span>
+                        <span><strong>Person:</strong> ${highlightText(person.fullName || na())}</span>
+                        <span><strong>Status Marked:</strong> ${highlightText(newStatus)}</span>
+                        <span><strong>Marked By:</strong> ${renderActorInline(actor, entry.changedByName)}</span>
+                        <span><strong>Marked At:</strong> ${highlightText(formatDate(entry.changedAt))}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function buildUsersSearchBlob(user) {
+            return [
+                user.username,
+                user.email,
+                user.role,
+                user.organizationName,
+                user.station,
+                user.idNumber,
+                user.verificationStatus
+            ].join(' ').toLowerCase();
+        }
+
+        function onUsersSearchChange() {
+            const query = (document.getElementById('users-search-input')?.value || '').trim().toLowerCase();
+            const role = document.getElementById('users-search-role')?.value || 'all';
+            currentUsersSearchQuery = query;
+
+            const filtered = allUsersDirectoryItems.filter((user) => {
+                const rolePass = role === 'all' || user.role === role;
+                const queryPass = !query || buildUsersSearchBlob(user).includes(query);
+                return rolePass && queryPass;
+            });
+
+            renderUsersDirectory(filtered);
+        }
+
+        function resetUsersSearch() {
+            document.getElementById('users-search-input').value = '';
+            document.getElementById('users-search-role').value = 'all';
+            currentUsersSearchQuery = '';
+            renderUsersDirectory(allUsersDirectoryItems);
+        }
+
+        function renderUsersDirectory(users) {
+            const holder = document.getElementById('users-directory-list');
+            const summary = document.getElementById('users-directory-summary');
+            if (!holder || !summary) return;
+
+            const visibleUsers = Array.isArray(users) ? users : [];
+            summary.textContent = `Showing ${visibleUsers.length} account(s).`;
+
+            if (!visibleUsers.length) {
+                holder.innerHTML = '<div class="empty-state loading-full">No users match your search.</div>';
+                return;
+            }
+
+            holder.innerHTML = visibleUsers.map((u) => `
+                <div class="admin-directory-card">
+                    <span><strong>Name:</strong> ${highlightTextWithQuery(u.username || na(), currentUsersSearchQuery)}</span>
+                    <span><strong>Email:</strong> ${highlightTextWithQuery(u.email || na(), currentUsersSearchQuery)}</span>
+                    <span><strong>Role:</strong> ${highlightTextWithQuery(roleLabel(u.role || ''), currentUsersSearchQuery)}</span>
+                    <span><strong>Organization:</strong> ${highlightTextWithQuery(u.organizationName || na(), currentUsersSearchQuery)}</span>
+                    <span><strong>Station:</strong> ${highlightTextWithQuery(u.station || na(), currentUsersSearchQuery)}</span>
+                    <span><strong>Verification:</strong> ${highlightTextWithQuery(u.verificationStatus || na(), currentUsersSearchQuery)}</span>
+                    <span><strong>Joined:</strong> ${highlightTextWithQuery(formatDate(u.createdAt), currentUsersSearchQuery)}</span>
+                </div>
+            `).join('');
+        }
+
         async function loadAdminDashboard() {
             const pendingEl = document.getElementById('pending-list');
             const reviewedApprovedEl = document.getElementById('reviewed-approved-list');
@@ -1289,6 +1502,8 @@
             const rejectedEl = document.getElementById('rejected-list');
             const caseLogEl = document.getElementById('case-approval-log');
             const activityEl = document.getElementById('admin-activity-log');
+            const reviewedCaseStatusEl = document.getElementById('reviewed-case-status-list');
+            const usersDirectoryEl = document.getElementById('users-directory-list');
 
             pendingEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading', 'Loading pending registrations...')}</span></div>`;
             reviewedApprovedEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
@@ -1299,12 +1514,19 @@
             if (activityEl) {
                 activityEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
             }
+            if (reviewedCaseStatusEl) {
+                reviewedCaseStatusEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
+            }
+            if (usersDirectoryEl) {
+                usersDirectoryEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
+            }
 
             try {
-                const [summary, caseLog, activityLog] = await Promise.all([
+                const [summary, caseLog, activityLog, allUsers] = await Promise.all([
                     apiCall('/auth/registration-review-summary'),
                     apiCall('/people/admin/approval-log'),
-                    apiCall('/people/admin/activity-log')
+                    apiCall('/people/admin/activity-log'),
+                    apiCall('/auth/admin/users')
                 ]);
 
                 registrationSummaryData = {
@@ -1315,8 +1537,11 @@
                 applyRequestSearchAndRender();
                 allCaseLogItems = caseLog || [];
                 applyCaseSearchAndRender();
+                renderReviewedCaseStatusList(allCaseLogItems);
                 allActivityItems = activityLog || [];
                 renderActivityLog(allActivityItems);
+                allUsersDirectoryItems = allUsers || [];
+                renderUsersDirectory(allUsersDirectoryItems);
             } catch (err) {
                 const failText = `${getAdminText('admin_load_failed', 'Failed to load pending registrations')}: ${err.message}`;
                 pendingEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
@@ -1327,6 +1552,12 @@
                 caseLogEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 if (activityEl) {
                     activityEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                }
+                if (reviewedCaseStatusEl) {
+                    reviewedCaseStatusEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                }
+                if (usersDirectoryEl) {
+                    usersDirectoryEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 }
                 const summaryEl = document.getElementById('case-search-summary');
                 if (summaryEl) summaryEl.textContent = failText;
