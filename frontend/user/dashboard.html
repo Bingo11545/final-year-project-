@@ -205,19 +205,40 @@
         }
         changeLanguage(savedLang);
 
+        function bindDashboardSearchEvents() {
+            const triggerSearch = (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    loadPeople();
+                }
+            };
+
+            ['searchName', 'searchCity', 'searchMinAge'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('keydown', triggerSearch);
+            });
+
+            ['searchGender', 'searchRegion'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', loadPeople);
+            });
+        }
+
         async function loadPeople() {
-            const search = document.getElementById('searchName').value;
-            const gender = document.getElementById('searchGender').value;
-            const minAge = document.getElementById('searchMinAge').value;
-            const region = document.getElementById('searchRegion').value;
-            const city = document.getElementById('searchCity').value;
-            let url = `/people/with-mine?`;
-            url += `status=Missing&`;
-            if (search) url += `name=${encodeURIComponent(search)}`;
-            if (gender) url += `${url.endsWith('?') ? '' : '&'}gender=${encodeURIComponent(gender)}`;
-            if (minAge) url += `${url.endsWith('?') ? '' : '&'}minAge=${encodeURIComponent(minAge)}`;
-            if (region) url += `${url.endsWith('?') ? '' : '&'}region=${encodeURIComponent(region)}`;
-            if (city) url += `${url.endsWith('?') ? '' : '&'}city=${encodeURIComponent(city)}`;
+            const search = (document.getElementById('searchName')?.value || '').trim();
+            const gender = (document.getElementById('searchGender')?.value || '').trim();
+            const minAge = (document.getElementById('searchMinAge')?.value || '').trim();
+            const region = (document.getElementById('searchRegion')?.value || '').trim();
+            const city = (document.getElementById('searchCity')?.value || '').trim();
+
+            const params = new URLSearchParams();
+            params.set('status', 'Missing');
+            if (search) params.set('name', search);
+            if (gender) params.set('gender', gender);
+            if (minAge) params.set('minAge', minAge);
+            if (region) params.set('region', region);
+            if (city) params.set('city', city);
+            const url = `/people/with-mine?${params.toString()}`;
 
             const container = document.getElementById('listContainer');
             const lang = localStorage.getItem('preferredLanguage') || 'en';
@@ -302,6 +323,7 @@
             }
         }
 
+        bindDashboardSearchEvents();
         loadPeople();
     </script>
 </body>

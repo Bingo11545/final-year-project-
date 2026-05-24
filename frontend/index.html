@@ -200,21 +200,45 @@
             } catch(e) { /* silent fail */ }
         }
 
+        function bindPublicSearchEvents() {
+            const triggerSearch = (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    loadPublicFeed();
+                }
+            };
+
+            ['searchName', 'searchCity', 'searchMinAge'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('keydown', triggerSearch);
+            });
+
+            ['searchGender', 'searchRegion'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', loadPublicFeed);
+            });
+        }
+
         async function loadPublicFeed() {
             const container = document.getElementById('publicFeed');
             const lang = localStorage.getItem('preferredLanguage') || 'en';
             const t = translations[lang] || translations['en'];
             container.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${t.public_searching_registry || 'Searching registry...'}</span></div>`;
 
-            const name = document.getElementById('searchName').value;
-            const region = document.getElementById('searchRegion').value;
-            const city = document.getElementById('searchCity').value;
-            const minAge = document.getElementById('searchMinAge').value;
+            const name = (document.getElementById('searchName')?.value || '').trim();
+            const gender = (document.getElementById('searchGender')?.value || '').trim();
+            const region = (document.getElementById('searchRegion')?.value || '').trim();
+            const city = (document.getElementById('searchCity')?.value || '').trim();
+            const minAge = (document.getElementById('searchMinAge')?.value || '').trim();
 
-            let url = '/people?status=Missing';
-            if (name) url += `&name=${encodeURIComponent(name)}`;
-            if (city) url += `&city=${encodeURIComponent(city)}`;
-            if (minAge) url += `&minAge=${minAge}`;
+            const params = new URLSearchParams();
+            params.set('status', 'Missing');
+            if (name) params.set('name', name);
+            if (gender) params.set('gender', gender);
+            if (region) params.set('region', region);
+            if (city) params.set('city', city);
+            if (minAge) params.set('minAge', minAge);
+            const url = `/people?${params.toString()}`;
 
             try {
                 const people = await apiCall(url);
@@ -272,6 +296,7 @@
             }
         }
 
+        bindPublicSearchEvents();
         loadPublicFeed();
         loadStats();
     </script>
