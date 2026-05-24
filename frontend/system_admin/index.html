@@ -460,6 +460,24 @@
             return Number.isNaN(date.getTime()) ? na() : date.toLocaleString();
         }
 
+        function formatYesNo(value) {
+            if (value === true || value === 'true') return 'Yes';
+            if (value === false || value === 'false') return 'No';
+            return na();
+        }
+
+        function toDisplay(value) {
+            if (value === undefined || value === null || value === '') return na();
+            return value;
+        }
+
+        function resolveMediaUrl(rawUrl) {
+            if (!rawUrl) return '';
+            if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
+            const clean = String(rawUrl).replace(/^\/+/, '');
+            return `${BACKEND_ORIGIN}/${clean}`;
+        }
+
         function createUserCard(u, mode = 'pending') {
             const card = document.createElement('div');
             card.className = 'admin-user-card';
@@ -542,11 +560,19 @@
                 return;
             }
 
-            logEl.innerHTML = cases.map((person) => `
+            logEl.innerHTML = cases.map((person) => {
+                const firstImage = Array.isArray(person.images) && person.images.length ? resolveMediaUrl(person.images[0].url) : '';
+                const reporterId = typeof person.reportedBy === 'object' ? person.reportedBy?._id : person.reportedBy;
+
+                return `
                 <div class="admin-case-log-card">
                     <h4>${person.fullName || na()}</h4>
                     <div class="admin-case-log-meta">
-                        <span><strong>${getAdminText('admin_case_name', 'Case')}:</strong> ${person.caseDisplay || person.policeCaseNumber || person.officialVerificationRef || person._id || na()}</span>
+                        <span><strong>${getAdminText('admin_case_name', 'Case')}:</strong> ${toDisplay(person.caseDisplay || person.policeCaseNumber || person.officialVerificationRef || person._id)}</span>
+                        <span><strong>${getAdminText('admin_case_id', 'Case ID')}:</strong> ${toDisplay(person._id)}</span>
+                        <span><strong>${getAdminText('admin_case_ref', 'Official Ref')}:</strong> ${toDisplay(person.officialVerificationRef)}</span>
+                        <span><strong>${getAdminText('admin_case_police_no', 'Police Case Number')}:</strong> ${toDisplay(person.policeCaseNumber)}</span>
+                        <span><strong>${getAdminText('admin_case_district', 'Police District')}:</strong> ${toDisplay(person.policeDistrict)}</span>
                         <span><strong>${getAdminText('admin_case_approved_by', 'Approved By')}:</strong> ${person.approvedByUser?.username || person.approvedByName || getAdminText('admin_case_legacy_approver', 'Legacy record')}</span>
                         <span><strong>${getAdminText('admin_case_approved_role', 'Approver Role')}:</strong> ${roleLabel(person.approvedByUser?.role || person.approvedByRole || '')}</span>
                         <span><strong>${getAdminText('admin_case_approved_email', 'Approver Email')}:</strong> ${person.approvedByUser?.email || person.approvedByEmail || na()}</span>
@@ -554,9 +580,38 @@
                         <span><strong>${getAdminText('admin_case_approved_at', 'Approved At')}:</strong> ${formatDate(person.approvedAt)}</span>
                         <span><strong>${getAdminText('admin_case_approval_source', 'Approval Source')}:</strong> ${person.approvedByUser?.source || person.approvalSource || getAdminText('admin_case_approval_source_unknown', 'unknown')}</span>
                         <span><strong>${getAdminText('admin_case_reported_by', 'Reported By')}:</strong> ${person.reportedBy?.username || na()}</span>
+                        <span><strong>${getAdminText('admin_case_reporter_role', 'Reporter Role')}:</strong> ${roleLabel(person.reportedBy?.role || '')}</span>
+                        <span><strong>${getAdminText('admin_case_reporter_id', 'Reporter ID')}:</strong> ${toDisplay(reporterId)}</span>
+                        <span><strong>${getAdminText('admin_case_posted_at', 'Posted At')}:</strong> ${formatDate(person.createdAt)}</span>
+
+                        <span><strong>${getAdminText('admin_missing_status', 'Missing Person Status')}:</strong> ${toDisplay(person.status)}</span>
+                        <span><strong>${getAdminText('admin_missing_classification', 'Classification')}:</strong> ${toDisplay(person.classification)}</span>
+                        <span><strong>${getAdminText('admin_missing_age', 'Age')}:</strong> ${toDisplay(person.age)}</span>
+                        <span><strong>${getAdminText('admin_missing_gender', 'Gender')}:</strong> ${toDisplay(person.gender)}</span>
+                        <span><strong>${getAdminText('admin_missing_city', 'City')}:</strong> ${toDisplay(person.city)}</span>
+                        <span><strong>${getAdminText('admin_missing_region', 'Region')}:</strong> ${toDisplay(person.region)}</span>
+                        <span><strong>${getAdminText('admin_missing_last_seen_date', 'Last Seen Date')}:</strong> ${formatDate(person.lastSeenDate)}</span>
+                        <span><strong>${getAdminText('admin_missing_last_seen_location', 'Last Seen Location')}:</strong> ${toDisplay(person.lastSeenLocation)}</span>
+                        <span><strong>${getAdminText('admin_missing_contact_phone', 'Contact Phone')}:</strong> ${toDisplay(person.contactPhone)}</span>
+                        <span><strong>${getAdminText('admin_missing_description', 'Description')}:</strong> ${toDisplay(person.description)}</span>
+
+                        <span><strong>${getAdminText('admin_missing_height', 'Height')}:</strong> ${toDisplay(person.height)}</span>
+                        <span><strong>${getAdminText('admin_missing_weight', 'Weight')}:</strong> ${toDisplay(person.weight)}</span>
+                        <span><strong>${getAdminText('admin_missing_eye_color', 'Eye Color')}:</strong> ${toDisplay(person.eyeColor)}</span>
+                        <span><strong>${getAdminText('admin_missing_hair_color', 'Hair Color')}:</strong> ${toDisplay(person.hairColor)}</span>
+                        <span><strong>${getAdminText('admin_missing_race', 'Race / Ethnicity')}:</strong> ${toDisplay(person.race)}</span>
+                        <span><strong>${getAdminText('admin_missing_complexion', 'Complexion')}:</strong> ${toDisplay(person.complexion)}</span>
+                        <span><strong>${getAdminText('admin_missing_marks', 'Distinguishing Marks')}:</strong> ${toDisplay(person.distinguishingMarks)}</span>
+
+                        <span><strong>${getAdminText('admin_case_is_police_reported', 'Police Reported')}:</strong> ${formatYesNo(person.isPoliceReported)}</span>
+                        <span><strong>${getAdminText('admin_case_vehicle', 'Vehicle Information')}:</strong> ${toDisplay(person.vehicleInformation)}</span>
+                        <span><strong>${getAdminText('admin_case_social_media', 'Social Media Accounts')}:</strong> ${toDisplay(person.socialMediaAccounts)}</span>
+                        <span><strong>${getAdminText('admin_case_anonymous', 'Anonymous Report')}:</strong> ${formatYesNo(person.isAnonymous)}</span>
+                        <span><strong>${getAdminText('admin_case_photo', 'Posted Photo')}:</strong> ${firstImage ? `<a href="${firstImage}" target="_blank" rel="noopener noreferrer">${getAdminText('admin_view_photo', 'View Photo')}</a>` : na()}</span>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         async function loadAdminDashboard() {
