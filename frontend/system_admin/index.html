@@ -591,6 +591,7 @@
         const na = () => getAdminText('not_available', 'N/A');
         let allCaseLogItems = [];
         let currentCaseSearchQuery = '';
+        let currentRequestSearchQuery = '';
         let registrationSummaryData = {
             pending: [],
             approved: [],
@@ -663,12 +664,12 @@
                 .replace(/'/g, '&#39;');
         }
 
-        function highlightText(value) {
+        function highlightTextWithQuery(value, query) {
             const plain = (value === undefined || value === null || value === '') ? na() : String(value);
-            const query = currentCaseSearchQuery.trim();
-            if (!query || plain === na()) return escapeHtml(plain);
+            const term = String(query || '').trim();
+            if (!term || plain === na()) return escapeHtml(plain);
 
-            const regex = new RegExp(escapeRegExp(query), 'ig');
+            const regex = new RegExp(escapeRegExp(term), 'ig');
             let result = '';
             let lastIndex = 0;
             let match;
@@ -681,6 +682,14 @@
 
             result += escapeHtml(plain.slice(lastIndex));
             return result;
+        }
+
+        function highlightText(value) {
+            return highlightTextWithQuery(value, currentCaseSearchQuery);
+        }
+
+        function highlightRequestText(value) {
+            return highlightTextWithQuery(value, currentRequestSearchQuery);
         }
 
         function renderMetaLine(label, value, shouldHighlight = true) {
@@ -831,9 +840,9 @@
             const reviewMeta = mode === 'pending'
                 ? ''
                 : `
-                    <span><strong>${getAdminText('admin_reviewed_by', 'Reviewed By')}:</strong> ${u.verificationReviewedByName || na()}</span>
-                    <span><strong>${getAdminText('admin_reviewed_at', 'Reviewed At')}:</strong> ${formatDate(u.verificationReviewedAt)}</span>
-                    ${mode === 'rejected' ? `<span><strong>${getAdminText('admin_rejection_reason', 'Reason')}:</strong> ${u.verificationRejectionReason || na()}</span>` : ''}
+                    <span><strong>${getAdminText('admin_reviewed_by', 'Reviewed By')}:</strong> ${highlightRequestText(u.verificationReviewedByName || na())}</span>
+                    <span><strong>${getAdminText('admin_reviewed_at', 'Reviewed At')}:</strong> ${highlightRequestText(formatDate(u.verificationReviewedAt))}</span>
+                    ${mode === 'rejected' ? `<span><strong>${getAdminText('admin_rejection_reason', 'Reason')}:</strong> ${highlightRequestText(u.verificationRejectionReason || na())}</span>` : ''}
                 `;
 
             const actions = mode === 'pending'
@@ -856,17 +865,17 @@
                 </div>
                 <div class="info" style="padding-top:4px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
-                        <h3 style="margin:0; font-size:1.25rem;">${u.username}</h3>
+                        <h3 style="margin:0; font-size:1.25rem;">${highlightRequestText(u.username)}</h3>
                         <span class="admin-status-pill ${statusClass}">${statusLabel}</span>
                     </div>
                     <div class="admin-user-meta">
-                        <span><strong>${getAdminText('admin_email', 'Email')}:</strong> ${u.email}</span>
-                        <span><strong>${getAdminText('admin_role', 'Role')}:</strong> ${roleLabel(u.role)}</span>
-                        <span><strong>${getAdminText('admin_org', 'Organization')}:</strong> ${u.organizationName || na()}</span>
-                        <span><strong>${getAdminText('admin_station', 'Station')}:</strong> ${u.station || na()}</span>
-                        <span><strong>${getAdminText('admin_dob', 'Date of Birth')}:</strong> ${u.dateOfBirth || na()}</span>
-                        <span><strong>${getAdminText('admin_id_service', 'ID / Service Number')}:</strong> ${u.idNumber || na()}</span>
-                        <span><strong>${getAdminText('admin_submitted', 'Submitted')}:</strong> ${formatDate(u.createdAt)}</span>
+                        <span><strong>${getAdminText('admin_email', 'Email')}:</strong> ${highlightRequestText(u.email)}</span>
+                        <span><strong>${getAdminText('admin_role', 'Role')}:</strong> ${highlightRequestText(roleLabel(u.role))}</span>
+                        <span><strong>${getAdminText('admin_org', 'Organization')}:</strong> ${highlightRequestText(u.organizationName || na())}</span>
+                        <span><strong>${getAdminText('admin_station', 'Station')}:</strong> ${highlightRequestText(u.station || na())}</span>
+                        <span><strong>${getAdminText('admin_dob', 'Date of Birth')}:</strong> ${highlightRequestText(u.dateOfBirth || na())}</span>
+                        <span><strong>${getAdminText('admin_id_service', 'ID / Service Number')}:</strong> ${highlightRequestText(u.idNumber || na())}</span>
+                        <span><strong>${getAdminText('admin_submitted', 'Submitted')}:</strong> ${highlightRequestText(formatDate(u.createdAt))}</span>
                         ${reviewMeta}
                     </div>
                     ${docLink ? `<a href="${docLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="margin-bottom:10px; display:inline-flex;"><i class="fas fa-file-alt"></i><span>${getAdminText('admin_view_id_doc', 'View ID Document')}</span></a>` : `<p class="error-inline">${getAdminText('admin_no_doc', 'No document uploaded')}</p>`}
@@ -891,16 +900,17 @@
 
         function getRequestSearchInputs() {
             return {
-                query: (document.getElementById('request-search-input')?.value || '').trim().toLowerCase(),
+                query: (document.getElementById('request-search-input')?.value || '').trim(),
                 role: document.getElementById('request-search-role')?.value || 'all',
                 status: document.getElementById('request-search-status')?.value || 'all'
             };
         }
 
         function filterUsers(users, role, query) {
+            const queryText = String(query || '').toLowerCase();
             return (users || []).filter((user) => {
                 const rolePass = role === 'all' || user.role === role;
-                const queryPass = !query || buildUserSearchBlob(user).includes(query);
+                const queryPass = !queryText || buildUserSearchBlob(user).includes(queryText);
                 return rolePass && queryPass;
             });
         }
@@ -918,6 +928,7 @@
 
         function applyRequestSearchAndRender() {
             const { query, role, status } = getRequestSearchInputs();
+            currentRequestSearchQuery = query;
 
             const pendingFiltered = filterUsers(registrationSummaryData.pending, role, query);
             const approvedFiltered = filterUsers(registrationSummaryData.approved, role, query);
