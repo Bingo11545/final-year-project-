@@ -183,6 +183,48 @@
             padding: 18px;
         }
 
+        .admin-case-search {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+
+        .admin-case-search input,
+        .admin-case-search select {
+            width: 100%;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        .admin-case-search-summary {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 10px;
+        }
+
+        .admin-case-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .admin-case-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--border-subtle);
+            background: #0f172a;
+            cursor: pointer;
+        }
+
         .admin-case-log-card h4 {
             margin: 0 0 12px;
             color: var(--text-primary);
@@ -261,6 +303,10 @@
             .admin-user-photo {
                 width: 100%;
                 height: 220px;
+            }
+
+            .admin-case-search {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -402,6 +448,35 @@
                                 <p class="text-muted" style="margin:6px 0 0;" data-key="admin_case_log_desc">See which police admin approved each published case.</p>
                             </div>
                         </div>
+                        <div class="admin-case-search">
+                            <input id="case-search-input" type="text" placeholder="Search case, person, approver, location..." oninput="onCaseSearchChange()">
+                            <select id="case-search-field" onchange="onCaseSearchChange()">
+                                <option value="all">All Fields</option>
+                                <option value="case">Case ID / Reference</option>
+                                <option value="person">Missing Person Details</option>
+                                <option value="approver">Approver Details</option>
+                                <option value="reporter">Reporter Details</option>
+                                <option value="location">City / Region / Last Seen</option>
+                            </select>
+                            <select id="case-search-status" onchange="onCaseSearchChange()">
+                                <option value="all">All Status</option>
+                                <option value="missing">Missing</option>
+                                <option value="found">Found</option>
+                                <option value="deceased">Deceased</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="cold case">Cold Case</option>
+                            </select>
+                            <select id="case-search-source" onchange="onCaseSearchChange()">
+                                <option value="all">All Sources</option>
+                                <option value="explicit-approver">Explicit Approver</option>
+                                <option value="auto-approved-reporter">Auto Approved Reporter</option>
+                                <option value="legacy-record">Legacy Record</option>
+                            </select>
+                            <button class="btn btn-sm" type="button" onclick="resetCaseSearch()">
+                                <i class="fas fa-rotate-left"></i><span>Reset</span>
+                            </button>
+                        </div>
+                        <div id="case-search-summary" class="admin-case-search-summary"></div>
                         <div id="case-approval-log" class="admin-case-log">
                             <div class="loading-indicator loading-full">
                                 <div class="spinner"></div>
@@ -432,6 +507,7 @@
         };
 
         const na = () => getAdminText('not_available', 'N/A');
+        let allCaseLogItems = [];
 
         if (!IS_FORCED_PUBLIC_VIEW && getUserRole() !== 'admin') {
             window.location.href = '../login.html';
@@ -476,6 +552,130 @@
             if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
             const clean = String(rawUrl).replace(/^\/+/, '');
             return `${BACKEND_ORIGIN}/${clean}`;
+        }
+
+        function normalizeSearchText(value) {
+            return String(value || '').toLowerCase();
+        }
+
+        function buildSearchBlob(person, field) {
+            const caseBlob = [
+                person.caseDisplay,
+                person._id,
+                person.policeCaseNumber,
+                person.officialVerificationRef,
+                person.policeDistrict,
+                person.approvalSource
+            ].join(' ');
+
+            const personBlob = [
+                person.fullName,
+                person.description,
+                person.status,
+                person.classification,
+                person.gender,
+                person.age,
+                person.height,
+                person.weight,
+                person.eyeColor,
+                person.hairColor,
+                person.race,
+                person.complexion,
+                person.distinguishingMarks,
+                person.contactPhone,
+                person.vehicleInformation,
+                person.socialMediaAccounts
+            ].join(' ');
+
+            const approverBlob = [
+                person.approvedByName,
+                person.approvedBy,
+                person.approvedByRole,
+                person.approvedByEmail,
+                person.approvedByUser?.username,
+                person.approvedByUser?._id,
+                person.approvedByUser?.role,
+                person.approvedByUser?.email
+            ].join(' ');
+
+            const reporterBlob = [
+                person.reportedBy?.username,
+                person.reportedBy?._id,
+                person.reportedBy?.role
+            ].join(' ');
+
+            const locationBlob = [
+                person.city,
+                person.region,
+                person.lastSeenLocation
+            ].join(' ');
+
+            if (field === 'case') return caseBlob;
+            if (field === 'person') return personBlob;
+            if (field === 'approver') return approverBlob;
+            if (field === 'reporter') return reporterBlob;
+            if (field === 'location') return locationBlob;
+            return [caseBlob, personBlob, approverBlob, reporterBlob, locationBlob].join(' ');
+        }
+
+        function getCaseSearchInputs() {
+            return {
+                query: (document.getElementById('case-search-input')?.value || '').trim(),
+                field: document.getElementById('case-search-field')?.value || 'all',
+                status: document.getElementById('case-search-status')?.value || 'all',
+                source: document.getElementById('case-search-source')?.value || 'all'
+            };
+        }
+
+        function onCaseSearchChange() {
+            applyCaseSearchAndRender();
+        }
+
+        function resetCaseSearch() {
+            document.getElementById('case-search-input').value = '';
+            document.getElementById('case-search-field').value = 'all';
+            document.getElementById('case-search-status').value = 'all';
+            document.getElementById('case-search-source').value = 'all';
+            applyCaseSearchAndRender();
+        }
+
+        function applyCaseSearchAndRender() {
+            const { query, field, status, source } = getCaseSearchInputs();
+            const queryText = normalizeSearchText(query);
+
+            const ranked = allCaseLogItems
+                .map((person) => {
+                    const haystack = normalizeSearchText(buildSearchBlob(person, field));
+                    const statusText = normalizeSearchText(person.status);
+                    const sourceText = normalizeSearchText(person.approvalSource || person.approvedByUser?.source);
+
+                    const statusPass = status === 'all' || statusText === status;
+                    const sourcePass = source === 'all' || sourceText === source;
+                    const isMatch = !queryText || haystack.includes(queryText);
+                    const score = queryText && isMatch
+                        ? (haystack.startsWith(queryText) ? 2 : 1)
+                        : 0;
+
+                    return { person, isMatch, score, statusPass, sourcePass };
+                })
+                .filter((item) => item.statusPass && item.sourcePass)
+                .sort((a, b) => {
+                    if (a.isMatch !== b.isMatch) return a.isMatch ? -1 : 1;
+                    if (a.score !== b.score) return b.score - a.score;
+                    return new Date(b.person.approvedAt || b.person.createdAt || 0) - new Date(a.person.approvedAt || a.person.createdAt || 0);
+                });
+
+            const visible = queryText ? ranked.filter((item) => item.isMatch).map((item) => item.person) : ranked.map((item) => item.person);
+            const matchCount = ranked.filter((item) => item.isMatch).length;
+            const summaryEl = document.getElementById('case-search-summary');
+
+            if (queryText) {
+                summaryEl.textContent = `Search "${query}" found ${matchCount} result(s). Matched cases are shown at the top.`;
+            } else {
+                summaryEl.textContent = `Showing ${visible.length} case post(s). Use advanced search to bring target cases to the top.`;
+            }
+
+            renderCaseApprovalLog(visible);
         }
 
         function createUserCard(u, mode = 'pending') {
@@ -561,12 +761,21 @@
             }
 
             logEl.innerHTML = cases.map((person) => {
-                const firstImage = Array.isArray(person.images) && person.images.length ? resolveMediaUrl(person.images[0].url) : '';
+                const images = Array.isArray(person.images) ? person.images : [];
+                const imageHtml = images
+                    .slice(0, 4)
+                    .map((img, idx) => {
+                        const src = resolveMediaUrl(img?.url);
+                        if (!src) return '';
+                        return `<img src="${src}" alt="Case image ${idx + 1}" class="admin-case-image" onclick="openPhotoModal('${src}')">`;
+                    })
+                    .join('');
                 const reporterId = typeof person.reportedBy === 'object' ? person.reportedBy?._id : person.reportedBy;
 
                 return `
                 <div class="admin-case-log-card">
                     <h4>${person.fullName || na()}</h4>
+                    ${imageHtml ? `<div class="admin-case-images">${imageHtml}</div>` : ''}
                     <div class="admin-case-log-meta">
                         <span><strong>${getAdminText('admin_case_name', 'Case')}:</strong> ${toDisplay(person.caseDisplay || person.policeCaseNumber || person.officialVerificationRef || person._id)}</span>
                         <span><strong>${getAdminText('admin_case_id', 'Case ID')}:</strong> ${toDisplay(person._id)}</span>
@@ -607,7 +816,7 @@
                         <span><strong>${getAdminText('admin_case_vehicle', 'Vehicle Information')}:</strong> ${toDisplay(person.vehicleInformation)}</span>
                         <span><strong>${getAdminText('admin_case_social_media', 'Social Media Accounts')}:</strong> ${toDisplay(person.socialMediaAccounts)}</span>
                         <span><strong>${getAdminText('admin_case_anonymous', 'Anonymous Report')}:</strong> ${formatYesNo(person.isAnonymous)}</span>
-                        <span><strong>${getAdminText('admin_case_photo', 'Posted Photo')}:</strong> ${firstImage ? `<a href="${firstImage}" target="_blank" rel="noopener noreferrer">${getAdminText('admin_view_photo', 'View Photo')}</a>` : na()}</span>
+                        <span><strong>${getAdminText('admin_case_photo', 'Posted Photo')}:</strong> ${imageHtml ? getAdminText('admin_photo_visible', 'Visible in card') : na()}</span>
                     </div>
                 </div>
             `;
@@ -640,7 +849,8 @@
                 renderRegistrationList('reviewed-rejected-list', summary.rejected || [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
                 renderRegistrationList('approved-list', summary.approved || [], 'admin_no_approved', 'No approved requests yet.', 'approved');
                 renderRegistrationList('rejected-list', summary.rejected || [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
-                renderCaseApprovalLog(caseLog || []);
+                allCaseLogItems = caseLog || [];
+                applyCaseSearchAndRender();
             } catch (err) {
                 const failText = `${getAdminText('admin_load_failed', 'Failed to load pending registrations')}: ${err.message}`;
                 pendingEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
@@ -649,6 +859,8 @@
                 approvedEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 rejectedEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 caseLogEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                const summaryEl = document.getElementById('case-search-summary');
+                if (summaryEl) summaryEl.textContent = failText;
             }
         }
 
