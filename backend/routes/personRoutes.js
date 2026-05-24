@@ -840,7 +840,14 @@ router.put('/:id/approve', auth(), async (req, res) => {
     const updated = await store.updatePerson(req.params.id, approvalPatch);
     await logActivity('case-approved', approver, { personId: person._id }, {
       caseName: person.fullName || null,
-      source: 'explicit-approver'
+      source: 'explicit-approver',
+      approvedByRole: 'police admin',
+      oldFile: {
+        isApproved: !!person.isApproved
+      },
+      updatedFile: {
+        isApproved: true
+      }
     });
     return res.json(updated);
   } catch (err) {

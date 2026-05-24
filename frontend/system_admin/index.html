@@ -349,6 +349,15 @@
             border: 1px solid rgba(148,163,184,0.25);
         }
 
+        .admin-activity-json-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2px;
+        }
+
         .admin-activity-view {
             margin-top: 2px;
             justify-self: start;
@@ -1554,29 +1563,31 @@
                 const targetObj = normalizeObjectValue(item.target);
                 const caseName = detailsObj.caseName || detailsObj.personName || detailsObj.fullName || 'N/A';
                 const action = escapeHtml(actionLabelForAdminActivity(item.type));
-                const renderObjectEntries = (obj) => {
-                    const entries = Object.entries(obj || {});
-                    if (!entries.length) return '<span>None</span>';
-                    return entries.map(([key, value]) => {
-                        const normalized = (typeof value === 'object' && value !== null)
-                            ? JSON.stringify(value)
-                            : String(value);
-                        return `<span><strong>${escapeHtml(key)}:</strong> ${escapeHtml(normalized)}</span>`;
-                    }).join('');
-                };
+                const prettyJson = (obj) => escapeHtml(JSON.stringify(obj || {}, null, 2));
+                const oldFileObj = normalizeObjectValue(detailsObj.oldFile);
+                const updatedFileObj = normalizeObjectValue(detailsObj.updatedFile);
+                const hasOldUpdated = item.type === 'case-approved' && (Object.keys(oldFileObj).length || Object.keys(updatedFileObj).length);
+                const isApprovedText = hasOldUpdated
+                    ? `Approval Change: ${String(oldFileObj.isApproved)} -> ${String(updatedFileObj.isApproved)} by Police Admin`
+                    : '';
 
                 return `
                     <div class="admin-activity-card">
                         <span><strong>What They Did:</strong> ${action}</span>
                         <span><strong>Action Summary:</strong> ${escapeHtml(actionSummaryForAdminActivity(item.type, actor.username || item.actorName || na(), caseName))}</span>
+                        ${hasOldUpdated ? `<span><strong>${escapeHtml(isApprovedText)}</strong></span>` : ''}
                         <span><strong>Type:</strong> ${escapeHtml(item.type || na())}</span>
                         <span><strong>Actor:</strong> ${escapeHtml(actor.username || item.actorName || na())} (${escapeHtml(roleLabel(actor.role || item.actorRole || ''))})</span>
                         <span><strong>Email:</strong> ${escapeHtml(actor.email || item.actorEmail || na())}</span>
                         <span><strong>Time:</strong> ${escapeHtml(formatDate(item.createdAt))}</span>
-                        <span><strong>Target:</strong></span>
-                        ${renderObjectEntries(targetObj)}
-                        <span><strong>Details:</strong></span>
-                        ${renderObjectEntries(detailsObj)}
+                        ${hasOldUpdated ? '<div class="admin-activity-json-title">Old File</div>' : ''}
+                        ${hasOldUpdated ? `<pre>${prettyJson(oldFileObj)}</pre>` : ''}
+                        ${hasOldUpdated ? '<div class="admin-activity-json-title">Updated File</div>' : ''}
+                        ${hasOldUpdated ? `<pre>${prettyJson(updatedFileObj)}</pre>` : ''}
+                        <div class="admin-activity-json-title">Target (JSON)</div>
+                        <pre>${prettyJson(targetObj)}</pre>
+                        <div class="admin-activity-json-title">Details (JSON)</div>
+                        <pre>${prettyJson(detailsObj)}</pre>
                         <button
                             class="btn btn-sm admin-activity-view"
                             type="button"
@@ -1610,7 +1621,7 @@
 
         function actionSummaryForAdminActivity(type, actorName, caseName) {
             if (type === 'case-approved') {
-                return `${actorName} approved missing person post for ${caseName}.`;
+                return `${actorName} approved missing person post for ${caseName} (not approved to approved).`;
             }
             return `${actorName} performed ${actionLabelForAdminActivity(type).toLowerCase()} on ${caseName}.`;
         }
