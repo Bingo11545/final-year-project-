@@ -672,10 +672,10 @@
                 <span data-key="police_active_cases">Active Cases</span>
             </div>
 
-            <a href="/police_admin/my-reports.html" class="pd-nav-item" id="nav-my-reports">
+            <div class="pd-nav-item" onclick="switchSection('my-reports')" id="nav-my-reports">
                 <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
                 <span>My Reports</span>
-            </a>
+            </div>
 
             <div class="pd-nav-item" onclick="switchSection('found')" id="nav-found">
                 <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
@@ -789,6 +789,24 @@
                 </div>
             </div>
 
+            <!-- MY REPORTS SECTION -->
+            <div id="sec-my-reports" class="pd-section">
+                <div class="pd-top-bar">
+                    <div>
+                        <div class="pd-page-title">
+                            <div class="pd-page-title title-icon pd-title-icon pd-title-icon-blue">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <span>My Reports</span>
+                        </div>
+                        <div class="pd-page-sub">Reports submitted from your account with their latest status and details</div>
+                    </div>
+                </div>
+                <div id="list-my-reports">
+                    <div class="loading-indicator"><div class="spinner"></div><span>Loading your reports...</span></div>
+                </div>
+            </div>
+
             <!-- FOUND SECTION -->
             <div id="sec-found" class="pd-section">
                 <div class="pd-top-bar">
@@ -865,7 +883,50 @@
 
             if (tab === 'pending') loadPending();
             if (tab === 'tips') loadTips();
+            if (tab === 'my-reports') loadMyReports();
             if (tab === 'active' || tab === 'found') loadAllInternal();
+        }
+
+        async function loadMyReports() {
+            const container = document.getElementById('list-my-reports');
+            if (!container) return;
+
+            try {
+                const reports = await apiCall('/people/my-reports');
+                if (!reports.length) {
+                    container.innerHTML = `<div class="pd-empty"><i class="fas fa-folder-open"></i><h3>No reports yet</h3><p>You have not posted any report from this account.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = reports.map((p) => {
+                    const imageUrl = p.images && p.images[0] ? `${IMG_URL_BASE}${p.images[0].url}` : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo';
+                    return `
+                        <div class="pd-case-card active-c">
+                            <img class="pd-case-img" src="${imageUrl}" alt="${p.fullName}">
+                            <div class="pd-case-body">
+                                <div class="pd-case-name">${p.fullName || 'N/A'}</div>
+                                <div class="pd-case-meta">
+                                    <span><i class="fas fa-user"></i>${policeText('police_reported_by', 'Reported By')}: ${renderReporterInline(p)}</span>
+                                    <span><i class="fas fa-circle-info"></i>Status: ${p.status || 'N/A'}</span>
+                                    <span><i class="fas fa-calendar"></i>Submitted: ${new Date(p.createdAt || Date.now()).toLocaleDateString()}</span>
+                                    ${p.policeCaseNumber ? `<span><i class="fas fa-hashtag"></i>${policeText('police_case_prefix', 'Case')} ${p.policeCaseNumber}</span>` : ''}
+                                </div>
+                                <div class="pd-case-desc">${p.description || policeText('police_no_additional_desc', 'No additional description provided.')}</div>
+                            </div>
+                            <div class="pd-case-actions">
+                                <a href="/user/case.html?id=${p._id}" class="pd-btn pd-btn-view">
+                                    <i class="fas fa-eye"></i> ${policeText('police_view_edit', 'View/Edit')}
+                                </a>
+                                <a href="/police_admin/my-reports.html" class="pd-btn pd-btn-find">
+                                    <i class="fas fa-pen"></i> Open Full Editor
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>${policeText('police_error_loading', 'Error Loading')}</h3><p>${e.message}</p></div>`;
+            }
         }
 
         // ── TIPS ──
