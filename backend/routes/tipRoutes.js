@@ -73,6 +73,17 @@ router.put('/:id', auth(), async (req, res) => {
     if (!tip) return res.status(404).json({ msg: 'Tip not found' });
 
     const updated = await store.updateTip(req.params.id, { status: req.body.status });
+    const actor = await store.getUserById(req.user.id);
+    await store.createActivityLog({
+      type: 'tip-status-updated',
+      actorId: actor?._id || req.user.id,
+      actorName: actor?.username || req.user.id,
+      actorRole: actor?.role || req.user.role,
+      actorEmail: actor?.email || null,
+      actorProfilePhoto: actor?.profilePhoto || null,
+      target: { tipId: tip._id, personId: tip.person },
+      details: { oldStatus: tip.status || null, newStatus: req.body.status || null }
+    });
     return res.json(updated);
   } catch (err) {
     console.error(err);
@@ -142,12 +153,36 @@ router.post('/person/:personId', auth(), async (req, res) => {
       location: req.body.location || ''
     });
 
+    await store.createActivityLog({
+      type: noteType === 'tip' ? 'case-tip-added' : 'case-comment-added',
+      actorId: author?._id || req.user.id,
+      actorName: author?.username || req.user.id,
+      actorRole: author?.role || req.user.role,
+      actorEmail: author?.email || null,
+      actorProfilePhoto: author?.profilePhoto || null,
+      target: { personId: person._id, tipId: note._id },
+      details: {
+        message: message.slice(0, 500),
+        noteType,
+        caseName: person.fullName || null
+      }
+    });
+
     if (String(person.reportedBy) !== String(req.user.id)) {
       await store.createNotification({
         user: person.reportedBy,
         message: `${author?.username || 'An officer'} added a ${noteType} on your report (${person.fullName || req.params.personId}).`,
         relatedPersonId: person._id
       });
+    } else {
+      const officers = await store.listUsers((u) => ['law_enforcement', 'admin'].includes(u.role));
+      await Promise.all(
+        officers.map((officer) => store.createNotification({
+          user: officer._id,
+          message: `${author?.username || 'A user'} added a ${noteType} on case ${person.fullName || req.params.personId}.`,
+          relatedPersonId: person._id
+        }))
+      );
     }
 
     return res.json({ msg: 'Note added successfully', note });

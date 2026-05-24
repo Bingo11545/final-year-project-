@@ -181,6 +181,21 @@ router.post(
       verificationRejectionReason: ''
     });
 
+    await store.createActivityLog({
+      type: needsApproval ? 'authority-registration-submitted' : 'user-registration-completed',
+      actorId: user._id,
+      actorName: user.username,
+      actorRole: user.role,
+      actorEmail: user.email,
+      actorProfilePhoto: user.profilePhoto || null,
+      target: { userId: user._id },
+      details: {
+        verificationStatus: user.verificationStatus,
+        role: user.role,
+        organizationName: user.organizationName || null
+      }
+    });
+
     try {
       await sendEmail({
         email: user.email,
@@ -320,6 +335,20 @@ router.put('/registrations/:id/approve', auth(['admin']), async (req, res) => {
       verificationReviewedByName: reviewer?.username || 'System Admin'
     });
 
+    await store.createActivityLog({
+      type: 'registration-approved',
+      actorId: reviewer?._id || req.user.id,
+      actorName: reviewer?.username || 'System Admin',
+      actorRole: reviewer?.role || req.user.role,
+      actorEmail: reviewer?.email || null,
+      actorProfilePhoto: reviewer?.profilePhoto || null,
+      target: { userId: user._id },
+      details: {
+        approvedUser: user.username,
+        approvedUserRole: user.role
+      }
+    });
+
     await store.createNotification({
       user: user._id,
       message: 'Your registration has been approved. You can now log in and use your account.'
@@ -360,6 +389,21 @@ router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
       verificationReviewedAt: new Date().toISOString(),
       verificationReviewedBy: req.user.id,
       verificationReviewedByName: reviewer?.username || 'System Admin'
+    });
+
+    await store.createActivityLog({
+      type: 'registration-rejected',
+      actorId: reviewer?._id || req.user.id,
+      actorName: reviewer?.username || 'System Admin',
+      actorRole: reviewer?.role || req.user.role,
+      actorEmail: reviewer?.email || null,
+      actorProfilePhoto: reviewer?.profilePhoto || null,
+      target: { userId: user._id },
+      details: {
+        rejectedUser: user.username,
+        rejectedUserRole: user.role,
+        reason: reason || null
+      }
     });
 
     await store.createNotification({

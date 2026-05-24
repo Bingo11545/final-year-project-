@@ -298,6 +298,32 @@
             border: 1px solid rgba(148,163,184,0.25);
         }
 
+        .admin-activity-log {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        .admin-activity-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .admin-activity-card pre {
+            margin: 0;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(15,23,42,0.45);
+            overflow-x: auto;
+            font-size: 0.76rem;
+            color: #dbeafe;
+            border: 1px solid rgba(148,163,184,0.25);
+        }
+
         .admin-user-avatar-small {
             width: 24px;
             height: 24px;
@@ -550,6 +576,10 @@
                         <i class="fas fa-shield-halved"></i>
                         <span data-key="admin_case_log_title">Police-Approved Case Posts</span>
                     </button>
+                    <button type="button" class="admin-nav-btn" id="admin-nav-activity" onclick="switchAdminSection('activity')">
+                        <i class="fas fa-clock-rotate-left"></i>
+                        <span>User and Police Activities</span>
+                    </button>
                 </div>
             </aside>
 
@@ -673,6 +703,23 @@
                         </div>
                     </div>
                 </section>
+
+                <section class="admin-panel" id="admin-panel-activity">
+                    <div class="admin-section-block">
+                        <div class="admin-section-head">
+                            <div>
+                                <h3>User and Police Activities</h3>
+                                <p class="text-muted" style="margin:6px 0 0;">Full timeline of report creation, comments, tips, update requests, approvals, and police actions.</p>
+                            </div>
+                        </div>
+                        <div id="admin-activity-log" class="admin-activity-log">
+                            <div class="loading-indicator loading-full">
+                                <div class="spinner"></div>
+                                <span data-key="admin_loading_history">Loading review history...</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -696,6 +743,7 @@
 
         const na = () => getAdminText('not_available', 'N/A');
         let allCaseLogItems = [];
+        let allActivityItems = [];
         let currentCaseSearchQuery = '';
         let currentRequestSearchQuery = '';
         let registrationSummaryData = {
@@ -1205,6 +1253,34 @@
             }).join('');
         }
 
+        function renderActivityLog(items) {
+            const activityEl = document.getElementById('admin-activity-log');
+            if (!activityEl) return;
+
+            if (!Array.isArray(items) || !items.length) {
+                activityEl.innerHTML = '<div class="empty-state loading-full">No user or police activity recorded yet.</div>';
+                return;
+            }
+
+            activityEl.innerHTML = items.slice(0, 250).map((item) => {
+                const actor = item.actor || {};
+                const details = escapeHtml(JSON.stringify(item.details || {}, null, 2));
+                const target = escapeHtml(JSON.stringify(item.target || {}, null, 2));
+                return `
+                    <div class="admin-activity-card">
+                        <span><strong>Type:</strong> ${escapeHtml(item.type || na())}</span>
+                        <span><strong>Actor:</strong> ${escapeHtml(actor.username || item.actorName || na())} (${escapeHtml(roleLabel(actor.role || item.actorRole || ''))})</span>
+                        <span><strong>Email:</strong> ${escapeHtml(actor.email || item.actorEmail || na())}</span>
+                        <span><strong>Time:</strong> ${escapeHtml(formatDate(item.createdAt))}</span>
+                        <span><strong>Target:</strong></span>
+                        <pre>${target}</pre>
+                        <span><strong>Details:</strong></span>
+                        <pre>${details}</pre>
+                    </div>
+                `;
+            }).join('');
+        }
+
         async function loadAdminDashboard() {
             const pendingEl = document.getElementById('pending-list');
             const reviewedApprovedEl = document.getElementById('reviewed-approved-list');
@@ -1212,6 +1288,7 @@
             const approvedEl = document.getElementById('approved-list');
             const rejectedEl = document.getElementById('rejected-list');
             const caseLogEl = document.getElementById('case-approval-log');
+            const activityEl = document.getElementById('admin-activity-log');
 
             pendingEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading', 'Loading pending registrations...')}</span></div>`;
             reviewedApprovedEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
@@ -1219,11 +1296,15 @@
             approvedEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
             rejectedEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
             caseLogEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
+            if (activityEl) {
+                activityEl.innerHTML = `<div class="loading-indicator loading-full"><div class="spinner"></div><span>${getAdminText('admin_loading_history', 'Loading review history...')}</span></div>`;
+            }
 
             try {
-                const [summary, caseLog] = await Promise.all([
+                const [summary, caseLog, activityLog] = await Promise.all([
                     apiCall('/auth/registration-review-summary'),
-                    apiCall('/people/admin/approval-log')
+                    apiCall('/people/admin/approval-log'),
+                    apiCall('/people/admin/activity-log')
                 ]);
 
                 registrationSummaryData = {
@@ -1234,6 +1315,8 @@
                 applyRequestSearchAndRender();
                 allCaseLogItems = caseLog || [];
                 applyCaseSearchAndRender();
+                allActivityItems = activityLog || [];
+                renderActivityLog(allActivityItems);
             } catch (err) {
                 const failText = `${getAdminText('admin_load_failed', 'Failed to load pending registrations')}: ${err.message}`;
                 pendingEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
@@ -1242,6 +1325,9 @@
                 approvedEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 rejectedEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 caseLogEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                if (activityEl) {
+                    activityEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
+                }
                 const summaryEl = document.getElementById('case-search-summary');
                 if (summaryEl) summaryEl.textContent = failText;
                 const reqSummaryEl = document.getElementById('request-search-summary');

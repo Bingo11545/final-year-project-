@@ -203,6 +203,34 @@ async function listTips() {
   return listCollection('tips');
 }
 
+async function createPersonUpdateRequest(data) {
+  const id = randomUUID();
+  return setDoc('person_update_requests', id, { ...data, createdAt: nowIso(), updatedAt: nowIso() });
+}
+
+async function updatePersonUpdateRequest(id, patch) {
+  return updateDoc('person_update_requests', id, { ...patch, updatedAt: nowIso() });
+}
+
+async function getPersonUpdateRequestById(id) {
+  return getDoc('person_update_requests', id);
+}
+
+async function listPersonUpdateRequests(filterFn) {
+  const requests = await listCollection('person_update_requests');
+  return typeof filterFn === 'function' ? requests.filter(filterFn) : requests;
+}
+
+async function createActivityLog(data) {
+  const id = randomUUID();
+  return setDoc('activity_logs', id, { ...data, createdAt: nowIso() });
+}
+
+async function listActivityLogs(filterFn) {
+  const logs = await listCollection('activity_logs');
+  return typeof filterFn === 'function' ? logs.filter(filterFn) : logs;
+}
+
 module.exports = {
   createUser,
   updateUser,
@@ -222,5 +250,11 @@ module.exports = {
   createTip,
   updateTip,
   getTipById,
-  listTips
+  listTips,
+  createPersonUpdateRequest,
+  updatePersonUpdateRequest,
+  getPersonUpdateRequestById,
+  listPersonUpdateRequests,
+  createActivityLog,
+  listActivityLogs
 };

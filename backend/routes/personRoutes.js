@@ -153,6 +153,50 @@ function buildChangeHistoryEntry({ person, patch, actor, actorId, changeType }) 
   };
 }
 
+function normalizeUpdateRequest(request, userMap = {}, personMap = {}) {
+  const requester = userMap[request.requestedBy];
+  const reviewer = userMap[request.reviewedBy];
+  const person = personMap[request.personId];
+
+  return {
+    ...request,
+    requestedByUser: requester
+      ? {
+          _id: requester._id,
+          username: requester.username,
+          role: requester.role,
+          email: requester.email || null,
+          profilePhoto: requester.profilePhoto || null,
+          organizationName: requester.organizationName || null
+        }
+      : null,
+    reviewedByUser: reviewer
+      ? {
+          _id: reviewer._id,
+          username: reviewer.username,
+          role: reviewer.role,
+          email: reviewer.email || null,
+          profilePhoto: reviewer.profilePhoto || null,
+          organizationName: reviewer.organizationName || null
+        }
+      : null,
+    person: person ? normalizePerson(person, userMap) : null
+  };
+}
+
+async function logActivity(type, actor, target, details = {}) {
+  return store.createActivityLog({
+    type,
+    actorId: actor?._id || null,
+    actorName: actor?.username || 'Unknown User',
+    actorRole: actor?.role || 'unknown',
+    actorEmail: actor?.email || null,
+    actorProfilePhoto: actor?.profilePhoto || null,
+    target,
+    details
+  });
+}
+
 function applyFilters(people, query) {
   let result = [...people];
   if (query.status) result = result.filter((p) => p.status === query.status);
@@ -527,6 +571,12 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
 
     const newPerson = await store.createPerson(payload);
 
+    await logActivity(isApproved ? 'police-report-created' : 'user-report-created', reporter, { personId: newPerson._id }, {
+      caseName: newPerson.fullName || null,
+      status: newPerson.status || null,
+      isApproved: !!newPerson.isApproved
+    });
+
     const matches = [];
     if (Array.isArray(newPerson.faceEmbeddings) && newPerson.faceEmbeddings.length) {
       const others = await store.listPeople(
@@ -601,6 +651,51 @@ router.put('/:id', auth(), async (req, res) => {
     }
 
     const actor = await store.getUserById(req.user.id);
+
+    if (!Object.keys(patch).length) {
+      return res.status(400).json({ msg: 'No valid fields provided for update.' });
+    }
+
+    if (!isPolice) {
+      const existingPending = await store.listPersonUpdateRequests(
+        (r) => String(r.personId) === String(person._id)
+          && String(r.requestedBy) === String(req.user.id)
+          && r.status === 'pending'
+      );
+
+      if (existingPending.length) {
+        return res.status(409).json({ msg: 'You already have a pending update request for this case.' });
+      }
+
+      const request = await store.createPersonUpdateRequest({
+        personId: person._id,
+        requestedBy: req.user.id,
+        requestedByRole: actor?.role || req.user.role,
+        status: 'pending',
+        patch,
+        reason: String(req.body.reason || '').trim() || null
+      });
+
+      const reviewers = await store.listUsers((u) => ['law_enforcement', 'admin'].includes(u.role));
+      await Promise.all(
+        reviewers.map((u) => store.createNotification({
+          user: u._id,
+          message: `${actor?.username || 'A user'} requested a case update for ${person.fullName || person._id}.`,
+          relatedPersonId: person._id
+        }))
+      );
+
+      await logActivity('user-case-update-requested', actor, { personId: person._id, requestId: request._id }, {
+        patch,
+        caseName: person.fullName || null
+      });
+
+      return res.status(202).json({
+        msg: 'Update request submitted. Police admin will review and apply changes after approval.',
+        request
+      });
+    }
+
     const entry = buildChangeHistoryEntry({
       person,
       patch,
@@ -614,6 +709,20 @@ router.put('/:id', auth(), async (req, res) => {
     }
 
     const updated = await store.updatePerson(req.params.id, patch);
+
+    if (String(person.reportedBy) !== String(req.user.id)) {
+      await store.createNotification({
+        user: person.reportedBy,
+        message: `${actor?.username || 'Police admin'} applied updates to your case (${person.fullName || person._id}).`,
+        relatedPersonId: person._id
+      });
+    }
+
+    await logActivity('police-case-updated', actor, { personId: person._id }, {
+      patch,
+      caseName: person.fullName || null
+    });
+
     return res.json(updated);
   } catch (err) {
     console.error(err);
@@ -650,6 +759,10 @@ router.put('/:id/approve', auth(), async (req, res) => {
     }
 
     const updated = await store.updatePerson(req.params.id, approvalPatch);
+    await logActivity('case-approved', approver, { personId: person._id }, {
+      caseName: person.fullName || null,
+      source: 'explicit-approver'
+    });
     return res.json(updated);
   } catch (err) {
     console.error(err);
@@ -677,7 +790,204 @@ router.put('/:id/status', auth(), async (req, res) => {
       statusPatch.changeHistory = [...(Array.isArray(person.changeHistory) ? person.changeHistory : []), statusHistory].slice(-40);
     }
     const updated = await store.updatePerson(req.params.id, statusPatch);
+    await logActivity('case-status-updated', actor, { personId: person._id }, {
+      oldStatus: person.status,
+      newStatus: req.body.status,
+      caseName: person.fullName || null
+    });
     return res.json(updated);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.get('/update-requests/pending', auth(), async (req, res) => {
+  try {
+    if (!['law_enforcement', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Access Denied' });
+    }
+
+    const [users, people, requests] = await Promise.all([
+      store.listUsers(),
+      store.listPeople(),
+      store.listPersonUpdateRequests((r) => r.status === 'pending')
+    ]);
+
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+    const personMap = Object.fromEntries(people.map((p) => [p._id, p]));
+
+    const result = requests
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .map((r) => normalizeUpdateRequest(r, userMap, personMap));
+
+    return res.json(result);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.get('/update-requests/mine', auth(), async (req, res) => {
+  try {
+    const [users, people, requests] = await Promise.all([
+      store.listUsers(),
+      store.listPeople(),
+      store.listPersonUpdateRequests((r) => String(r.requestedBy) === String(req.user.id))
+    ]);
+
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+    const personMap = Object.fromEntries(people.map((p) => [p._id, p]));
+
+    const result = requests
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .map((r) => normalizeUpdateRequest(r, userMap, personMap));
+
+    return res.json(result);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.put('/update-requests/:requestId/approve', auth(), async (req, res) => {
+  try {
+    if (!['law_enforcement', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Access Denied' });
+    }
+
+    const request = await store.getPersonUpdateRequestById(req.params.requestId);
+    if (!request) return res.status(404).json({ msg: 'Update request not found' });
+    if (request.status !== 'pending') {
+      return res.status(400).json({ msg: 'This update request has already been reviewed.' });
+    }
+
+    const person = await store.getPersonById(request.personId);
+    if (!person) return res.status(404).json({ msg: 'Case not found' });
+
+    const reviewer = await store.getUserById(req.user.id);
+    const patch = request.patch || {};
+
+    const entry = buildChangeHistoryEntry({
+      person,
+      patch,
+      actor: reviewer,
+      actorId: req.user.id,
+      changeType: 'user-update-approved'
+    });
+
+    const personPatch = { ...patch };
+    if (entry) {
+      personPatch.changeHistory = [...(Array.isArray(person.changeHistory) ? person.changeHistory : []), entry].slice(-40);
+    }
+
+    const updatedPerson = await store.updatePerson(person._id, personPatch);
+
+    const reviewedRequest = await store.updatePersonUpdateRequest(request._id, {
+      status: 'approved',
+      reviewedBy: req.user.id,
+      reviewedAt: new Date().toISOString(),
+      reviewReason: String(req.body.reason || '').trim() || null,
+      appliedPatch: patch
+    });
+
+    await store.createNotification({
+      user: request.requestedBy,
+      message: `Your requested update for ${person.fullName || person._id} was approved and applied by ${reviewer?.username || 'Police admin'}.`,
+      relatedPersonId: person._id
+    });
+
+    await logActivity('user-update-approved', reviewer, { personId: person._id, requestId: request._id }, {
+      patch,
+      requestedBy: request.requestedBy,
+      caseName: person.fullName || null
+    });
+
+    return res.json({ msg: 'Update request approved and applied.', request: reviewedRequest, person: updatedPerson });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.put('/update-requests/:requestId/reject', auth(), async (req, res) => {
+  try {
+    if (!['law_enforcement', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Access Denied' });
+    }
+
+    const request = await store.getPersonUpdateRequestById(req.params.requestId);
+    if (!request) return res.status(404).json({ msg: 'Update request not found' });
+    if (request.status !== 'pending') {
+      return res.status(400).json({ msg: 'This update request has already been reviewed.' });
+    }
+
+    const reviewer = await store.getUserById(req.user.id);
+    const person = await store.getPersonById(request.personId);
+
+    const reviewedRequest = await store.updatePersonUpdateRequest(request._id, {
+      status: 'rejected',
+      reviewedBy: req.user.id,
+      reviewedAt: new Date().toISOString(),
+      reviewReason: String(req.body.reason || '').trim() || null
+    });
+
+    await store.createNotification({
+      user: request.requestedBy,
+      message: `Your requested update for ${person?.fullName || request.personId} was rejected. ${reviewedRequest.reviewReason ? `Reason: ${reviewedRequest.reviewReason}` : ''}`.trim(),
+      relatedPersonId: request.personId
+    });
+
+    await logActivity('user-update-rejected', reviewer, { personId: request.personId, requestId: request._id }, {
+      patch: request.patch || {},
+      requestedBy: request.requestedBy,
+      reason: reviewedRequest.reviewReason || null,
+      caseName: person?.fullName || null
+    });
+
+    return res.json({ msg: 'Update request rejected.', request: reviewedRequest });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+router.get('/admin/activity-log', auth(['admin']), async (req, res) => {
+  try {
+    const [users, activities] = await Promise.all([
+      store.listUsers(),
+      store.listActivityLogs()
+    ]);
+
+    const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
+
+    const enriched = activities
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .map((item) => {
+        const actor = userMap[item.actorId];
+        return {
+          ...item,
+          actor: actor
+            ? {
+                _id: actor._id,
+                username: actor.username,
+                role: actor.role,
+                email: actor.email || null,
+                profilePhoto: actor.profilePhoto || null,
+                organizationName: actor.organizationName || null
+              }
+            : {
+                _id: item.actorId || null,
+                username: item.actorName || 'Unknown User',
+                role: item.actorRole || 'unknown',
+                email: item.actorEmail || null,
+                profilePhoto: item.actorProfilePhoto || null,
+                organizationName: null
+              }
+        };
+      });
+
+    return res.json(enriched);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server Error' });

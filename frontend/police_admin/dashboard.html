@@ -1026,8 +1026,11 @@
         async function loadPending() {
             const container = document.getElementById('list-pending');
             try {
-                const data = await apiCall('/people/pending');
-                const count = data.length || 0;
+                const [data, pendingUpdates] = await Promise.all([
+                    apiCall('/people/pending'),
+                    apiCall('/people/update-requests/pending')
+                ]);
+                const count = (data.length || 0) + (pendingUpdates.length || 0);
                 document.getElementById('stat-pending').textContent = count;
                 const badge = document.getElementById('badge-pending');
                 if (count > 0) { badge.textContent = count; badge.classList.add('visible'); }
@@ -1041,7 +1044,7 @@
                     return;
                 }
 
-                container.innerHTML = data.map(p => `
+                const pendingCaseCards = data.map(p => `
                     <div class="pd-case-card pending">
                         <img class="pd-case-img" src="${p.images && p.images[0] ? IMG_URL_BASE + p.images[0].url : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo'}" alt="${p.fullName}">
                         <div class="pd-case-body">
@@ -1064,8 +1067,69 @@
                         </div>
                     </div>
                 `).join('');
+
+                const pendingUpdateCards = (pendingUpdates || []).map((request) => {
+                    const person = request.person || {};
+                    const requester = request.requestedByUser || {};
+                    const image = person.images && person.images[0] ? `${IMG_URL_BASE}${person.images[0].url}` : 'https://via.placeholder.com/82x82/131c35/4a5568?text=No+Photo';
+                    const patch = request.patch || {};
+                    const fields = Object.keys(patch).map((key) => `<div><strong>${key}:</strong> ${patch[key] || 'N/A'}</div>`).join('');
+
+                    return `
+                        <div class="pd-case-card pending">
+                            <img class="pd-case-img" src="${image}" alt="${person.fullName || 'Case'}">
+                            <div class="pd-case-body">
+                                <div class="pd-case-name">User Update Request ${person.fullName ? `- ${person.fullName}` : ''}</div>
+                                <div class="pd-case-meta">
+                                    <span><i class="fas fa-user-edit"></i>Requested By: ${requester.username || 'Unknown'} (${requester.role || 'user'})</span>
+                                    <span><i class="fas fa-calendar"></i>${new Date(request.createdAt || Date.now()).toLocaleDateString()}</span>
+                                    <span><i class="fas fa-hashtag"></i>Request ID: ${request._id || 'N/A'}</span>
+                                    <span><i class="fas fa-user"></i>${policeText('police_reported_by', 'Reported By')}: ${renderReporterInline(person)}</span>
+                                </div>
+                                <div class="pd-case-desc">${request.reason || 'No additional reason provided by user.'}</div>
+                                <div class="pd-case-meta" style="display:grid; gap:4px; margin-top:8px;">${fields || '<div><strong>Fields:</strong> N/A</div>'}</div>
+                            </div>
+                            <div class="pd-case-actions">
+                                <button class="pd-btn pd-btn-approve" onclick="approveUserUpdateRequest('${request._id}')">
+                                    <i class="fas fa-check"></i> Approve Update
+                                </button>
+                                <button class="pd-btn pd-btn-revert" onclick="rejectUserUpdateRequest('${request._id}')">
+                                    <i class="fas fa-xmark"></i> Reject Update
+                                </button>
+                                <a href="/user/case.html?id=${person._id || ''}" class="pd-btn pd-btn-view">
+                                    <i class="fas fa-eye"></i> ${policeText('police_view_full', 'View Full')}
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `${pendingCaseCards}${pendingUpdateCards}`;
             } catch (e) {
                 container.innerHTML = `<div class="pd-empty"><i class="fas fa-exclamation-triangle"></i><h3>${policeText('police_error_loading', 'Error Loading')}</h3><p>${e.message}</p></div>`;
+            }
+        }
+
+        async function approveUserUpdateRequest(requestId) {
+            if (!confirm('Approve this user update request and apply the new values to the case?')) return;
+            try {
+                await apiCall(`/people/update-requests/${requestId}/approve`, 'PUT', {});
+                loadPending();
+                loadAllInternal();
+                showToast('Update request approved and applied.', 'success');
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function rejectUserUpdateRequest(requestId) {
+            const reason = prompt('Optional rejection reason:') || '';
+            try {
+                await apiCall(`/people/update-requests/${requestId}/reject`, 'PUT', { reason });
+                loadPending();
+                showToast('Update request rejected.', 'success');
+            } catch (e) {
+                showToast(e.message, 'error');
             }
         }
 
