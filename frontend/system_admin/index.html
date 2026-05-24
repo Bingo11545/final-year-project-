@@ -132,12 +132,23 @@
 
         .admin-user-card {
             display: grid;
-            grid-template-columns: 140px 1fr;
+            grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
             gap: 18px;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
             padding: 18px;
+        }
+
+        .admin-user-card .info {
+            min-width: 0;
+        }
+
+        .admin-user-card h3,
+        .admin-user-card span,
+        .admin-user-card p {
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .admin-status-pill {
@@ -265,7 +276,7 @@
 
         .admin-user-meta {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 10px 14px;
             margin: 8px 0 14px;
             font-size: 0.98rem;
@@ -299,9 +310,23 @@
 
         .admin-user-images {
             display: grid;
-            grid-template-columns: 140px 140px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
             align-content: start;
+            min-width: 0;
+        }
+
+        .admin-user-photo,
+        .admin-doc-thumb {
+            width: 100%;
+        }
+
+        #pending-list.grid-container,
+        #reviewed-approved-list.grid-container,
+        #approved-list.grid-container,
+        #reviewed-rejected-list.grid-container,
+        #rejected-list.grid-container {
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
         }
 
         .admin-doc-thumb {
@@ -347,6 +372,14 @@
         @media (max-width: 760px) {
             .admin-user-card {
                 grid-template-columns: 1fr;
+            }
+
+            #pending-list.grid-container,
+            #reviewed-approved-list.grid-container,
+            #approved-list.grid-container,
+            #reviewed-rejected-list.grid-container,
+            #rejected-list.grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             }
 
             .admin-request-search {
