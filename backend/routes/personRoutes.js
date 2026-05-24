@@ -473,18 +473,21 @@ router.post('/search/image', handleImageUpload, async (req, res) => {
 
     const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
 
-    const matches = people
+    const rankedMatches = people
       .map((person) => ({
         person: normalizePerson(person, userMap),
         similarity: cosineSimilarity(queryEmbedding, person.faceEmbeddings || [])
       }))
       .filter((item) => Number.isFinite(item.similarity) && item.similarity >= minSimilarity)
       .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 20)
-      .map((item) => ({
-        ...item.person,
-        similarity: Number(item.similarity.toFixed(4))
-      }));
+      .slice(0, 20);
+
+    const matches = rankedMatches.length
+      ? [{
+          ...rankedMatches[0].person,
+          similarity: Number(rankedMatches[0].similarity.toFixed(4))
+        }]
+      : [];
 
     return res.json({
       minSimilarity,
