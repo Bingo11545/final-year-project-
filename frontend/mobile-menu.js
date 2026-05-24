@@ -31,9 +31,10 @@
                 </button>
             </div>
             <div class="fm-mobile-menu-list">
-                <a class="fm-mobile-link" href="#" id="fmLangMenuItem">
-                    <span>🌐 English</span>
-                </a>
+                <div class="fm-mobile-lang-row">
+                    <span class="fm-mobile-lang-label">🌐 Language</span>
+                    <select class="fm-mobile-lang-select" id="fmMobileLanguage" aria-label="Mobile language selector"></select>
+                </div>
                 <a class="fm-mobile-link" href="/user/dashboard.html">
                     <span>Dashboard</span>
                 </a>
@@ -57,7 +58,8 @@
         const openBtn = document.getElementById('fmOpenMenuBtn');
         const closeBtn = document.getElementById('fmCloseMenuBtn');
         const logoutBtn = document.getElementById('fmLogoutBtn');
-        const langItem = document.getElementById('fmLangMenuItem');
+        const mobileLanguage = document.getElementById('fmMobileLanguage');
+        const pageLanguageSelector = document.getElementById('languageSelector');
 
         function openMenu() {
             sidebar.classList.add('open');
@@ -81,24 +83,38 @@
 
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function () {
+                if (typeof window.logout === 'function') {
+                    window.logout();
+                    return;
+                }
                 localStorage.removeItem('token');
                 closeMenu();
                 window.location.href = '/login.html';
             });
         }
 
-        if (langItem) {
-            langItem.addEventListener('click', function (e) {
-                e.preventDefault();
-                const selector = document.getElementById('languageSelector');
-                if (!selector) return;
-                selector.value = 'en';
-                if (typeof window.changeLanguage === 'function') {
-                    window.changeLanguage('en');
-                } else {
-                    localStorage.setItem('preferredLanguage', 'en');
+        if (mobileLanguage) {
+            if (pageLanguageSelector) {
+                mobileLanguage.innerHTML = pageLanguageSelector.innerHTML;
+                mobileLanguage.value = pageLanguageSelector.value || localStorage.getItem('preferredLanguage') || 'en';
+            } else {
+                mobileLanguage.innerHTML = '<option value="en">🌐 English</option><option value="am">🇪🇹 አማርኛ</option>';
+                mobileLanguage.value = localStorage.getItem('preferredLanguage') || 'en';
+            }
+
+            mobileLanguage.addEventListener('change', function () {
+                const nextLang = mobileLanguage.value;
+
+                if (pageLanguageSelector) {
+                    pageLanguageSelector.value = nextLang;
+                    pageLanguageSelector.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-                closeMenu();
+
+                if (typeof window.changeLanguage === 'function') {
+                    window.changeLanguage(nextLang);
+                } else {
+                    localStorage.setItem('preferredLanguage', nextLang);
+                }
             });
         }
 

@@ -140,6 +140,43 @@
         cursor: pointer;
     }
 
+    .fm-mobile-lang-row {
+        display: grid;
+        gap: 0.35rem;
+        padding: 0.72rem 0.8rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-secondary, #a8b8cc);
+    }
+
+    [data-theme="light"] .fm-mobile-lang-row {
+        color: #374151;
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    .fm-mobile-lang-label {
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .fm-mobile-lang-select {
+        width: 100%;
+        min-height: 40px;
+        border-radius: 9px;
+        border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14));
+        background: var(--bg-card, #131c35);
+        color: var(--text-primary, #f0f6ff);
+        padding: 0 0.65rem;
+        font: inherit;
+    }
+
+    [data-theme="light"] .fm-mobile-lang-select {
+        background: #f8fafc;
+        color: #0f172a;
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+
     [data-theme="light"] .fm-mobile-link,
     [data-theme="light"] .fm-mobile-action {
         color: #374151;
