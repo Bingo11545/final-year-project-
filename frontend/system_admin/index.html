@@ -304,6 +304,31 @@
             gap: 14px;
         }
 
+        .admin-activity-controls {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .admin-activity-controls input,
+        .admin-activity-controls select {
+            width: 100%;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        .admin-activity-summary {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 10px;
+        }
+
         .admin-activity-card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -593,6 +618,10 @@
             .admin-user-directory-controls {
                 grid-template-columns: 1fr;
             }
+
+            .admin-activity-controls {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -816,6 +845,30 @@
                                 <p class="text-muted" style="margin:6px 0 0;">Full timeline of report creation, comments, tips, update requests, approvals, and police actions.</p>
                             </div>
                         </div>
+                        <div class="admin-activity-controls">
+                            <input id="admin-activity-search" type="text" placeholder="Search action, actor, case, details..." oninput="applyActivityFiltersAndRender()">
+                            <select id="admin-activity-type" onchange="applyActivityFiltersAndRender()">
+                                <option value="all">All Actions</option>
+                                <option value="user-case-update-requested">Update Requested</option>
+                                <option value="user-update-approved">Update Approved</option>
+                                <option value="user-update-rejected">Update Rejected</option>
+                                <option value="case-comment-added">Comment Added</option>
+                                <option value="case-tip-added">Tip Added</option>
+                                <option value="police-case-updated">Police Updated Case</option>
+                                <option value="case-status-updated">Status Updated</option>
+                            </select>
+                            <select id="admin-activity-role" onchange="applyActivityFiltersAndRender()">
+                                <option value="all">All Actor Roles</option>
+                                <option value="user">User</option>
+                                <option value="authorized_org">Authorized Org</option>
+                                <option value="law_enforcement">Police Admin</option>
+                                <option value="admin">System Admin</option>
+                            </select>
+                            <button class="btn btn-sm" type="button" onclick="resetActivityFilters()">
+                                <i class="fas fa-rotate-left"></i><span>Reset</span>
+                            </button>
+                        </div>
+                        <div id="admin-activity-summary" class="admin-activity-summary"></div>
                         <div id="admin-activity-log" class="admin-activity-log">
                             <div class="loading-indicator loading-full">
                                 <div class="spinner"></div>
@@ -1400,10 +1453,12 @@
 
         function renderActivityLog(items) {
             const activityEl = document.getElementById('admin-activity-log');
+            const summaryEl = document.getElementById('admin-activity-summary');
             if (!activityEl) return;
 
             if (!Array.isArray(items) || !items.length) {
                 activityEl.innerHTML = '<div class="empty-state loading-full">No user or police activity recorded yet.</div>';
+                if (summaryEl) summaryEl.textContent = 'Showing 0 activity record(s).';
                 return;
             }
 
@@ -1411,8 +1466,10 @@
                 const actor = item.actor || {};
                 const details = escapeHtml(JSON.stringify(item.details || {}, null, 2));
                 const target = escapeHtml(JSON.stringify(item.target || {}, null, 2));
+                const action = escapeHtml(actionLabelForAdminActivity(item.type));
                 return `
                     <div class="admin-activity-card">
+                        <span><strong>What They Did:</strong> ${action}</span>
                         <span><strong>Type:</strong> ${escapeHtml(item.type || na())}</span>
                         <span><strong>Actor:</strong> ${escapeHtml(actor.username || item.actorName || na())} (${escapeHtml(roleLabel(actor.role || item.actorRole || ''))})</span>
                         <span><strong>Email:</strong> ${escapeHtml(actor.email || item.actorEmail || na())}</span>
@@ -1424,6 +1481,52 @@
                     </div>
                 `;
             }).join('');
+
+            if (summaryEl) summaryEl.textContent = `Showing ${items.length} activity record(s).`;
+        }
+
+        function actionLabelForAdminActivity(type) {
+            const labels = {
+                'user-case-update-requested': 'User requested case information update',
+                'user-update-approved': 'Police admin approved and applied user update',
+                'user-update-rejected': 'Police admin rejected user update request',
+                'case-comment-added': 'User or police added a case comment',
+                'case-tip-added': 'User or police added a case tip',
+                'police-case-updated': 'Police admin directly updated case fields',
+                'case-status-updated': 'Police admin changed case status',
+                'case-approved': 'Police admin approved case for posting',
+                'user-report-created': 'User created a new report',
+                'police-report-created': 'Police admin created a new report'
+            };
+            return labels[type] || type || 'Activity recorded';
+        }
+
+        function applyActivityFiltersAndRender() {
+            const search = String(document.getElementById('admin-activity-search')?.value || '').trim().toLowerCase();
+            const type = document.getElementById('admin-activity-type')?.value || 'all';
+            const role = document.getElementById('admin-activity-role')?.value || 'all';
+
+            const filtered = (allActivityItems || []).filter((item) => {
+                const actor = item.actor || {};
+                const details = item.details || {};
+                const haystack = `${item.type || ''} ${actionLabelForAdminActivity(item.type)} ${actor.username || ''} ${actor.role || ''} ${JSON.stringify(details)}`.toLowerCase();
+                const searchPass = !search || haystack.includes(search);
+                const typePass = type === 'all' || item.type === type;
+                const rolePass = role === 'all' || String(actor.role || '').toLowerCase() === role;
+                return searchPass && typePass && rolePass;
+            });
+
+            renderActivityLog(filtered);
+        }
+
+        function resetActivityFilters() {
+            const search = document.getElementById('admin-activity-search');
+            const type = document.getElementById('admin-activity-type');
+            const role = document.getElementById('admin-activity-role');
+            if (search) search.value = '';
+            if (type) type.value = 'all';
+            if (role) role.value = 'all';
+            applyActivityFiltersAndRender();
         }
 
         function renderReviewedCaseStatusList(items) {
@@ -1601,7 +1704,7 @@
                 applyCaseSearchAndRender();
                 renderReviewedCaseStatusList(allCaseLogItems);
                 allActivityItems = activityLog || [];
-                renderActivityLog(allActivityItems);
+                applyActivityFiltersAndRender();
                 allUsersDirectoryItems = allUsers || [];
                 renderUsersDirectory(allUsersDirectoryItems);
             } catch (err) {
