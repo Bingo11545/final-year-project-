@@ -1,8 +1,9 @@
 # Dependencies
 node_modules/
-venv/
-__pycache__/
-*.pyc
+
+# AI service local virtual environment/cache
+ai-service/venv/
+ai-service/__pycache__/
 
 # Environment variables
 .env
