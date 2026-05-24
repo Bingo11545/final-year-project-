@@ -1533,9 +1533,17 @@
                 return;
             }
 
+            const resolveRegisteredName = (u) => {
+                if (u.role === 'authorized_org' && String(u.organizationName || '').trim()) {
+                    return String(u.organizationName || '').trim();
+                }
+                return u.username || na();
+            };
+
             holder.innerHTML = visibleUsers.map((u) => `
                 <div class="admin-directory-card">
-                    <span><strong>Name:</strong> ${highlightTextWithQuery(u.username || na(), currentUsersSearchQuery)}</span>
+                    <span><strong>Name:</strong> ${highlightTextWithQuery(resolveRegisteredName(u), currentUsersSearchQuery)}</span>
+                    <span><strong>Account Username:</strong> ${highlightTextWithQuery(u.username || na(), currentUsersSearchQuery)}</span>
                     <span><strong>Email:</strong> ${highlightTextWithQuery(u.email || na(), currentUsersSearchQuery)}</span>
                     <span><strong>Role:</strong> ${highlightTextWithQuery(roleLabel(u.role || ''), currentUsersSearchQuery)}</span>
                     <span><strong>Organization:</strong> ${highlightTextWithQuery(u.organizationName || na(), currentUsersSearchQuery)}</span>
