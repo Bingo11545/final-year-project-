@@ -131,9 +131,9 @@
         }
 
         .admin-user-card {
-            display: grid;
-            grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
-            gap: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
@@ -144,6 +144,15 @@
 
         .admin-user-card .info {
             min-width: 0;
+        }
+
+        .admin-user-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
         }
 
         .admin-user-card h3,
@@ -267,8 +276,8 @@
         }
 
         .admin-user-photo {
-            width: 140px;
-            height: 160px;
+            width: 100%;
+            height: 170px;
             border-radius: 12px;
             object-fit: cover;
             border: 1px solid var(--border-subtle);
@@ -279,7 +288,7 @@
         .admin-user-meta {
             display: grid;
             grid-template-columns: minmax(0, 1fr);
-            gap: 10px 14px;
+            gap: 8px;
             margin: 8px 0 14px;
             font-size: 0.98rem;
             line-height: 1.5;
@@ -321,7 +330,7 @@
 
         .admin-user-images {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
             align-content: start;
             min-width: 0;
@@ -356,8 +365,8 @@
         }
 
         .admin-doc-thumb {
-            width: 140px;
-            height: 160px;
+            width: 100%;
+            height: 170px;
             border-radius: 12px;
             object-fit: cover;
             border: 1px solid var(--border-subtle);
@@ -413,17 +422,17 @@
             }
 
             .admin-user-images {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             }
 
             .admin-user-photo {
                 width: 100%;
-                height: 220px;
+                height: 190px;
             }
 
             .admin-doc-thumb {
                 width: 100%;
-                height: 220px;
+                height: 190px;
             }
 
             .admin-case-search {
@@ -922,8 +931,8 @@
                     <img src="${safePhoto}" alt="${u.username} photo" class="admin-user-photo" onclick="openPhotoModal('${safePhoto}')">
                     ${docThumb ? `<img src="${docThumb}" alt="${u.username} document" class="admin-doc-thumb" onclick="openPhotoModal('${docThumb}')">` : ''}
                 </div>
-                <div class="info" style="padding-top:4px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                <div class="info">
+                    <div class="admin-user-head">
                         <h3 style="margin:0; font-size:1.25rem;">${highlightRequestText(u.username)}</h3>
                         <span class="admin-status-pill ${statusClass}">${statusLabel}</span>
                     </div>
