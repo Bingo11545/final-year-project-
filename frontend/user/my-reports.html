@@ -60,26 +60,6 @@
             display: grid;
             gap: 8px;
         }
-        .my-report-requests {
-            margin-top: 12px;
-            border-top: 1px solid var(--border-subtle);
-            padding-top: 12px;
-            display: grid;
-            gap: 8px;
-        }
-        .my-request-item {
-            background: rgba(245, 158, 11, 0.08);
-            border: 1px solid rgba(245, 158, 11, 0.24);
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 0.88rem;
-        }
-        .my-note-item {
-            background: rgba(59,130,246,0.08);
-            border: 1px solid rgba(59,130,246,0.2);
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 0.9rem;
         }
         .my-note-item .meta {
             display: block;
@@ -184,49 +164,6 @@
             }).join('');
         }
 
-        async function loadNotes(reportId) {
-            const holder = document.getElementById(`notes-${reportId}`);
-            if (!holder) return;
-
-            try {
-                const notes = await apiCall(`/tips/person/${reportId}`);
-                if (!notes.length) {
-                    holder.innerHTML = '<div class="text-muted">No comments/tips yet.</div>';
-                    return;
-                }
-
-                holder.innerHTML = notes.map((note) => `
-                    <div class="my-note-item">
-                        <div><strong>${e(note.noteType || 'comment')}:</strong> ${e(note.message)}</div>
-                        <span class="meta">${e(note.author?.username || note.reporterName || 'Unknown')} (${e(note.author?.role || 'user')}) • ${asDate(note.createdAt)}</span>
-                    </div>
-                `).join('');
-            } catch (err) {
-                holder.innerHTML = `<div class="text-muted">Failed to load notes: ${e(err.message)}</div>`;
-            }
-        }
-
-        async function submitNote(reportId) {
-            const msgEl = document.getElementById(`note-msg-${reportId}`);
-            const typeEl = document.getElementById(`note-type-${reportId}`);
-            const message = (msgEl?.value || '').trim();
-            const noteType = typeEl?.value || 'comment';
-
-            if (!message) {
-                showToast('Please enter a message before sending.', 'warning');
-                return;
-            }
-
-            try {
-                await apiCall(`/tips/person/${reportId}`, 'POST', { message, noteType });
-                msgEl.value = '';
-                showToast('Note added successfully.', 'success');
-                loadNotes(reportId);
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
-        }
-
         async function saveReport(reportId) {
             const description = (document.getElementById(`edit-desc-${reportId}`)?.value || '').trim();
             const city = (document.getElementById(`edit-city-${reportId}`)?.value || '').trim();
@@ -310,27 +247,12 @@
                                 ${renderRequestHistory(requestMap[r._id])}
                             </div>
 
-                            <div class="my-report-actions" style="margin-top:10px;">
-                                <div>
-                                    <label>Add Comment / Tip</label>
-                                    <textarea id="note-msg-${r._id}" rows="2" placeholder="Write your update or tip..."></textarea>
-                                </div>
-                                <div>
-                                    <label>Type</label>
-                                    <select id="note-type-${r._id}">
-                                        <option value="comment">Comment</option>
-                                        <option value="tip">Tip</option>
-                                    </select>
-                                    <button class="btn btn-sm" style="margin-top:8px;" onclick="submitNote('${r._id}')"><i class="fas fa-paper-plane"></i> Add Note</button>
-                                </div>
+                            <div class="text-muted" style="margin-top:10px; border-top:1px solid var(--border-subtle); padding-top:10px;">
+                                Comments/tips are visible to police admins only.
                             </div>
-
-                            <div class="my-report-notes" id="notes-${r._id}"></div>
                         </article>
                     `;
                 }).join('');
-
-                reports.forEach((r) => loadNotes(r._id));
             } catch (err) {
                 list.innerHTML = `<div class="error-state loading-full">Failed to load your reports: ${e(err.message)}</div>`;
             }
