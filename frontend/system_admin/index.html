@@ -272,6 +272,48 @@
             line-height: 1.5;
         }
 
+        .admin-request-search {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+
+        .admin-request-search input,
+        .admin-request-search select {
+            width: 100%;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        .admin-request-search-summary {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 12px;
+        }
+
+        .admin-user-images {
+            display: grid;
+            grid-template-columns: 140px 140px;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .admin-doc-thumb {
+            width: 140px;
+            height: 160px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid var(--border-subtle);
+            background: #0f172a;
+            cursor: pointer;
+        }
+
         .admin-photo-modal {
             position: fixed;
             inset: 0;
@@ -307,7 +349,20 @@
                 grid-template-columns: 1fr;
             }
 
+            .admin-request-search {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-user-images {
+                grid-template-columns: 1fr;
+            }
+
             .admin-user-photo {
+                width: 100%;
+                height: 220px;
+            }
+
+            .admin-doc-thumb {
                 width: 100%;
                 height: 220px;
             }
@@ -344,6 +399,26 @@
         </div>
 
         <p class="text-muted" style="margin-bottom:1.2rem;" data-key="admin_desc">Review ID documents and approve or reject law enforcement and authorized organization registrations.</p>
+
+        <div class="admin-request-search">
+            <input id="request-search-input" type="text" placeholder="Search name, email, role, station, ID number..." oninput="onRequestSearchChange()">
+            <select id="request-search-role" onchange="onRequestSearchChange()">
+                <option value="all">All Roles</option>
+                <option value="law_enforcement">Law Enforcement</option>
+                <option value="authorized_org">Authorized Organization</option>
+                <option value="admin">Admin</option>
+            </select>
+            <select id="request-search-status" onchange="onRequestSearchChange()">
+                <option value="all">All Request Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Declined</option>
+            </select>
+            <button class="btn btn-sm" type="button" onclick="resetRequestSearch()">
+                <i class="fas fa-rotate-left"></i><span>Reset</span>
+            </button>
+        </div>
+        <div id="request-search-summary" class="admin-request-search-summary"></div>
 
         <div class="admin-layout">
             <aside class="admin-sidebar">
@@ -516,6 +591,11 @@
         const na = () => getAdminText('not_available', 'N/A');
         let allCaseLogItems = [];
         let currentCaseSearchQuery = '';
+        let registrationSummaryData = {
+            pending: [],
+            approved: [],
+            rejected: []
+        };
 
         if (!IS_FORCED_PUBLIC_VIEW && getUserRole() !== 'admin') {
             window.location.href = '../login.html';
@@ -560,6 +640,10 @@
             if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
             const clean = String(rawUrl).replace(/^\/+/, '');
             return `${BACKEND_ORIGIN}/${clean}`;
+        }
+
+        function isImagePath(value) {
+            return /\.(jpg|jpeg|png|webp|gif|bmp|jfif)$/i.test(String(value || ''));
         }
 
         function normalizeSearchText(value) {
@@ -732,6 +816,7 @@
             const docLink = u.verificationDocument
                 ? `${BACKEND_ORIGIN}/${u.verificationDocument}`
                 : '';
+            const docThumb = docLink && isImagePath(u.verificationDocument) ? docLink : '';
 
             const profilePhoto = u.profilePhoto
                 ? `${BACKEND_ORIGIN}/${u.profilePhoto}`
@@ -765,7 +850,10 @@
                 : '';
 
             card.innerHTML = `
-                <img src="${safePhoto}" alt="${u.username} photo" class="admin-user-photo" onclick="openPhotoModal('${safePhoto}')">
+                <div class="admin-user-images">
+                    <img src="${safePhoto}" alt="${u.username} photo" class="admin-user-photo" onclick="openPhotoModal('${safePhoto}')">
+                    ${docThumb ? `<img src="${docThumb}" alt="${u.username} document" class="admin-doc-thumb" onclick="openPhotoModal('${docThumb}')">` : ''}
+                </div>
                 <div class="info" style="padding-top:4px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
                         <h3 style="margin:0; font-size:1.25rem;">${u.username}</h3>
@@ -787,6 +875,84 @@
             `;
 
             return card;
+        }
+
+        function buildUserSearchBlob(user) {
+            return [
+                user.username,
+                user.email,
+                user.role,
+                user.organizationName,
+                user.station,
+                user.dateOfBirth,
+                user.idNumber
+            ].join(' ').toLowerCase();
+        }
+
+        function getRequestSearchInputs() {
+            return {
+                query: (document.getElementById('request-search-input')?.value || '').trim().toLowerCase(),
+                role: document.getElementById('request-search-role')?.value || 'all',
+                status: document.getElementById('request-search-status')?.value || 'all'
+            };
+        }
+
+        function filterUsers(users, role, query) {
+            return (users || []).filter((user) => {
+                const rolePass = role === 'all' || user.role === role;
+                const queryPass = !query || buildUserSearchBlob(user).includes(query);
+                return rolePass && queryPass;
+            });
+        }
+
+        function onRequestSearchChange() {
+            applyRequestSearchAndRender();
+        }
+
+        function resetRequestSearch() {
+            document.getElementById('request-search-input').value = '';
+            document.getElementById('request-search-role').value = 'all';
+            document.getElementById('request-search-status').value = 'all';
+            applyRequestSearchAndRender();
+        }
+
+        function applyRequestSearchAndRender() {
+            const { query, role, status } = getRequestSearchInputs();
+
+            const pendingFiltered = filterUsers(registrationSummaryData.pending, role, query);
+            const approvedFiltered = filterUsers(registrationSummaryData.approved, role, query);
+            const rejectedFiltered = filterUsers(registrationSummaryData.rejected, role, query);
+
+            if (status === 'all' || status === 'pending') {
+                renderRegistrationList('pending-list', pendingFiltered, 'admin_no_pending', 'No pending registrations.', 'pending');
+            } else {
+                renderRegistrationList('pending-list', [], 'admin_no_pending', 'No pending registrations.', 'pending');
+            }
+
+            if (status === 'all' || status === 'approved') {
+                renderRegistrationList('reviewed-approved-list', approvedFiltered, 'admin_no_approved', 'No approved requests yet.', 'approved');
+                renderRegistrationList('approved-list', approvedFiltered, 'admin_no_approved', 'No approved requests yet.', 'approved');
+            } else {
+                renderRegistrationList('reviewed-approved-list', [], 'admin_no_approved', 'No approved requests yet.', 'approved');
+                renderRegistrationList('approved-list', [], 'admin_no_approved', 'No approved requests yet.', 'approved');
+            }
+
+            if (status === 'all' || status === 'rejected') {
+                renderRegistrationList('reviewed-rejected-list', rejectedFiltered, 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+                renderRegistrationList('rejected-list', rejectedFiltered, 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+            } else {
+                renderRegistrationList('reviewed-rejected-list', [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+                renderRegistrationList('rejected-list', [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+            }
+
+            const summaryEl = document.getElementById('request-search-summary');
+            if (summaryEl) {
+                const totalVisible =
+                    (status === 'all' || status === 'pending' ? pendingFiltered.length : 0)
+                    + (status === 'all' || status === 'approved' ? approvedFiltered.length : 0)
+                    + (status === 'all' || status === 'rejected' ? rejectedFiltered.length : 0);
+                summaryEl.textContent = `Showing ${totalVisible} request(s) across Pending/Reviewed/Approved/Declined sections.`;
+            }
         }
 
         function renderRegistrationList(containerId, users, emptyKey, emptyFallback, mode) {
@@ -891,11 +1057,12 @@
                     apiCall('/people/admin/approval-log')
                 ]);
 
-                renderRegistrationList('pending-list', summary.pending || [], 'admin_no_pending', 'No pending registrations.', 'pending');
-                renderRegistrationList('reviewed-approved-list', summary.approved || [], 'admin_no_approved', 'No approved requests yet.', 'approved');
-                renderRegistrationList('reviewed-rejected-list', summary.rejected || [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
-                renderRegistrationList('approved-list', summary.approved || [], 'admin_no_approved', 'No approved requests yet.', 'approved');
-                renderRegistrationList('rejected-list', summary.rejected || [], 'admin_no_rejected', 'No declined requests yet.', 'rejected');
+                registrationSummaryData = {
+                    pending: summary.pending || [],
+                    approved: summary.approved || [],
+                    rejected: summary.rejected || []
+                };
+                applyRequestSearchAndRender();
                 allCaseLogItems = caseLog || [];
                 applyCaseSearchAndRender();
             } catch (err) {
@@ -908,6 +1075,8 @@
                 caseLogEl.innerHTML = `<div class="error-state loading-full">${failText}</div>`;
                 const summaryEl = document.getElementById('case-search-summary');
                 if (summaryEl) summaryEl.textContent = failText;
+                const reqSummaryEl = document.getElementById('request-search-summary');
+                if (reqSummaryEl) reqSummaryEl.textContent = failText;
             }
         }
 
