@@ -248,6 +248,27 @@
     border-color: rgba(29,78,216,0.15);
 }
 
+/* Verify hint (shared across pages) */
+.verify-hint {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.65;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+}
+
+[data-theme="light"] .verify-hint {
+    color: #374151;
+    background: rgba(0,0,0,0.02);
+    border-color: rgba(0,0,0,0.07);
+}
+
+.verify-hint i { color: var(--accent-blue); margin-right: 5px; }
+[data-theme="light"] .verify-hint i { color: #1d4ed8; }
+
 /* ============================================================
    THEME TOGGLE BUTTON
    ============================================================ */
