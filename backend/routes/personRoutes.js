@@ -476,18 +476,21 @@ router.post('/search/image', handleImageUpload, async (req, res) => {
 
     const userMap = Object.fromEntries(users.map((u) => [u._id, u]));
 
-    const matches = people
+    const rankedMatches = people
       .map((person) => ({
         person: normalizePerson(person, userMap),
         similarity: cosineSimilarity(queryEmbedding, person.faceEmbeddings || [])
       }))
       .filter((item) => Number.isFinite(item.similarity) && item.similarity >= minSimilarity)
       .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 20)
-      .map((item) => ({
-        ...item.person,
-        similarity: Number(item.similarity.toFixed(4))
-      }));
+      .slice(0, 20);
+
+    const matches = rankedMatches.length
+      ? [{
+          ...rankedMatches[0].person,
+          similarity: Number(rankedMatches[0].similarity.toFixed(4))
+        }]
+      : [];
 
     return res.json({
       minSimilarity,
@@ -840,7 +843,14 @@ router.put('/:id/approve', auth(), async (req, res) => {
     const updated = await store.updatePerson(req.params.id, approvalPatch);
     await logActivity('case-approved', approver, { personId: person._id }, {
       caseName: person.fullName || null,
-      source: 'explicit-approver'
+      source: 'explicit-approver',
+      approvedByRole: 'police admin',
+      oldFile: {
+        isApproved: !!person.isApproved
+      },
+      updatedFile: {
+        isApproved: true
+      }
     });
     return res.json(updated);
   } catch (err) {
