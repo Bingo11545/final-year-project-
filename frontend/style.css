@@ -288,6 +288,9 @@
     flex-shrink: 0;
 }
 
+/* Hide desktop theme toggle; show only on mobile (hamburger) */
+.theme-toggle-btn { display: none; }
+
 .theme-toggle-btn:hover {
     background: var(--bg-card-hover);
     color: var(--accent-teal);
@@ -485,6 +488,11 @@ nav {
 }
 
 .logo span.highlight { color: var(--accent-teal); }
+
+/* Make the main logo text black in light mode so it's always visible */
+[data-theme="light"] .logo span { color: #000 !important; }
+/* In dark mode, keep the logo readable via theme token */
+[data-theme="dark"] .logo span { color: var(--text-primary); }
 
 /* Nav Links */
 .nav-links {

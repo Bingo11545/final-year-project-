@@ -49,6 +49,16 @@
         color: var(--accent-teal, #0ea5e9);
     }
 
+    /* Show theme toggle in the mobile topbar */
+    .fm-mobile-topbar .theme-toggle-btn {
+        display: inline-flex;
+        margin-right: 8px;
+    }
+
+    /* Mobile brand color adjustments for light/dark themes */
+    [data-theme="light"] .fm-mobile-brand span { color: #000 !important; }
+    [data-theme="dark"] .fm-mobile-brand span { color: var(--text-primary); }
+
     .fm-mobile-hamburger {
         width: 42px;
         height: 42px;
