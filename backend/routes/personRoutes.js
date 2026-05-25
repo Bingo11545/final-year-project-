@@ -8,6 +8,9 @@ const FormData = require('form-data');
 const sendEmail = require('../utils/sendEmail');
 const store = require('../services/firebaseStore');
 
+const DEFAULT_AI_SERVICE_URL = 'https://final-year-project-k7vn.onrender.com';
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || DEFAULT_AI_SERVICE_URL).replace(/\/+$|^\s+|\s+$/g, '');
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5000000 },
@@ -54,7 +57,7 @@ function cosineSimilarity(vecA, vecB) {
 }
 
 async function validateHumanFaceStrict(imageFile) {
-  if (!process.env.AI_SERVICE_URL) {
+  if (!AI_SERVICE_URL) {
     return {
       ok: false,
       status: 503,
@@ -69,7 +72,7 @@ async function validateHumanFaceStrict(imageFile) {
       contentType: imageFile.mimetype
     });
 
-    const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/validate-face`, formData, {
+    const aiResponse = await axios.post(`${AI_SERVICE_URL}/validate-face`, formData, {
       headers: { ...formData.getHeaders() },
       timeout: 15000
     });
@@ -227,7 +230,7 @@ function applyFilters(people, query) {
 }
 
 async function generateFaceEmbeddingFromFile(file) {
-  if (!process.env.AI_SERVICE_URL) {
+  if (!AI_SERVICE_URL) {
     throw new Error('AI face verification service is not configured.');
   }
 
@@ -237,7 +240,7 @@ async function generateFaceEmbeddingFromFile(file) {
     contentType: file.mimetype
   });
 
-  const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/generate-embedding`, formData, {
+  const aiResponse = await axios.post(`${AI_SERVICE_URL}/generate-embedding`, formData, {
     headers: { ...formData.getHeaders() },
     timeout: 20000
   });
@@ -608,7 +611,7 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
           contentType: req.file.mimetype
         });
 
-        const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/generate-embedding`, formData, {
+        const aiResponse = await axios.post(`${AI_SERVICE_URL}/generate-embedding`, formData, {
           headers: { ...formData.getHeaders() }
         });
 

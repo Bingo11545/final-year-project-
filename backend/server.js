@@ -7,8 +7,10 @@ dotenv.config();
 const app = express();
 
 // Middleware
+const frontendOrigin = process.env.FRONTEND_URL || 'https://missingpersonfinder.netlify.app';
 const allowedOrigins = [
-    process.env.FRONTEND_URL,
+    frontendOrigin,
+    'https://missingpersonfinder.netlify.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:5500',
