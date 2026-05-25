@@ -666,6 +666,24 @@
                     <input type="checkbox" id="legalCertified" required>
                     <span id="report-step1-certify">I certify that this case has already been reported to the <strong>Ethiopian Federal Police</strong> or a regional police authority.</span>
                 </label>
+                <div style="margin-top:1rem">
+                    <div class="form-group-modern">
+                        <label data-key="report_national_id_label">Upload National ID (for legal verification) <span class="req">*</span></label>
+                        <div class="upload-zone" id="id-upload-zone" style="padding:1.25rem">
+                            <input type="file" id="nationalId" accept="image/*" aria-label="Upload national ID image">
+                            <div class="upload-zone-icon"><i class="fas fa-id-card"></i></div>
+                            <p><strong id="report-id-upload-cta">Click or drag to upload national ID</strong></p>
+                            <small id="report-id-upload-hint">Upload a clear photo of your national ID - JPG, PNG, WEBP - Max 10MB</small>
+                        </div>
+                        <div id="id-preview-container" style="display:none; margin-top:0.75rem">
+                            <img id="id-preview-img" src="" alt="ID preview" style="max-width:220px; border-radius:8px; border:1px solid #e5e7eb">
+                            <div id="id-validation-status" class="ai-validation-status ai-status-checking" style="margin-top:0.5rem;">
+                                <div class="spinner spinner-14"></div>
+                                <span id="id-status-text">AI is validating your national ID image...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="verify-hint" id="report-step1-requirement">To continue, enter the police report ID or official verification reference in Step 2. The report form is available immediately so the case details can be completed in the correct order.</div>
             </div>
 
@@ -1056,9 +1074,41 @@
             policeCaseInput.required = false;
         }
 
+        // ID upload bindings
+        const idInput = document.getElementById('nationalId');
+        const idZone = document.getElementById('id-upload-zone');
+        if (idInput) idInput.addEventListener('change', handleIdUpload);
+        if (idZone) {
+            idZone.addEventListener('dragover', (e) => { e.preventDefault(); idZone.classList.add('dragover'); });
+            idZone.addEventListener('dragleave', () => idZone.classList.remove('dragover'));
+            idZone.addEventListener('drop', (e) => {
+                e.preventDefault(); idZone.classList.remove('dragover'); const files = e.dataTransfer.files; if (files[0]) { idInput.files = files; handleIdUpload({ target: { files } }); }
+            });
+        }
+
+        // Modify syncLegalLockState to require ID validation for non-police users
+        const originalSync = syncLegalLockState;
+        function syncLegalLockState(showToastMessage = false) {
+            const unlocked = !!legalCertified.checked;
+            // For non-police reporters, require ID validation to unlock
+            const canUnlock = isPolice || idValidated;
+            const finalUnlocked = unlocked && (isPolice || canUnlock);
+            mainForm.classList.toggle('main-form-locked', !finalUnlocked);
+            document.querySelectorAll('.progress-step[data-step-index]').forEach((stepEl) => {
+                const stepNum = Number(stepEl.getAttribute('data-step-index') || 0);
+                const shouldActivate = finalUnlocked ? stepNum >= 1 : stepNum === 1;
+                stepEl.classList.toggle('active', shouldActivate);
+            });
+            if (!finalUnlocked && showToastMessage) {
+                showToast(reportText('report_legal_required', 'You must complete Step 1 legal certification before submitting this report.'), 'warning');
+            }
+        }
+
         // ── AI Photo Validation (STRICT — no fallback) ──
         let photoValidated = false;
         let validatedPhotoFingerprint = null;
+        let idValidated = false;
+        let validatedIdFingerprint = null;
 
         function getPhotoFingerprint(file) {
             return file ? `${file.name}::${file.size}::${file.lastModified}` : null;
@@ -1102,6 +1152,88 @@
                 setValidationStatus(statusDiv, false, reportText('report_validation_error', 'Validation error. Please upload a clear face photo.'));
                 photoValidated = false;
                 validatedPhotoFingerprint = null;
+            }
+        }
+
+        // National ID upload handling
+        async function handleIdUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast(reportText('report_invalid_image_type', 'Please upload a valid image file (JPG, PNG, or WEBP).'), 'error');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showToast(reportText('report_image_too_large', 'File size exceeds 10MB. Please upload a smaller image.'), 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const previewContainer = document.getElementById('id-preview-container');
+            const previewImg = document.getElementById('id-preview-img');
+            const statusDiv = document.getElementById('id-validation-status');
+
+            const reader = new FileReader();
+            reader.onload = (e) => { previewImg.src = e.target.result; };
+            reader.readAsDataURL(file);
+
+            previewContainer.style.display = 'block';
+            statusDiv.className = 'ai-validation-status ai-status-checking';
+            statusDiv.innerHTML = `<div class="spinner spinner-14"></div><span>${reportText('report_ai_verifying', 'AI is verifying the photo contains a human face...')}</span>`;
+            idValidated = false;
+            validatedIdFingerprint = null;
+
+            try {
+                await validateIdImage(file, statusDiv);
+            } catch (err) {
+                setValidationStatus(statusDiv, false, reportText('report_validation_error', 'Validation error. Please upload a clear ID image.'));
+                idValidated = false;
+                validatedIdFingerprint = null;
+            }
+        }
+
+        async function validateIdImage(file, statusEl) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`${AI_URL}/validate-id`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.is_valid_id || result.is_valid_id === true) {
+                        setValidationStatus(statusEl, true, `✓ ${reportText('report_id_verified', 'ID validated')} · ${reportText('report_ai_detector', 'Detector')}: ${result.detector || 'unknown'}`);
+                        idValidated = true;
+                        validatedIdFingerprint = `${file.name}::${file.size}::${file.lastModified}`;
+                        syncLegalLockState(false);
+                    } else {
+                        const reason = result.reason || reportText('report_id_invalid', 'ID could not be validated as an official document.');
+                        setValidationStatus(statusEl, false, `✗ ${reason}`);
+                        idValidated = false;
+                        validatedIdFingerprint = null;
+                        document.getElementById('nationalId').value = '';
+                        setTimeout(() => { document.getElementById('id-preview-container').style.display = 'none'; }, 5000);
+                        syncLegalLockState(false);
+                    }
+                } else {
+                    setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_service_error', 'AI verification service error. Please try again or contact support if the issue persists.')}`);
+                    idValidated = false;
+                    validatedIdFingerprint = null;
+                    document.getElementById('nationalId').value = '';
+                    syncLegalLockState(false);
+                }
+            } catch (networkErr) {
+                setValidationStatus(statusEl, false, `✗ ${reportText('report_ai_service_unavailable', 'AI verification service is currently unavailable. Please try again in a few moments. A valid human face photo is required.')}`);
+                idValidated = false;
+                validatedIdFingerprint = null;
+                document.getElementById('nationalId').value = '';
+                syncLegalLockState(false);
             }
         }
 
@@ -1264,6 +1396,27 @@
 
             if (imgInput.files[0]) {
                 formData.append('image', imgInput.files[0]);
+            }
+
+            // Attach national ID for verification if provided (required for non-police)
+            const idInputSubmit = document.getElementById('nationalId');
+            if (!isPolice) {
+                if (!idInputSubmit || !idInputSubmit.files[0]) {
+                    showToast(reportText('report_id_required', 'National ID image is required for non-police reporters.'), 'warning');
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>${reportText('report_submit_button', 'Submit to National Registry')}</span>`;
+                    return;
+                }
+                if (!idValidated) {
+                    showToast(reportText('report_photo_not_validated', 'Your national ID has not been validated. Please wait for AI validation.'), 'warning');
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-paper-plane"></i><span>${reportText('report_submit_button', 'Submit to National Registry')}</span>`;
+                    return;
+                }
+            }
+
+            if (idInputSubmit && idInputSubmit.files[0]) {
+                formData.append('nationalId', idInputSubmit.files[0]);
             }
 
             try {

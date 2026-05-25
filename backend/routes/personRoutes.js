@@ -44,6 +44,19 @@ function handleImageUpload(req, res, next) {
   });
 }
 
+function handleReportUploads(req, res, next) {
+  // Accept both the person image and a national ID image for verification
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'nationalId', maxCount: 1 }
+  ])(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ msg: err.message || 'Invalid upload.' });
+    }
+    return next();
+  });
+}
+
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
   let normA = 0;
@@ -106,6 +119,48 @@ async function validateHumanFaceStrict(imageFile) {
       ok: false,
       status: 503,
       msg: 'AI verification service is unavailable. Please try again shortly.',
+      error: err?.message || 'AI request failed'
+    };
+  }
+}
+
+async function validateIdImage(idFile) {
+  if (!AI_SERVICE_URL) {
+    return {
+      ok: false,
+      status: 503,
+      msg: 'AI ID verification service is not configured.'
+    };
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('image', idFile.buffer, {
+      filename: idFile.originalname || `id${path.extname(idFile.originalname || '.jpg')}`,
+      contentType: idFile.mimetype
+    });
+
+    const aiResponse = await axios.post(`${AI_SERVICE_URL}/validate-id`, formData, {
+      headers: { ...formData.getHeaders() },
+      timeout: 15000
+    });
+
+    const result = aiResponse?.data || {};
+    if (result.is_valid_id === false) {
+      return {
+        ok: false,
+        status: 400,
+        msg: result.reason || 'Uploaded ID could not be validated as an official document.',
+        ai: result
+      };
+    }
+
+    return { ok: true, ai: result };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 503,
+      msg: 'AI ID verification service is unavailable. Please try again shortly.',
       error: err?.message || 'AI request failed'
     };
   }
@@ -514,7 +569,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', [auth(), handleImageUpload], async (req, res) => {
+router.post('/', [auth(), handleReportUploads], async (req, res) => {
   try {
     if (req.user.role === 'admin') {
       return res.status(403).json({ msg: 'System admin accounts cannot submit person reports.' });
@@ -598,8 +653,23 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
       payload.approvalSource = 'auto-approved-reporter';
     }
 
-    if (req.file) {
-      const faceValidation = await validateHumanFaceStrict(req.file);
+    // For regular reporters require a national ID validation step
+    const imageFile = req.files && req.files.image && req.files.image[0];
+    const idFile = req.files && req.files.nationalId && req.files.nationalId[0];
+
+    if (!isApproved) {
+      if (!idFile) {
+        return res.status(400).json({ msg: 'National ID image is required for validation before submitting a report.' });
+      }
+
+      const idValidation = await validateIdImage(idFile);
+      if (!idValidation.ok) {
+        return res.status(idValidation.status || 400).json({ msg: idValidation.msg, aiValidation: idValidation.ai || null });
+      }
+    }
+
+    if (imageFile) {
+      const faceValidation = await validateHumanFaceStrict(imageFile);
       if (!faceValidation.ok) {
         return res.status(faceValidation.status || 400).json({
           msg: faceValidation.msg,
@@ -609,9 +679,9 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
 
       try {
         const formData = new FormData();
-        formData.append('image', req.file.buffer, {
-          filename: req.file.originalname || `image${path.extname(req.file.originalname || '.jpg')}`,
-          contentType: req.file.mimetype
+        formData.append('image', imageFile.buffer, {
+          filename: imageFile.originalname || `image${path.extname(imageFile.originalname || '.jpg')}`,
+          contentType: imageFile.mimetype
         });
 
         const aiResponse = await axios.post(`${AI_SERVICE_URL}/generate-embedding`, formData, {
@@ -628,6 +698,12 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
             for (const other of existingMissing) {
               const sim = cosineSimilarity(payload.faceEmbeddings, other.faceEmbeddings);
               if (sim > 0.9) {
+                if (String(other.reportedBy) === String(req.user.id)) {
+                  return res.status(400).json({
+                    msg: 'You have already reported this person. Please update the existing report or submit a sighting.'
+                  });
+                }
+
                 return res.status(400).json({
                   msg: 'This person is already listed as missing. Please update the existing record or report a sighting.'
                 });
@@ -640,10 +716,10 @@ router.post('/', [auth(), handleImageUpload], async (req, res) => {
       }
 
       const image = await store.createFile({
-        originalName: req.file.originalname,
-        contentType: req.file.mimetype,
-        size: req.file.size,
-        dataBuffer: req.file.buffer,
+        originalName: imageFile.originalname,
+        contentType: imageFile.mimetype,
+        size: imageFile.size,
+        dataBuffer: imageFile.buffer,
         uploadedBy: req.user.id,
         purpose: 'person-image'
       });
