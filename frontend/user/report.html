@@ -1033,15 +1033,27 @@
         const legalCertified = document.getElementById('legalCertified');
         mainForm.style.display = 'block';
 
+        const userRole = typeof getUserRole === 'function' ? getUserRole() : null;
+        const isPolice = (userRole === 'law_enforcement' || userRole === 'admin');
+
+        // ── AI Photo Validation (STRICT — no fallback) ──
+        let photoValidated = false;
+        let validatedPhotoFingerprint = null;
+        let idValidated = false;
+        let validatedIdFingerprint = null;
+
         function syncLegalLockState(showToastMessage = false) {
             const unlocked = !!legalCertified.checked;
-            mainForm.classList.toggle('main-form-locked', !unlocked);
+            // For non-police reporters, require ID validation to unlock
+            const canUnlock = isPolice || idValidated;
+            const finalUnlocked = unlocked && (isPolice || canUnlock);
+            mainForm.classList.toggle('main-form-locked', !finalUnlocked);
             document.querySelectorAll('.progress-step[data-step-index]').forEach((stepEl) => {
                 const stepNum = Number(stepEl.getAttribute('data-step-index') || 0);
-                const shouldActivate = unlocked ? stepNum >= 1 : stepNum === 1;
+                const shouldActivate = finalUnlocked ? stepNum >= 1 : stepNum === 1;
                 stepEl.classList.toggle('active', shouldActivate);
             });
-            if (!unlocked && showToastMessage) {
+            if (!finalUnlocked && showToastMessage) {
                 showToast(reportText('report_legal_required', 'You must complete Step 1 legal certification before submitting this report.'), 'warning');
             }
         }
@@ -1052,8 +1064,6 @@
         syncLegalLockState(false);
 
         // Police Role Logic
-        const userRole = typeof getUserRole === 'function' ? getUserRole() : null;
-        const isPolice = (userRole === 'law_enforcement' || userRole === 'admin');
 
         const officialStep = document.getElementById('step-official-record');
         const officialVerificationRefInput = document.getElementById('officialVerificationRef');
@@ -1095,30 +1105,6 @@
                 e.preventDefault(); idZone.classList.remove('dragover'); const files = e.dataTransfer.files; if (files[0]) { idInput.files = files; handleIdUpload({ target: { files } }); }
             });
         }
-
-        // Modify syncLegalLockState to require ID validation for non-police users
-        const originalSync = syncLegalLockState;
-        function syncLegalLockState(showToastMessage = false) {
-            const unlocked = !!legalCertified.checked;
-            // For non-police reporters, require ID validation to unlock
-            const canUnlock = isPolice || idValidated;
-            const finalUnlocked = unlocked && (isPolice || canUnlock);
-            mainForm.classList.toggle('main-form-locked', !finalUnlocked);
-            document.querySelectorAll('.progress-step[data-step-index]').forEach((stepEl) => {
-                const stepNum = Number(stepEl.getAttribute('data-step-index') || 0);
-                const shouldActivate = finalUnlocked ? stepNum >= 1 : stepNum === 1;
-                stepEl.classList.toggle('active', shouldActivate);
-            });
-            if (!finalUnlocked && showToastMessage) {
-                showToast(reportText('report_legal_required', 'You must complete Step 1 legal certification before submitting this report.'), 'warning');
-            }
-        }
-
-        // ── AI Photo Validation (STRICT — no fallback) ──
-        let photoValidated = false;
-        let validatedPhotoFingerprint = null;
-        let idValidated = false;
-        let validatedIdFingerprint = null;
 
         function getPhotoFingerprint(file) {
             return file ? `${file.name}::${file.size}::${file.lastModified}` : null;
