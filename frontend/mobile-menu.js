@@ -18,8 +18,11 @@
         topbar.innerHTML = `
             <a class="fm-mobile-brand" href="/index.html" aria-label="Home">
                 <i class="fas fa-search-location"></i>
-                <span>Find Missing Person</span>
+                <span>Find Missing <span class="highlight">Person</span></span>
             </a>
+            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme" id="fmThemeToggleTop">
+                <i class="fas fa-sun"></i>
+            </button>
             <button type="button" class="fm-mobile-hamburger" aria-label="Open menu" id="fmOpenMenuBtn">
                 <i class="fas fa-bars"></i>
             </button>
@@ -45,6 +48,10 @@
                     <span class="fm-mobile-lang-label">🌐 Language</span>
                     <select class="fm-mobile-lang-select" id="fmMobileLanguage" aria-label="Mobile language selector"></select>
                 </div>
+                <button type="button" class="fm-mobile-action" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span>Toggle Theme</span>
+                    <i class="fas fa-adjust"></i>
+                </button>
                 <a class="fm-mobile-link" href="/user/dashboard.html">
                     <span>Dashboard</span>
                 </a>

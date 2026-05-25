@@ -41,6 +41,10 @@
         font-weight: 700;
     }
 
+    /* Ensure mobile brand text and highlight follow theme tokens */
+    .fm-mobile-brand { color: var(--text-primary); }
+    .fm-mobile-brand .highlight { color: var(--accent-teal); }
+
     .fm-mobile-brand i {
         color: var(--accent-teal, #0ea5e9);
     }
