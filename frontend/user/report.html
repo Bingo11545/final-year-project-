@@ -1074,6 +1074,16 @@
             policeCaseInput.required = false;
         }
 
+        // For non-police users require national ID upload in Step 1
+        const idInputReq = document.getElementById('nationalId');
+        const idRequirementNote = document.getElementById('report-step1-requirement');
+        if (!isPolice) {
+            if (idInputReq) idInputReq.required = true;
+            if (idRequirementNote) idRequirementNote.textContent = 'To continue, upload your national ID in Step 1 for residency verification and enter the police report ID or official verification reference in Step 2.';
+        } else {
+            if (idInputReq) idInputReq.required = false;
+        }
+
         // ID upload bindings
         const idInput = document.getElementById('nationalId');
         const idZone = document.getElementById('id-upload-zone');
