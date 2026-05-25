@@ -2,7 +2,7 @@ const translations = {
     en: {
         // Home / Hero
         title: "National Missing Persons Identification System",
-        subtitle: "Ethiopian Federal Police Commission",
+        subtitle: "National Missing Person Registry",
         tagline: "A unified AI-powered platform for reporting, searching, and locating missing individuals across Ethiopia.",
         btn_report: "Report Missing Person",
         btn_search: "Search Database",

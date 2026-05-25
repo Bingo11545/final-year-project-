@@ -2451,6 +2451,35 @@ footer {
     background: #eff6ff;
 }
 
+/* Ensure brand/logo remains visible in light mode across pages */
+[data-theme="light"] .logo,
+[data-theme="light"] .logo a,
+[data-theme="light"] .panel-logo-text,
+[data-theme="light"] .mobile-brand-name {
+    color: #0f172a !important;
+}
+
+/* Make sure the theme toggle button is visible on mobile/tablet */
+@media (max-width: 920px) {
+    .theme-toggle-btn {
+        display: inline-flex !important;
+        z-index: 1200;
+        width: 36px;
+        height: 36px;
+    }
+    .nav-tools { gap: 8px; }
+}
+
+/* Small tweak: ensure mobile brand name contrast in light mode */
+[data-theme="light"] .mobile-brand-name { color: #0f172a; }
+
+/* Input-with-icon helpers used across auth forms */
+.input-with-icon { position: relative; display: flex; align-items: center; gap:10px; }
+.input-with-icon i { position: relative; color: var(--text-muted); margin-left:6px; }
+.input-with-icon input { flex: 1; padding-left: 10px; }
+.input-with-icon button { background: none; border: none; }
+
+
 /* Fadeout animation for reveal effects */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(12px); }
