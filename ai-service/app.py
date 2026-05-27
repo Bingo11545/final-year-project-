@@ -18,6 +18,46 @@ def _cleanup_file(path):
         os.remove(path)
 
 
+def _is_blurry(face_img, threshold=75.0):
+    if face_img is None or face_img.size == 0:
+        return True, 0.0
+    gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+    fm = cv2.Laplacian(gray, cv2.CV_64F).var()
+    return fm < threshold, fm
+
+
+def _is_low_contrast(face_img, threshold=35.0):
+    if face_img is None or face_img.size == 0:
+        return True, 0.0
+    gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+    std_dev = gray.std()
+    return std_dev < threshold, std_dev
+
+
+def _validate_face_quality(img, x, y, w, h):
+    img_h, img_w = img.shape[:2]
+    x1, y1 = max(0, x), max(0, y)
+    x2, y2 = min(img_w, x + w), min(img_h, y + h)
+    
+    face_img = img[y1:y2, x1:x2]
+    if face_img.size == 0:
+        return False, "Detected face region is empty."
+        
+    face_w, face_h = x2 - x1, y2 - y1
+    if face_w < 50 or face_h < 50:
+        return False, f"The face in the image is too small or low-resolution ({face_w}x{face_h}px). Please upload a high-quality close-up photo."
+
+    is_blurry_flag, fm = _is_blurry(face_img, threshold=75.0)
+    if is_blurry_flag:
+        return False, f"The face in the image is too blurry (sharpness score: {fm:.1f}, required: >= 75.0). Please upload a sharp, high-resolution photo."
+
+    is_low_c, std_dev = _is_low_contrast(face_img, threshold=35.0)
+    if is_low_c:
+        return False, f"The image contrast is too low (contrast score: {std_dev:.1f}, required: >= 35.0). Please upload a clear photo with good lighting and contrast."
+
+    return True, None
+
+
 def _face_boxes_from_path(img_path):
     img = cv2.imread(img_path)
     if img is None:
@@ -26,6 +66,7 @@ def _face_boxes_from_path(img_path):
     cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     boxes = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
     return img, boxes
+
 
 
 def _opencv_embedding(img_path):
@@ -134,6 +175,19 @@ def validate_face():
     file.save(temp_path)
     
     try:
+        img = cv2.imread(temp_path)
+        if img is None:
+            return jsonify({
+                "is_human_face": False,
+                "confidence": 0.0,
+                "faces_detected": 0,
+                "reason": "Could not read the uploaded file as an image",
+                "detector": "quality-checker"
+            })
+            
+        boxes = []
+        detector_name = "opencv-fallback"
+        
         try:
             from deepface import DeepFace
             result = DeepFace.extract_faces(
@@ -141,36 +195,60 @@ def validate_face():
                 detector_backend="opencv",
                 enforce_detection=True
             )
-
             if result and len(result) > 0:
-                confidence = result[0].get("confidence", 0.85)
-                return jsonify({
-                    "is_human_face": True,
-                    "confidence": float(confidence),
-                    "faces_detected": len(result),
-                    "detector": "deepface"
-                })
-            else:
-                return jsonify({
-                    "is_human_face": False,
-                    "confidence": 0.0,
-                    "reason": "No human face detected in the image",
-                    "detector": "deepface"
-                })
+                detector_name = "deepface"
+                for face_data in result:
+                    box = face_data.get("facial_area", {})
+                    boxes.append((box.get("x", 0), box.get("y", 0), box.get("w", 0), box.get("h", 0)))
         except Exception:
-            _, boxes = _face_boxes_from_path(temp_path)
-            faces_detected = len(boxes)
+            _, detects = _face_boxes_from_path(temp_path)
+            boxes = [tuple(b) for b in detects]
+            detector_name = "opencv-fallback"
+
+        faces_detected = len(boxes)
+        
+        if faces_detected == 0:
             return jsonify({
-                "is_human_face": faces_detected > 0,
-                "confidence": 0.8 if faces_detected > 0 else 0.0,
-                "faces_detected": faces_detected,
-                "reason": None if faces_detected > 0 else "No human face could be detected in the uploaded image",
-                "detector": "opencv-fallback"
+                "is_human_face": False,
+                "confidence": 0.0,
+                "faces_detected": 0,
+                "reason": "No human face could be detected in the uploaded image. Please ensure your face is fully visible.",
+                "detector": detector_name
             })
+            
+        if faces_detected > 1:
+            return jsonify({
+                "is_human_face": False,
+                "confidence": 0.0,
+                "faces_detected": faces_detected,
+                "reason": f"Multiple faces detected ({faces_detected}). Please upload a photo containing only the missing person.",
+                "detector": detector_name
+            })
+            
+        x, y, w, h = boxes[0]
+        ok, reason = _validate_face_quality(img, x, y, w, h)
+        
+        if not ok:
+            return jsonify({
+                "is_human_face": False,
+                "confidence": 0.0,
+                "faces_detected": 1,
+                "reason": reason,
+                "detector": detector_name
+            })
+            
+        return jsonify({
+            "is_human_face": True,
+            "confidence": 0.95,
+            "faces_detected": 1,
+            "detector": detector_name
+        })
+        
     except Exception as e:
         return jsonify({"error": "Face validation error: " + str(e)}), 500
     finally:
         _cleanup_file(temp_path)
+
 
 
 # ============================================================

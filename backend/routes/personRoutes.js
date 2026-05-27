@@ -691,6 +691,19 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
         if (Array.isArray(aiResponse.data.embedding)) {
           payload.faceEmbeddings = aiResponse.data.embedding;
 
+          // Global replication / exact duplicate check (similarity > 0.96)
+          const allPeople = await store.listPeople(
+            (p) => Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length
+          );
+          for (const other of allPeople) {
+            const sim = cosineSimilarity(payload.faceEmbeddings, other.faceEmbeddings);
+            if (sim > 0.96) {
+              return res.status(400).json({
+                msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed."
+              });
+            }
+          }
+
           if (status === 'Missing') {
             const existingMissing = await store.listPeople(
               (p) => p.status === 'Missing' && Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length

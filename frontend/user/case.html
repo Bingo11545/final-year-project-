@@ -343,6 +343,17 @@
                     <button class="btn btn-danger" onclick="submitTip()" data-key="tip_submit">Submit Tip to Police</button>
                     <p class="tip-note" data-key="tip_emergency">* In emergencies, contact your local emergency services immediately.</p>
                 </div>
+                
+                <!-- Police-specific actions (visible only to law_enforcement/admin roles) -->
+                <div id="police-actions" class="tip-box" style="display:none; margin-top:18px;">
+                    <h3><i class="fas fa-user-shield"></i> Police Actions</h3>
+                    <p class="tip-note">Quick actions for law enforcement accounts.</p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                        <button class="btn btn-danger" onclick="markFoundFromCase()">Mark Case as Found</button>
+                        <a class="btn" id="open-dashboard-btn" href="/police_admin/dashboard.html">Open Police Dashboard</a>
+                        <a class="btn" href="/police_admin/my-reports.html">Open My Reports</a>
+                    </div>
+                </div>
             </div>
         </div>
         </div>
@@ -430,6 +441,21 @@
                     }
                 }
 
+                // Hide tip submission for police/admin accounts and show police actions
+                try {
+                    const role = getUserRole();
+                    const tipBox = document.querySelector('.tip-box');
+                    const policeActions = document.getElementById('police-actions');
+                    if (role === 'law_enforcement' || role === 'admin') {
+                        if (tipBox) tipBox.style.display = 'none';
+                        if (policeActions) policeActions.style.display = 'block';
+                    } else {
+                        if (policeActions) policeActions.style.display = 'none';
+                    }
+                } catch (e) {
+                    // ignore if auth helpers not available
+                }
+
                 // Check for report action
                 if (urlParams.get('action') === 'report') {
                     setTimeout(() => {
@@ -491,6 +517,17 @@
             } catch (err) {
                 showToast(`${caseText('case_tip_error', 'Error submitting tip')}: ${err.message}`, 'error');
                 document.querySelector('.tip-box button').disabled = false;
+            }
+        }
+
+        async function markFoundFromCase() {
+            if (!confirm(caseText('police_confirm_mark_found', 'Mark this case as Found?'))) return;
+            try {
+                await apiCall(`/people/${personId}/status`, 'PUT', { status: 'Found' });
+                showToast(caseText('police_case_marked_found', 'Case marked as Found.'), 'success');
+                loadCase();
+            } catch (err) {
+                showToast(`${caseText('case_update_failed', 'Update failed')}: ${err.message}`, 'error');
             }
         }
 
