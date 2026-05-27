@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 
+const MAIL_TIMEOUT = 5000; // 5 second timeout
+
 const sendEmail = async (options) => {
   // Create a transporter
   // For production, use SendGrid, Mailgun, or AWS SES
@@ -14,7 +16,9 @@ const sendEmail = async (options) => {
     auth: {
       user: process.env.SMTP_EMAIL || 'user',
       pass: process.env.SMTP_PASSWORD || 'pass'
-    }
+    },
+    connectionTimeout: MAIL_TIMEOUT,
+    socketTimeout: MAIL_TIMEOUT
   });
 
   const message = {
@@ -35,7 +39,14 @@ const sendEmail = async (options) => {
           console.log("---------------------------------------------------");
           return; 
       }
-      const info = await transporter.sendMail(message);
+      
+      // Add timeout wrapper
+      const sendPromise = transporter.sendMail(message);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email send timeout')), MAIL_TIMEOUT)
+      );
+      
+      const info = await Promise.race([sendPromise, timeoutPromise]);
       console.log('Message sent: %s', info.messageId);
   } catch(error) {
       console.error("Email send error:", error);
@@ -46,6 +57,7 @@ const sendEmail = async (options) => {
       console.log(`Subject: ${options.subject}`);
       console.log(`Message: ${options.message}`);
       console.log("---------------------------------------------------");
+      throw error;
   }
 };
 

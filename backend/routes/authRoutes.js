@@ -196,17 +196,16 @@ router.post(
       }
     });
 
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: needsApproval ? 'Registration Received - Pending Admin Approval' : 'Welcome to FindThem.AI',
-        message: needsApproval
-          ? `Hi ${user.username}, your registration has been submitted and is pending system admin ID verification. You will be notified after approval or rejection.`
-          : `Hi ${user.username}, thank you for registering. You can now report missing persons.`
-      });
-    } catch (emailErr) {
-      console.error(emailErr);
-    }
+    // Send email asynchronously (non-blocking)
+    sendEmail({
+      email: user.email,
+      subject: needsApproval ? 'Registration Received - Pending Admin Approval' : 'Welcome to FindThem.AI',
+      message: needsApproval
+        ? `Hi ${user.username}, your registration has been submitted and is pending system admin ID verification. You will be notified after approval or rejection.`
+        : `Hi ${user.username}, thank you for registering. You can now report missing persons.`
+    }).catch(emailErr => {
+      console.error('Background email send failed:', emailErr);
+    });
 
     if (needsApproval) {
       if (!verificationDocument) {
@@ -354,15 +353,14 @@ router.put('/registrations/:id/approve', auth(['admin']), async (req, res) => {
       message: 'Your registration has been approved. You can now log in and use your account.'
     });
 
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'Registration Approved',
-        message: `Hi ${user.username}, your registration was approved by system admin. You can now sign in.`
-      });
-    } catch (emailErr) {
-      console.error(emailErr);
-    }
+    // Send approval email asynchronously (non-blocking)
+    sendEmail({
+      email: user.email,
+      subject: 'Registration Approved',
+      message: `Hi ${user.username}, your registration was approved by system admin. You can now sign in.`
+    }).catch(emailErr => {
+      console.error('Approval email failed:', emailErr);
+    });
 
     return res.json({ msg: 'Registration approved successfully' });
   } catch (err) {
@@ -411,15 +409,14 @@ router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
       message: `Your registration was not approved. Please resubmit your ID document.${reason ? ` Reason: ${reason}` : ''}`
     });
 
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'Registration Needs Resubmission',
-        message: `Hi ${user.username}, your registration was not approved. Please resubmit your ID document.${reason ? ` Reason: ${reason}` : ''}`
-      });
-    } catch (emailErr) {
-      console.error(emailErr);
-    }
+    // Send rejection email asynchronously (non-blocking)
+    sendEmail({
+      email: user.email,
+      subject: 'Registration Needs Resubmission',
+      message: `Hi ${user.username}, your registration was not approved. Please resubmit your ID document.${reason ? ` Reason: ${reason}` : ''}`
+    }).catch(emailErr => {
+      console.error('Rejection email failed:', emailErr);
+    });
 
     return res.json({ msg: 'Registration rejected. User has been notified to resubmit.' });
   } catch (err) {
@@ -448,11 +445,18 @@ router.post('/forgotpassword', async (req, res) => {
     const resetUrl = `${frontendBase}/reset_password.html?token=${resetToken}`;
 
     try {
-      await sendEmail({
+      // Timeout wrapper for password reset email (max 10 seconds)
+      const emailPromise = sendEmail({
         email: user.email,
         subject: 'Password Reset Token',
         message: `You requested a password reset. Use this link: ${resetUrl}`
       });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email send timeout')), 10000)
+      );
+      
+      await Promise.race([emailPromise, timeoutPromise]);
       return res.status(200).json({ success: true, data: 'Email sent' });
     } catch (err) {
       await store.updateUser(user._id, { resetPasswordToken: null, resetPasswordExpire: null });
