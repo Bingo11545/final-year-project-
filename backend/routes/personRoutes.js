@@ -92,7 +92,7 @@ async function validateHumanFaceStrict(imageFile) {
 
     const aiResponse = await axios.post(`${AI_SERVICE_URL}/validate-face`, formData, {
       headers: { ...formData.getHeaders() },
-      timeout: 15000
+      timeout: 60000
     });
 
     const result = aiResponse?.data || {};
@@ -129,7 +129,7 @@ async function validateHumanFaceStrict(imageFile) {
       });
       const fallbackResp = await axios.post('http://127.0.0.1:5001/validate-face', fallbackForm, {
         headers: { ...fallbackForm.getHeaders() },
-        timeout: 15000
+        timeout: 60000
       });
       const fallbackResult = fallbackResp?.data || {};
       if (!fallbackResult.is_human_face) {
@@ -184,7 +184,7 @@ async function validateIdImage(idFile) {
 
     const aiResponse = await axios.post(`${AI_SERVICE_URL}/validate-id`, formData, {
       headers: { ...formData.getHeaders() },
-      timeout: 15000
+      timeout: 60000
     });
 
     const result = aiResponse?.data || {};
@@ -208,7 +208,7 @@ async function validateIdImage(idFile) {
       });
       const fallbackResp = await axios.post('http://127.0.0.1:5001/validate-id', fallbackForm, {
         headers: { ...fallbackForm.getHeaders() },
-        timeout: 15000
+        timeout: 60000
       });
       const fallbackResult = fallbackResp?.data || {};
       if (fallbackResult.is_valid_id === false) {
@@ -360,17 +360,30 @@ async function generateFaceEmbeddingFromFile(file) {
     contentType: file.mimetype
   });
 
-  const aiResponse = await axios.post(`${AI_SERVICE_URL}/generate-embedding`, formData, {
+  const requestConfig = {
     headers: { ...formData.getHeaders() },
-    timeout: 20000
-  });
+    timeout: 60000
+  };
 
-  const embedding = aiResponse?.data?.embedding;
-  if (!Array.isArray(embedding) || !embedding.length) {
-    throw new Error('Failed to generate embedding for the uploaded image.');
+  try {
+    const aiResponse = await axios.post(`${AI_SERVICE_URL}/generate-embedding`, formData, requestConfig);
+    const embedding = aiResponse?.data?.embedding;
+    if (!Array.isArray(embedding) || !embedding.length) {
+      throw new Error('Failed to generate embedding for the uploaded image.');
+    }
+    return embedding;
+  } catch (primaryError) {
+    try {
+      const fallbackResponse = await axios.post('http://127.0.0.1:5001/generate-embedding', formData, requestConfig);
+      const fallbackEmbedding = fallbackResponse?.data?.embedding;
+      if (!Array.isArray(fallbackEmbedding) || !fallbackEmbedding.length) {
+        throw new Error('Fallback AI embedding service returned no embedding.');
+      }
+      return fallbackEmbedding;
+    } catch (fallbackError) {
+      throw new Error(primaryError?.message || fallbackError?.message || 'AI embedding generation failed.');
+    }
   }
-
-  return embedding;
 }
 
 router.get('/notifications', auth(), async (req, res) => {

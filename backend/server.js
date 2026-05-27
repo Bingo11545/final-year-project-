@@ -44,6 +44,12 @@ app.get('/', (req, res) => {
     res.send('Missing Person Finder API is running...');
 });
 
+app.get('/favicon.ico', (req, res) => {
+    const favicon = Buffer.from('AAABAAEAEBAAAAAAIABnAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAAC5JREFUeJzt0LERADAMwkDh/XdW7jJCKOPvUUEA1fAoKo2p1hu4htJsgN8/SOIBvVUIG7pVGfsAAAAASUVORK5CYII=', 'base64');
+    res.type('image/x-icon');
+    res.send(favicon);
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);

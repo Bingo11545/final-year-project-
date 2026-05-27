@@ -15,14 +15,6 @@ CORS(app)
 # Optional advanced face detection / recognition using insightface
 HAS_INSIGHTFACE = False
 face_app = None
-try:
-    from insightface.app import FaceAnalysis
-    HAS_INSIGHTFACE = True
-    face_app = FaceAnalysis(allowed_modules=['detection', 'recognition'])
-    # prepare with CPU (-1) and a reasonable detection size
-    face_app.prepare(ctx_id=-1, det_size=(640, 640))
-except Exception:
-    HAS_INSIGHTFACE = False
 
 # Optional FAISS for fast nearest neighbor search
 HAS_FAISS = False
@@ -39,12 +31,29 @@ except Exception:
 # Optional MediaPipe lightweight detector (fallback when insightface not available)
 HAS_MEDIAPIPE = False
 mp_face = None
-try:
-    import mediapipe as mp
-    HAS_MEDIAPIPE = True
-    mp_face = mp.solutions.face_detection
-except Exception:
-    HAS_MEDIAPIPE = False
+
+
+def _init_optional_models():
+    global HAS_INSIGHTFACE, face_app, HAS_MEDIAPIPE, mp_face
+    if HAS_INSIGHTFACE and face_app is not None:
+        return
+
+    try:
+        from insightface.app import FaceAnalysis
+        face_app = FaceAnalysis(allowed_modules=['detection', 'recognition'])
+        face_app.prepare(ctx_id=-1, det_size=(640, 640))
+        HAS_INSIGHTFACE = True
+    except Exception:
+        HAS_INSIGHTFACE = False
+        face_app = None
+
+    try:
+        import mediapipe as mp
+        HAS_MEDIAPIPE = True
+        mp_face = mp.solutions.face_detection
+    except Exception:
+        HAS_MEDIAPIPE = False
+        mp_face = None
 
 def _save_faiss():
     try:
@@ -173,6 +182,7 @@ def _validate_face_quality(img, x, y, w, h):
 
 
 def _face_boxes_from_path(img_path):
+    _init_optional_models()
     img = cv2.imread(img_path)
     if img is None:
         return img, []
@@ -217,6 +227,7 @@ def _face_boxes_from_path(img_path):
 
 
 def _opencv_embedding(img_path):
+    _init_optional_models()
     img, boxes = _face_boxes_from_path(img_path)
     if img is None:
         raise ValueError("Could not read image")
@@ -362,6 +373,7 @@ def root():
 
 @app.route('/generate-embedding', methods=['POST'])
 def generate_embedding():
+    _init_optional_models()
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
     
@@ -431,6 +443,7 @@ def verify_face():
 # ============================================================
 @app.route('/validate-face', methods=['POST'])
 def validate_face():
+    _init_optional_models()
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
     
