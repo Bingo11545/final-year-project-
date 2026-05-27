@@ -115,12 +115,49 @@ async function validateHumanFaceStrict(imageFile) {
       }
     };
   } catch (err) {
-    return {
-      ok: false,
-      status: 503,
-      msg: 'AI verification service is unavailable. Please try again shortly.',
-      error: err?.message || 'AI request failed'
-    };
+    // Try a local fallback (developer may run ai-service locally on port 5001)
+    try {
+      const fallbackForm = new FormData();
+      fallbackForm.append('image', imageFile.buffer, {
+        filename: imageFile.originalname || `image${path.extname(imageFile.originalname || '.jpg')}`,
+        contentType: imageFile.mimetype
+      });
+      const fallbackResp = await axios.post('http://127.0.0.1:5001/validate-face', fallbackForm, {
+        headers: { ...fallbackForm.getHeaders() },
+        timeout: 15000
+      });
+      const fallbackResult = fallbackResp?.data || {};
+      if (!fallbackResult.is_human_face) {
+        return {
+          ok: false,
+          status: 400,
+          msg: fallbackResult.reason || 'Uploaded image was rejected by fallback AI service.',
+          ai: {
+            is_human_face: false,
+            confidence: Number(fallbackResult.confidence || 0),
+            faces_detected: Number(fallbackResult.faces_detected || 0),
+            detector: fallbackResult.detector || 'fallback'
+          }
+        };
+      }
+
+      return {
+        ok: true,
+        ai: {
+          is_human_face: true,
+          confidence: Number(fallbackResult.confidence || 0),
+          faces_detected: Number(fallbackResult.faces_detected || 0),
+          detector: fallbackResult.detector || 'fallback'
+        }
+      };
+    } catch (err2) {
+      return {
+        ok: false,
+        status: 503,
+        msg: 'AI verification service is unavailable. Please try again shortly.',
+        error: err?.message || err2?.message || 'AI request failed'
+      };
+    }
   }
 }
 
@@ -157,12 +194,35 @@ async function validateIdImage(idFile) {
 
     return { ok: true, ai: result };
   } catch (err) {
-    return {
-      ok: false,
-      status: 503,
-      msg: 'AI ID verification service is unavailable. Please try again shortly.',
-      error: err?.message || 'AI request failed'
-    };
+    // Try local fallback to ai-service on port 5001
+    try {
+      const fallbackForm = new FormData();
+      fallbackForm.append('image', idFile.buffer, {
+        filename: idFile.originalname || `id${path.extname(idFile.originalname || '.jpg')}`,
+        contentType: idFile.mimetype
+      });
+      const fallbackResp = await axios.post('http://127.0.0.1:5001/validate-id', fallbackForm, {
+        headers: { ...fallbackForm.getHeaders() },
+        timeout: 15000
+      });
+      const fallbackResult = fallbackResp?.data || {};
+      if (fallbackResult.is_valid_id === false) {
+        return {
+          ok: false,
+          status: 400,
+          msg: fallbackResult.reason || 'Uploaded ID could not be validated by fallback AI service.',
+          ai: fallbackResult
+        };
+      }
+      return { ok: true, ai: fallbackResult };
+    } catch (err2) {
+      return {
+        ok: false,
+        status: 503,
+        msg: 'AI ID verification service is unavailable. Please try again shortly.',
+        error: err?.message || err2?.message || 'AI request failed'
+      };
+    }
   }
 }
 
