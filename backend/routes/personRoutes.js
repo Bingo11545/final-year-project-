@@ -11,6 +11,11 @@ const store = require('../services/firebaseStore');
 const DEFAULT_AI_SERVICE_URL = 'https://final-year-project-k7vn.onrender.com';
 const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || DEFAULT_AI_SERVICE_URL).replace(/\/+$|^\s+|\s+$/g, '');
 
+// Duplicate detection thresholds
+const DUPLICATE_HIGH = 0.92; // auto-block
+const DUPLICATE_REVIEW = 0.85; // flag for human review
+const DUPLICATE_PROBABLE = 0.80; // probable match to show
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5000000 },
@@ -749,17 +754,26 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
         });
 
         if (Array.isArray(aiResponse.data.embedding)) {
-          payload.faceEmbeddings = aiResponse.data.embedding;
+          // normalize embeddings (defensive)
+          const rawEmbedding = aiResponse.data.embedding;
+          const norm = Math.sqrt(rawEmbedding.reduce((s, v) => s + (v * v), 0)) || 1;
+          payload.faceEmbeddings = rawEmbedding.map((v) => v / norm);
 
-          // Global replication / exact duplicate check (similarity > 0.96)
+          // Global duplicate check using cosine similarity with safer thresholds
           const allPeople = await store.listPeople(
             (p) => Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length
           );
+
           for (const other of allPeople) {
-            const sim = cosineSimilarity(payload.faceEmbeddings, other.faceEmbeddings);
-            if (sim > 0.96) {
+            const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
+            const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
+            const sim = cosineSimilarity(payload.faceEmbeddings, otherEmb);
+            if (sim >= DUPLICATE_HIGH) {
               return res.status(400).json({
-                msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed."
+                msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed.",
+                duplicate: true,
+                matchedPersonId: other._id,
+                similarity: sim
               });
             }
           }
@@ -769,8 +783,10 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
               (p) => p.status === 'Missing' && Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length
             );
             for (const other of existingMissing) {
-              const sim = cosineSimilarity(payload.faceEmbeddings, other.faceEmbeddings);
-              if (sim > 0.9) {
+              const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
+              const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
+              const sim = cosineSimilarity(payload.faceEmbeddings, otherEmb);
+              if (sim >= DUPLICATE_HIGH) {
                 if (String(other.reportedBy) === String(req.user.id)) {
                   return res.status(400).json({
                     msg: 'You have already reported this person. Please update the existing report or submit a sighting.'
@@ -778,7 +794,19 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
                 }
 
                 return res.status(400).json({
-                  msg: 'This person is already listed as missing. Please update the existing record or report a sighting.'
+                  msg: 'This person is already listed as missing. Please update the existing record or report a sighting.',
+                  matchedPersonId: other._id,
+                  similarity: sim
+                });
+              }
+
+              if (sim >= DUPLICATE_REVIEW) {
+                // Flag for manual review rather than hard block
+                return res.status(200).json({
+                  msg: 'Potential duplicate detected. Your report is saved but pending review.',
+                  flaggedDuplicate: true,
+                  matchedPersonId: other._id,
+                  similarity: sim
                 });
               }
             }
@@ -815,8 +843,10 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
       );
 
       for (const other of others) {
-        const similarity = cosineSimilarity(newPerson.faceEmbeddings, other.faceEmbeddings);
-        if (similarity > 0.6) {
+        const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
+        const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
+        const similarity = cosineSimilarity(newPerson.faceEmbeddings, otherEmb);
+        if (similarity >= DUPLICATE_PROBABLE) {
           matches.push({ person: other, similarity });
 
           if (newPerson.status === 'Found' && other.status === 'Missing') {
