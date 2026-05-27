@@ -352,6 +352,20 @@
             color: #0f172a;
         }
 
+        .admin-demo-card-blue {
+            background: linear-gradient(180deg,#0ea5e9 0%,#0284c7 100%);
+            color: #ffffff;
+            border-radius: 18px;
+            padding: 22px;
+        }
+
+        .admin-demo-approved .admin-demo-json,
+        .admin-demo-approved .admin-demo-bool {
+            color: inherit;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
         .admin-demo-history {
             background: rgba(255,255,255,0.92);
             padding: 16px;
@@ -866,14 +880,28 @@
                         <div class="admin-section-head">
                             <h3 data-key="admin_reviewed_title">Reviewed Requests</h3>
                         </div>
-                        <div class="admin-case-log-card admin-demo-card" style="margin-bottom: 24px; border: 2px solid #38bdf8;">
+                        <div class="admin-case-log-card admin-demo-card admin-demo-card-blue" style="margin-bottom: 24px; border: 2px solid rgba(255,255,255,0.18);">
                             <div class="admin-demo-card-header">
                                 <h4 style="color:#0ea5e9; margin:0;">Case Approval Status Demo</h4>
                                 <p style="margin:0; color:var(--text-secondary);">This sample shows the police approval workflow: the case moves from unapproved to approved, with update history and final user payload.</p>
-                            </div>
-                            <div class="admin-demo-status-row">
-                                <span><strong>Status:</strong></span>
-                                <span class="admin-status-pill admin-status-pending">Not Approved</span>
+                                <div>
+                                    <h5 style="margin:0 0 12px; color:inherit;">User View (Target JSON)</h5>
+                                    <div class="admin-demo-approved" style="display:grid; gap:12px;">
+                                        <div style="display:flex; gap:12px; align-items:flex-start;">
+                                            <img src="https://via.placeholder.com/160x120.png?text=Case+Photo" alt="Case Photo" style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#fff;">
+                                            <div>
+                                                <div style="font-weight:800; font-size:1rem; color:#ffffff;">Case: Sample Approved Case</div>
+                                                <div style="color:rgba(255,255,255,0.9); margin-top:6px;">Brief details: This case was approved after verification by police admin. Shows sample description text to illustrate the approved case.</div>
+                                                <div style="margin-top:10px; color:rgba(255,255,255,0.95);"><strong>Approved By:</strong> police try (Law Enforcement) - haileyesustadilo@gmail.com</div>
+                                                <div style="color:rgba(255,255,255,0.95);"><strong>Approved At:</strong> 5/24/2026, 12:15:03 PM</div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong style="color:rgba(255,255,255,0.95);">User Payload</strong>
+                                            <pre class="admin-demo-json" data-json="%7B%22status%22%3A%22missing%22%2C%22approvedBy%22%3A%22police%20try%22%2C%22approvedAt%22%3A%222026-05-24T12%3A15%3A03.000Z%22%7D"></pre>
+                                        </div>
+                                    </div>
+                                </div>
                                 <span>→</span>
                                 <span class="admin-status-pill admin-status-approved">Approved by Police Admin</span>
                             </div>
