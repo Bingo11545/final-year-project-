@@ -4,9 +4,32 @@ import os
 import cv2
 import numpy as np
 from uuid import uuid4
+import math
+import traceback
 
 app = Flask(__name__)
 CORS(app)
+
+# Optional advanced face detection / recognition using insightface
+HAS_INSIGHTFACE = False
+face_app = None
+try:
+    from insightface.app import FaceAnalysis
+    HAS_INSIGHTFACE = True
+    face_app = FaceAnalysis(allowed_modules=['detection', 'recognition'])
+    # prepare with CPU (-1) and a reasonable detection size
+    face_app.prepare(ctx_id=-1, det_size=(640, 640))
+except Exception:
+    HAS_INSIGHTFACE = False
+
+# Detection / quality thresholds (tune on your dataset)
+DET_CONF = 0.5
+MIN_FACE_PX_RATIO = 0.12
+MIN_FACE_PX_ABS = 80
+BLUR_REJECT = 25.0
+BLUR_WARN = 40.0
+CONTRAST_REJECT = 12.0
+CONTRAST_WARN = 20.0
 
 
 def _temp_file_path(prefix, filename):
@@ -32,6 +55,51 @@ def _is_low_contrast(face_img, threshold=20.0):
     gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
     std_dev = gray.std()
     return std_dev < threshold, std_dev
+
+
+def _auto_gamma_correction(img, target_mean=100):
+    # simple gamma correction to move mean brightness towards target_mean
+    if img is None or img.size == 0:
+        return img
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    v = hsv[:, :, 2]
+    mean = np.mean(v)
+    if mean <= 0:
+        return img
+    gamma = math.log(target_mean / 255.0) / math.log(mean / 255.0) if mean != target_mean else 1.0
+    gamma = max(0.5, min(2.2, gamma))
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype('uint8')
+    return cv2.LUT(img, table)
+
+
+def _apply_clahe(img):
+    # apply CLAHE on the luminance channel in Lab space
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+    limg = cv2.merge((cl, a, b))
+    return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+
+def _denoise(img):
+    try:
+        return cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+    except Exception:
+        return img
+
+
+def _laplacian_variance(img_gray):
+    return cv2.Laplacian(img_gray, cv2.CV_64F).var()
+
+
+def _normalize_and_resize(img, size=(112, 112)):
+    # Resize, convert to RGB, and return
+    resized = cv2.resize(img, size, interpolation=cv2.INTER_AREA)
+    if len(resized.shape) == 2:
+        resized = cv2.cvtColor(resized, cv2.COLOR_GRAY2BGR)
+    return resized
 
 
 def _validate_face_quality(img, x, y, w, h):
@@ -62,6 +130,18 @@ def _face_boxes_from_path(img_path):
     img = cv2.imread(img_path)
     if img is None:
         return img, []
+    try:
+        if HAS_INSIGHTFACE and face_app is not None:
+            faces = face_app.get(img)
+            boxes = []
+            for f in faces:
+                x1, y1, x2, y2 = int(f.bbox[0]), int(f.bbox[1]), int(f.bbox[2]), int(f.bbox[3])
+                boxes.append((x1, y1, x2 - x1, y2 - y1))
+            return img, boxes
+    except Exception:
+        # fall through to OpenCV fallback
+        traceback.print_exc()
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     boxes = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
@@ -73,6 +153,21 @@ def _opencv_embedding(img_path):
     img, boxes = _face_boxes_from_path(img_path)
     if img is None:
         raise ValueError("Could not read image")
+    # If insightface is available, prefer its embeddings
+    try:
+        if HAS_INSIGHTFACE and face_app is not None:
+            faces = face_app.get(img)
+            if faces and len(faces) > 0:
+                # pick primary
+                f = faces[0]
+                emb = getattr(f, 'embedding', None)
+                if emb is not None:
+                    vec = np.array(emb, dtype=np.float32)
+                    # normalize
+                    n = np.linalg.norm(vec) or 1.0
+                    return (vec / n).tolist()
+    except Exception:
+        traceback.print_exc()
 
     if len(boxes) > 0:
         x, y, w, h = boxes[0]
@@ -122,7 +217,23 @@ def generate_embedding():
     file.save(temp_path)
     
     try:
-        # Prefer DeepFace when available, fallback to OpenCV embedding when not installed.
+        # Prefer insightface embeddings when available, else try DeepFace, else fallback to opencv-based descriptor
+        img = cv2.imread(temp_path)
+        if img is None:
+            return jsonify({"error": "Could not read uploaded image"}), 400
+
+        try:
+            if HAS_INSIGHTFACE and face_app is not None:
+                faces = face_app.get(img)
+                if faces and len(faces) > 0:
+                    emb = getattr(faces[0], 'embedding', None)
+                    if emb is not None:
+                        vec = np.array(emb, dtype=np.float32)
+                        n = np.linalg.norm(vec) or 1.0
+                        return jsonify({"embedding": (vec / n).tolist(), "model": "insightface"})
+        except Exception:
+            traceback.print_exc()
+
         try:
             from deepface import DeepFace
             embedding = DeepFace.represent(img_path=temp_path, model_name="Facenet", enforce_detection=False)[0]["embedding"]
@@ -184,64 +295,123 @@ def validate_face():
                 "reason": "Could not read the uploaded file as an image",
                 "detector": "quality-checker"
             })
-            
-        boxes = []
-        detector_name = "opencv-fallback"
-        
-        try:
-            from deepface import DeepFace
-            result = DeepFace.extract_faces(
-                img_path=temp_path,
-                detector_backend="opencv",
-                enforce_detection=True
-            )
-            if result and len(result) > 0:
-                detector_name = "deepface"
-                for face_data in result:
-                    box = face_data.get("facial_area", {})
-                    boxes.append((box.get("x", 0), box.get("y", 0), box.get("w", 0), box.get("h", 0)))
-        except Exception:
-            _, detects = _face_boxes_from_path(temp_path)
-            boxes = [tuple(b) for b in detects]
-            detector_name = "opencv-fallback"
 
-        faces_detected = len(boxes)
-        
-        if faces_detected == 0:
+        detector_name = 'opencv-fallback'
+        faces = []
+        try:
+            if HAS_INSIGHTFACE and face_app is not None:
+                dets = face_app.get(img)
+                detector_name = 'insightface'
+                for f in dets:
+                    bbox = [int(v) for v in f.bbox]
+                    score = float(getattr(f, 'det_score', 0.0) or 0.0)
+                    faces.append({
+                        'bbox': bbox,
+                        'score': score,
+                        'kps': getattr(f, 'kps', None),
+                        'embedding': getattr(f, 'embedding', None)
+                    })
+        except Exception:
+            traceback.print_exc()
+
+        if not faces:
+            # fallback detection
+            _, detects = _face_boxes_from_path(temp_path)
+            detector_name = 'opencv-fallback'
+            for b in detects:
+                x, y, w, h = int(b[0]), int(b[1]), int(b[2]), int(b[3])
+                faces.append({'bbox': [x, y, x + w, y + h], 'score': 0.0, 'kps': None, 'embedding': None})
+
+        faces_detected = len(faces)
+        img_h, img_w = img.shape[:2]
+        min_face_px = max(MIN_FACE_PX_ABS, int(MIN_FACE_PX_RATIO * min(img_w, img_h)))
+
+        # filter by score and size
+        filtered = []
+        for f in faces:
+            x1, y1, x2, y2 = f['bbox'][0], f['bbox'][1], f['bbox'][2], f['bbox'][3]
+            w = max(0, x2 - x1)
+            h = max(0, y2 - y1)
+            area = w * h
+            size_ok = (w >= min_face_px and h >= min_face_px)
+            score_ok = (f.get('score', 0.0) >= DET_CONF)
+            if size_ok or score_ok:
+                filtered.append({**f, 'w': w, 'h': h, 'area': area})
+
+        if not filtered:
             return jsonify({
-                "is_human_face": False,
-                "confidence": 0.0,
-                "faces_detected": 0,
-                "reason": "No human face could be detected in the uploaded image. Please ensure your face is fully visible.",
-                "detector": detector_name
+                'is_human_face': False,
+                'confidence': 0.0,
+                'faces_detected': faces_detected,
+                'reason': 'No clear face detected (face too small or low confidence). Try a closer crop or higher-resolution photo.',
+                'detector': detector_name
             })
-            
-        if faces_detected > 1:
+
+        # pick primary by largest area and closeness to center
+        cx, cy = img_w / 2.0, img_h / 2.0
+        def score_primary(f):
+            center_x = (f['bbox'][0] + f['bbox'][2]) / 2.0
+            center_y = (f['bbox'][1] + f['bbox'][3]) / 2.0
+            dist = math.hypot(center_x - cx, center_y - cy)
+            # prefer larger and more centered faces
+            return f['area'] - (dist * 2.0)
+
+        filtered.sort(key=score_primary, reverse=True)
+        primary = filtered[0]
+
+        # count large faces
+        large_faces = [f for f in filtered if f['w'] >= min_face_px and f['h'] >= min_face_px]
+
+        # crop primary face with a small margin
+        x1, y1, x2, y2 = primary['bbox'][0], primary['bbox'][1], primary['bbox'][2], primary['bbox'][3]
+        pad_w = int(max(10, 0.15 * (x2 - x1)))
+        pad_h = int(max(10, 0.15 * (y2 - y1)))
+        sx, sy = max(0, x1 - pad_w), max(0, y1 - pad_h)
+        ex, ey = min(img_w, x2 + pad_w), min(img_h, y2 + pad_h)
+        face_crop = img[sy:ey, sx:ex]
+
+        # preprocessing
+        face_proc = _auto_gamma_correction(face_crop)
+        face_proc = _apply_clahe(face_proc)
+        face_proc = _denoise(face_proc)
+        gray = cv2.cvtColor(face_proc, cv2.COLOR_BGR2GRAY)
+        blur_metric = _laplacian_variance(gray)
+        contrast_metric = gray.std()
+
+        # blurry checks
+        if blur_metric < BLUR_REJECT:
             return jsonify({
-                "is_human_face": False,
-                "confidence": 0.0,
-                "faces_detected": faces_detected,
-                "reason": f"Multiple faces detected ({faces_detected}). Please upload a photo containing only the missing person.",
-                "detector": detector_name
+                'is_human_face': False,
+                'confidence': 0.0,
+                'faces_detected': faces_detected,
+                'reason': f'The face appears too blurry (sharpness score: {blur_metric:.1f}; required: >= {BLUR_REJECT:.1f}). Try a clearer close-up photo.',
+                'detector': detector_name,
+                'ai': {'blur': blur_metric, 'contrast': contrast_metric}
             })
-            
-        x, y, w, h = boxes[0]
-        ok, reason = _validate_face_quality(img, x, y, w, h)
-        
-        if not ok:
+
+        if contrast_metric < CONTRAST_REJECT:
             return jsonify({
-                "is_human_face": False,
-                "confidence": 0.0,
-                "faces_detected": 1,
-                "reason": reason,
-                "detector": detector_name
+                'is_human_face': False,
+                'confidence': 0.0,
+                'faces_detected': faces_detected,
+                'reason': f'The image contrast is too low (contrast score: {contrast_metric:.1f}; required: >= {CONTRAST_REJECT:.1f}). Please upload a clearer photo.',
+                'detector': detector_name,
+                'ai': {'blur': blur_metric, 'contrast': contrast_metric}
             })
-            
+
+        # build response; provide warnings rather than hard reject for multiple large faces
+        warning = None
+        if len(large_faces) > 1:
+            warning = f'Multiple large faces detected ({len(large_faces)}). Primary face selected automatically; consider cropping to the missing person.'
+
+        conf = float(primary.get('score', 0.0) or 0.9)
         return jsonify({
-            "is_human_face": True,
-            "confidence": 0.95,
-            "faces_detected": 1,
-            "detector": detector_name
+            'is_human_face': True,
+            'confidence': conf,
+            'faces_detected': faces_detected,
+            'detector': detector_name,
+            'warning': warning,
+            'ai': {'blur': blur_metric, 'contrast': contrast_metric, 'primary_box': primary['bbox']}
         })
         
     except Exception as e:
