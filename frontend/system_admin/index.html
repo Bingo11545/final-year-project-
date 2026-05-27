@@ -1260,20 +1260,39 @@
                             email: entry.changedByEmail,
                             profilePhoto: entry.changedByProfilePhoto
                         };
-                        const oldVals = escapeHtml(JSON.stringify(entry.oldValues || {}, null, 2));
-                        const newVals = escapeHtml(JSON.stringify(entry.newValues || {}, null, 2));
+                        const oldValsRaw = JSON.stringify(entry.oldValues || {}, null, 2);
+                        const newValsRaw = JSON.stringify(entry.newValues || {}, null, 2);
+                        const oldValsAttr = encodeURIComponent(oldValsRaw);
+                        const newValsAttr = encodeURIComponent(newValsRaw);
                         return `
                             <div class="admin-case-history-item">
                                 <div><strong>${getAdminText('admin_case_update_type', 'Update Type')}:</strong> ${highlightText(entry.changeType || 'edit')}</div>
                                 <div><strong>${getAdminText('admin_case_updated_by', 'Updated By')}:</strong> ${renderActorInline(actor, entry.changedByName)}</div>
                                 <div><strong>${getAdminText('admin_case_updated_at', 'Updated At')}:</strong> ${highlightText(formatDate(entry.changedAt))}</div>
-                                <div><strong>${getAdminText('admin_case_old_values', 'Old File')}:</strong><pre>${oldVals}</pre></div>
-                                <div><strong>${getAdminText('admin_case_new_values', 'Updated File')}:</strong><pre>${newVals}</pre></div>
+                                <div><strong>${getAdminText('admin_case_old_values', 'Old File')}:</strong><pre data-json="${oldValsAttr}"></pre></div>
+                                <div><strong>${getAdminText('admin_case_new_values', 'Updated File')}:</strong><pre data-json="${newValsAttr}"></pre></div>
                             </div>
                         `;
                     }).join('')}
                 </div>
             `;
+        }
+
+        function populateDataJsonPre(container) {
+            try {
+                const root = container || document;
+                (root.querySelectorAll('pre[data-json]') || []).forEach((pre) => {
+                    const raw = pre.dataset.json || '';
+                    try {
+                        const parsed = JSON.parse(decodeURIComponent(raw || '%7B%7D'));
+                        pre.textContent = JSON.stringify(parsed, null, 2);
+                    } catch (e) {
+                        pre.textContent = decodeURIComponent(raw || '%7B%7D');
+                    }
+                });
+            } catch (e) {
+                // ignore
+            }
         }
 
         function buildSearchBlob(person, field) {
@@ -1629,6 +1648,8 @@
                 </div>
             `;
             }).join('');
+            // populate any JSON placeholders inside generated HTML
+            populateDataJsonPre(logEl);
         }
 
         function renderActivityLog(items) {
@@ -1680,13 +1701,13 @@
                         <span><strong>Email:</strong> ${escapeHtml(actor.email || item.actorEmail || na())}</span>
                         <span><strong>Time:</strong> ${escapeHtml(formatDate(item.createdAt))}</span>
                         ${hasOldUpdated ? '<div class="admin-activity-json-title">Old File</div>' : ''}
-                        ${hasOldUpdated ? `<pre>${prettyJson(oldFileObj)}</pre>` : ''}
+                        ${hasOldUpdated ? `<pre data-json="${encodeURIComponent(JSON.stringify(oldFileObj || {}))}"></pre>` : ''}
                         ${hasOldUpdated ? '<div class="admin-activity-json-title">Updated File</div>' : ''}
-                        ${hasOldUpdated ? `<pre>${prettyJson(updatedFileObj)}</pre>` : ''}
+                        ${hasOldUpdated ? `<pre data-json="${encodeURIComponent(JSON.stringify(updatedFileObj || {}))}"></pre>` : ''}
                         <div class="admin-activity-json-title">Target (JSON)</div>
-                        <pre>${prettyJson(targetObj)}</pre>
+                        <pre data-json="${encodeURIComponent(JSON.stringify(targetObj || {}))}"></pre>
                         <div class="admin-activity-json-title">Details (JSON)</div>
-                        <pre>${prettyJson(detailsObj)}</pre>
+                        <pre data-json="${encodeURIComponent(JSON.stringify(detailsObj || {}))}"></pre>
                         <button
                             class="btn btn-sm admin-activity-view"
                             type="button"
@@ -1698,6 +1719,9 @@
                     </div>
                 `;
             }).join('');
+
+            // Populate any generated pre[data-json] elements with safe text content
+            populateDataJsonPre(activityEl);
 
             if (summaryEl) summaryEl.textContent = `Showing ${items.length} activity record(s).`;
         }
