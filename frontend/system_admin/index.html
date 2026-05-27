@@ -870,7 +870,7 @@
                                     <dl style="display:grid; gap:6px; margin:0; color:var(--text-secondary);">
                                         <div><dt style="font-weight:700; display:inline;">Update Type:</dt> <dd style="display:inline; margin:0;">approve-report</dd></div>
                                         <div><dt style="font-weight:700; display:inline;">Updated By:</dt> <dd style="display:inline; margin:0;">police try (Law Enforcement) - haileyesustadilo@gmail.com</dd></div>
-                                        <div><dt style="font-weight:700; display:inline;">Updated At:</dt> <dd style="display:inline; margin:0;">5/24/2026, 9:15:03 AM</dd></div>
+                                        <div><dt style="font-weight:700; display:inline;">Updated At:</dt> <dd style="display:inline; margin:0;">5/24/2026, 12:15:03 PM</dd></div>
                                     </dl>
                                     <div style="margin-top: 14px;">
                                         <div style="font-weight:700; margin-bottom:6px;">Old File</div>
@@ -883,7 +883,7 @@
                                 </div>
                                 <div>
                                     <h5 style="margin:0 0 12px; color:var(--text-primary);">User View (Target JSON)</h5>
-                                                                        <pre class="admin-demo-json" data-json="%7B%0A%20%20%22status%22%3A%20%22missing%22%2C%0A%20%20%22approvedBy%22%3A%20%22police%20try%22%2C%0A%20%20%22approvedAt%22%3A%20%222026-05-24T09%3A15%3A03.000Z%22%0A%7D"></pre>
+                                                                        <pre class="admin-demo-json" data-json="%7B%22status%22%3A%22missing%22%2C%22approvedBy%22%3A%22police%20try%22%2C%22approvedAt%22%3A%222026-05-24T12%3A15%3A03.000Z%22%7D"></pre>
                                 </div>
                             </div>
                             <div class="admin-demo-footer">
@@ -1289,8 +1289,12 @@
                     const raw = pre.dataset.json || '';
                     try {
                         const parsed = JSON.parse(decodeURIComponent(raw || '%7B%7D'));
+                        // If this is a demo boolean isApproved block, render as plain true/false
+                        if (pre.classList && pre.classList.contains('admin-demo-json') && parsed && typeof parsed === 'object' && Object.prototype.hasOwnProperty.call(parsed, 'isApproved') && Object.keys(parsed).length === 1) {
+                            pre.outerHTML = `<span class="admin-demo-bool">${escapeHtml(String(parsed.isApproved))}</span>`;
+                        }
                         // If this is a demo user-view JSON block, render as friendly lines instead of raw JSON
-                        if (pre.classList && pre.classList.contains('admin-demo-json') && parsed && typeof parsed === 'object' && (parsed.status || parsed.approvedBy || parsed.approvedAt)) {
+                        else if (pre.classList && pre.classList.contains('admin-demo-json') && parsed && typeof parsed === 'object' && (parsed.status || parsed.approvedBy || parsed.approvedAt)) {
                             const parts = [];
                             if (Object.prototype.hasOwnProperty.call(parsed, 'status')) {
                                 parts.push(`<div><strong>${getAdminText('admin_missing_status','Status')}:</strong> ${escapeHtml(parsed.status)}</div>`);
