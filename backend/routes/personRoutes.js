@@ -782,6 +782,8 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
             const existingMissing = await store.listPeople(
               (p) => p.status === 'Missing' && Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length
             );
+            // collect a flag if we encounter a borderline match
+            let flaggedDuplicateInfo = null;
             for (const other of existingMissing) {
               const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
               const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
@@ -801,14 +803,16 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
               }
 
               if (sim >= DUPLICATE_REVIEW) {
-                // Flag for manual review rather than hard block
-                return res.status(200).json({
-                  msg: 'Potential duplicate detected. Your report is saved but pending review.',
-                  flaggedDuplicate: true,
-                  matchedPersonId: other._id,
-                  similarity: sim
-                });
+                // prepare flag info to persist after saving
+                flaggedDuplicateInfo = { matchedPersonId: other._id, similarity: sim };
+                break;
               }
+            }
+
+            // attach any flag info to payload so it can be persisted later
+            if (flaggedDuplicateInfo) {
+              payload.flaggedDuplicate = true;
+              payload.flaggedDuplicateInfo = flaggedDuplicateInfo;
             }
           }
         }
@@ -985,6 +989,22 @@ router.put('/:id', auth(), async (req, res) => {
     });
 
     return res.json(updated);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+// Admin endpoint: list flagged potential duplicates for review
+router.get('/flagged-duplicates', auth(), async (req, res) => {
+  try {
+    // only admin or law enforcement can review flags
+    if (!['admin', 'law_enforcement'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    const flagged = await store.listPeople((p) => p.flaggedDuplicate === true);
+    return res.json({ total: flagged.length, items: flagged });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server Error' });
