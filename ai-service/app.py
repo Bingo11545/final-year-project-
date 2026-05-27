@@ -81,10 +81,11 @@ atexit.register(_save_faiss)
 DET_CONF = 0.5
 MIN_FACE_PX_RATIO = 0.12
 MIN_FACE_PX_ABS = 80
-BLUR_REJECT = 25.0
+# We keep warning thresholds reasonably high, but only reject on extreme values
 BLUR_WARN = 40.0
-CONTRAST_REJECT = 12.0
+BLUR_REJECT_EXTREME = 5.0
 CONTRAST_WARN = 20.0
+CONTRAST_REJECT_EXTREME = 3.0
 
 
 def _temp_file_path(prefix, filename):
@@ -170,14 +171,16 @@ def _validate_face_quality(img, x, y, w, h):
     if face_w < 50 or face_h < 50:
         return False, f"The face in the image is too small or low-resolution ({face_w}x{face_h}px). Please upload a high-quality close-up photo."
 
-    is_blurry_flag, fm = _is_blurry(face_img, threshold=75.0)
-    if is_blurry_flag:
-        return False, f"The face in the image is too blurry (sharpness score: {fm:.1f}, required: >= 75.0). Please upload a sharp, high-resolution photo."
+    # Tolerant validation: reject only on extreme unreadable images.
+    is_blurry_flag, fm = _is_blurry(face_img, threshold=BLUR_WARN)
+    if fm < BLUR_REJECT_EXTREME:
+        return False, f"The face in the image is extremely blurry or unreadable (sharpness score: {fm:.1f})."
 
-    is_low_c, std_dev = _is_low_contrast(face_img, threshold=20.0)
-    if is_low_c:
-        return False, f"The image contrast is too low (contrast score: {std_dev:.1f}, required: >= {20.0:.1f}). Please upload a clear photo with good lighting and contrast."
+    is_low_c, std_dev = _is_low_contrast(face_img, threshold=CONTRAST_WARN)
+    if std_dev < CONTRAST_REJECT_EXTREME:
+        return False, f"The image contrast is extremely low ({std_dev:.1f}); the image appears unreadable."
 
+    # Otherwise accept; minor blur/contrast issues are tolerated.
     return True, None
 
 
@@ -544,39 +547,51 @@ def validate_face():
         blur_metric = _laplacian_variance(gray)
         contrast_metric = gray.std()
 
-        # blurry checks
-        if blur_metric < BLUR_REJECT:
+        # Tolerant handling: only reject on extreme unreadable metrics; otherwise return warnings
+        warnings = []
+        if blur_metric < BLUR_REJECT_EXTREME:
             return jsonify({
                 'is_human_face': False,
                 'confidence': 0.0,
                 'faces_detected': faces_detected,
-                'reason': f'The face appears too blurry (sharpness score: {blur_metric:.1f}; required: >= {BLUR_REJECT:.1f}). Try a clearer close-up photo.',
+                'reason': 'Uploaded image is extremely blurry and unreadable. Please provide a clearer photo.',
                 'detector': detector_name,
                 'ai': {'blur': blur_metric, 'contrast': contrast_metric}
             })
+        elif blur_metric < BLUR_WARN:
+            warnings.append(f'The face appears somewhat blurry (sharpness: {blur_metric:.1f}); matching may be less accurate.')
 
-        if contrast_metric < CONTRAST_REJECT:
+        if contrast_metric < CONTRAST_REJECT_EXTREME:
             return jsonify({
                 'is_human_face': False,
                 'confidence': 0.0,
                 'faces_detected': faces_detected,
-                'reason': f'The image contrast is too low (contrast score: {contrast_metric:.1f}; required: >= {CONTRAST_REJECT:.1f}). Please upload a clearer photo.',
+                'reason': 'Uploaded image has extremely low contrast and appears unreadable. Please provide a clearer photo.',
                 'detector': detector_name,
                 'ai': {'blur': blur_metric, 'contrast': contrast_metric}
             })
+        elif contrast_metric < CONTRAST_WARN:
+            warnings.append(f'The image contrast is somewhat low (contrast: {contrast_metric:.1f}); consider improving lighting.')
 
         # build response; provide warnings rather than hard reject for multiple large faces
-        warning = None
+        multi_face_warning = None
         if len(large_faces) > 1:
-            warning = f'Multiple large faces detected ({len(large_faces)}). Primary face selected automatically; consider cropping to the missing person.'
+            multi_face_warning = f'Multiple large faces detected ({len(large_faces)}). Primary face selected automatically; consider cropping to the missing person.'
 
         conf = float(primary.get('score', 0.0) or 0.9)
+        combined_warning = None
+        const_warnings = [w for w in warnings if w]
+        if multi_face_warning:
+            const_warnings.append(multi_face_warning)
+        if const_warnings:
+            combined_warning = ' '.join(const_warnings)
+
         return jsonify({
             'is_human_face': True,
             'confidence': conf,
             'faces_detected': faces_detected,
             'detector': detector_name,
-            'warning': warning,
+            'warning': combined_warning,
             'ai': {'blur': blur_metric, 'contrast': contrast_metric, 'primary_box': primary['bbox']}
         })
         
