@@ -789,59 +789,52 @@
                     <div class="admin-section-block">
                         <div class="admin-section-head">
                             <h3 data-key="admin_reviewed_title">Reviewed Requests</h3>
-        <!-- DEMO: Approval Status, Update Log, User View, and AI Image Analysis Note -->
-        <div class="admin-case-log-card" style="margin-bottom: 24px; border: 2px solid #38bdf8;">
-            <h4 style="color:#0ea5e9;">Case Approval Status Demo</h4>
-            <div style="margin-bottom: 10px;">
-                <strong>Status:</strong>
-                <span class="admin-status-pill admin-status-pending">Not Approved</span>
-                <span style="margin: 0 8px;">→</span>
-                <span class="admin-status-pill admin-status-approved">Approved by Police Admin</span>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <strong>Approval Update Log:</strong>
-                <div class="admin-case-history-item" style="margin-top: 8px;">
-                    <div><strong>Update Type:</strong> approve-report</div>
-                    <div><strong>Updated By:</strong> police try (Law Enforcement) - haileyesustadilo@gmail.com</div>
-                    <div><strong>Updated At:</strong> 5/24/2026, 9:15:03 AM</div>
-                    <div><strong>Old File:</strong><pre>{
                         </div>
-                        <div class="admin-review-columns">
-                    <div><strong>Updated File:</strong><pre>{
-                            <div>
-                                <div class="admin-section-head">
-                </div>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <strong>User View (Target JSON):</strong>
-                <pre style="background:#f1f5f9; color:#0f172a; border-radius:8px; padding:8px;">{
-                                    <h3 data-key="admin_approved_list_title">Approved Requests</h3>
-                                </div>
-                <strong>User View (Details JSON):</strong>
-                <pre style="background:#f1f5f9; color:#0f172a; border-radius:8px; padding:8px;">{
-                                <div id="reviewed-approved-list" class="grid-container">
-                                    <div class="loading-indicator loading-full">
-                                        <div class="spinner"></div>
-                                        <span data-key="admin_loading_history">Loading review history...</span>
-            </div>
-            <div style="margin-bottom: 0;">
-                <strong>AI Image Analysis:</strong>
-                <span>All images in the database will be analyzed by AI to check similarity and show the most similar ones.</span>
-            </div>
-        </div>
-                                    </div>
+                        <div class="admin-case-log-card" style="margin-bottom: 24px; border: 2px solid #38bdf8;">
+                            <h4 style="color:#0ea5e9; margin-bottom: 0.75rem;">Case Approval Status Demo</h4>
+                            <div style="margin-bottom: 10px;">
+                                <strong>Status:</strong>
+                                <span class="admin-status-pill admin-status-pending">Not Approved</span>
+                                <span style="margin: 0 8px;">→</span>
+                                <span class="admin-status-pill admin-status-approved">Approved by Police Admin</span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong>Approval Update Log:</strong>
+                                <div class="admin-case-history-item" style="margin-top: 8px;">
+                                    <div><strong>Update Type:</strong> approve-report</div>
+                                    <div><strong>Updated By:</strong> police try (Law Enforcement) - haileyesustadilo@gmail.com</div>
+                                    <div><strong>Updated At:</strong> 5/24/2026, 9:15:03 AM</div>
+                                    <div><strong>Old File:</strong></div>
+                                    <pre>{ "isApproved": false }</pre>
+                                    <div><strong>Updated File:</strong></div>
+                                    <pre>{ "isApproved": true }</pre>
                                 </div>
                             </div>
-                            <div>
-                                <div class="admin-section-head">
-                                    <h3 data-key="admin_rejected_list_title">Declined Requests</h3>
-                                </div>
-                                <div id="reviewed-rejected-list" class="grid-container">
-                                    <div class="loading-indicator loading-full">
-                                        <div class="spinner"></div>
-                                        <span data-key="admin_loading_history">Loading review history...</span>
-                                    </div>
-                                </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong>User View (Target JSON):</strong>
+                                <pre style="background:#f1f5f9; color:#0f172a; border-radius:8px; padding:8px;">{ "status": "missing", "approvedBy": "police try", "approvedAt": "2026-05-24T09:15:03.000Z" }</pre>
+                            </div>
+                            <div style="margin-bottom: 0;">
+                                <strong>AI Image Analysis:</strong>
+                                <span>All images in the database are analyzed by AI to find visually similar matches across reviewed cases.</span>
+                            </div>
+                        </div>
+                        <div class="admin-section-head" style="margin-top: 16px;">
+                            <h3 data-key="admin_approved_list_title">Approved Requests</h3>
+                        </div>
+                        <div id="reviewed-approved-list" class="grid-container">
+                            <div class="loading-indicator loading-full">
+                                <div class="spinner"></div>
+                                <span data-key="admin_loading_history">Loading review history...</span>
+                            </div>
+                        </div>
+                        <div class="admin-section-head" style="margin-top: 24px;">
+                            <h3 data-key="admin_rejected_list_title">Declined Requests</h3>
+                        </div>
+                        <div id="reviewed-rejected-list" class="grid-container">
+                            <div class="loading-indicator loading-full">
+                                <div class="spinner"></div>
+                                <span data-key="admin_loading_history">Loading review history...</span>
                             </div>
                         </div>
                         <div class="admin-section-head" style="margin-top: 16px;">
