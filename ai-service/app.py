@@ -6,6 +6,8 @@ import numpy as np
 from uuid import uuid4
 import math
 import traceback
+import json
+import atexit
 
 app = Flask(__name__)
 CORS(app)
@@ -21,6 +23,40 @@ try:
     face_app.prepare(ctx_id=-1, det_size=(640, 640))
 except Exception:
     HAS_INSIGHTFACE = False
+
+# Optional FAISS for fast nearest neighbor search
+HAS_FAISS = False
+faiss_index = None
+faiss_meta = []
+FAISS_INDEX_PATH = 'faiss.index'
+FAISS_META_PATH = 'faiss_meta.json'
+try:
+    import faiss
+    HAS_FAISS = True
+except Exception:
+    HAS_FAISS = False
+
+def _save_faiss():
+    try:
+        if HAS_FAISS and faiss_index is not None:
+            faiss.write_index(faiss_index, FAISS_INDEX_PATH)
+            with open(FAISS_META_PATH, 'w', encoding='utf-8') as f:
+                json.dump(faiss_meta, f)
+    except Exception:
+        traceback.print_exc()
+
+def _load_faiss():
+    global faiss_index, faiss_meta
+    try:
+        if HAS_FAISS and os.path.exists(FAISS_INDEX_PATH) and os.path.exists(FAISS_META_PATH):
+            faiss_index = faiss.read_index(FAISS_INDEX_PATH)
+            with open(FAISS_META_PATH, 'r', encoding='utf-8') as f:
+                faiss_meta = json.load(f)
+    except Exception:
+        traceback.print_exc()
+
+_load_faiss()
+atexit.register(_save_faiss)
 
 # Detection / quality thresholds (tune on your dataset)
 DET_CONF = 0.5
@@ -188,6 +224,92 @@ def _cosine_similarity(vec_a, vec_b):
     if denom == 0:
         return 0.0
     return float(np.dot(a, b) / denom)
+
+
+# ============================================================
+#  FAISS / Indexing endpoints
+# ============================================================
+@app.route('/index-add', methods=['POST'])
+def index_add():
+    try:
+        data = request.get_json() or {}
+        pid = data.get('id')
+        emb = data.get('embedding')
+        if not pid or not emb:
+            return jsonify({'error': 'id and embedding required'}), 400
+
+        vec = np.array(emb, dtype=np.float32)
+        # normalize for cosine similarity using inner product
+        n = np.linalg.norm(vec) or 1.0
+        vec = (vec / n).astype('float32')
+
+        if HAS_FAISS:
+            global faiss_index, faiss_meta
+            d = vec.shape[0]
+            if faiss_index is None:
+                faiss_index = faiss.IndexFlatIP(d)
+                faiss_meta = []
+            faiss_index.add(np.expand_dims(vec, axis=0))
+            faiss_meta.append({'id': pid})
+            _save_faiss()
+            return jsonify({'ok': True, 'indexed': True})
+        else:
+            # fallback: persist to meta list in file
+            faiss_meta.append({'id': pid, 'embedding': vec.tolist()})
+            with open(FAISS_META_PATH, 'w', encoding='utf-8') as f:
+                json.dump(faiss_meta, f)
+            return jsonify({'ok': True, 'indexed': False, 'note': 'faiss not available, stored meta'})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/index-search', methods=['POST'])
+def index_search():
+    try:
+        data = request.get_json() or {}
+        emb = data.get('embedding')
+        k = int(data.get('k') or 5)
+        if not emb:
+            return jsonify({'error': 'embedding required'}), 400
+        vec = np.array(emb, dtype=np.float32)
+        n = np.linalg.norm(vec) or 1.0
+        vec = (vec / n).astype('float32')
+
+        if HAS_FAISS and faiss_index is not None and faiss_index.ntotal > 0:
+            D, I = faiss_index.search(np.expand_dims(vec, axis=0), k)
+            results = []
+            for dist, idx in zip(D[0].tolist(), I[0].tolist()):
+                if idx < 0 or idx >= len(faiss_meta):
+                    continue
+                meta = faiss_meta[idx]
+                results.append({ 'id': meta.get('id'), 'similarity': float(dist) })
+            return jsonify({'results': results})
+        else:
+            # fallback linear search
+            candidates = []
+            if os.path.exists(FAISS_META_PATH):
+                with open(FAISS_META_PATH, 'r', encoding='utf-8') as f:
+                    try:
+                        items = json.load(f)
+                    except Exception:
+                        items = faiss_meta
+            else:
+                items = faiss_meta
+
+            for it in items:
+                other_emb = it.get('embedding') or it.get('vec')
+                if not other_emb:
+                    continue
+                sim = _cosine_similarity(vec, np.array(other_emb, dtype=np.float32))
+                candidates.append({'id': it.get('id'), 'similarity': float(sim)})
+
+            candidates.sort((lambda a, b: -1 if a['similarity'] > b['similarity'] else 1))
+            return jsonify({'results': candidates[:k]})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 
 # Mock database of embeddings for demonstration if DB not connected directly here
 # In production, this service would fetch known embeddings from the DB or a vector DB
