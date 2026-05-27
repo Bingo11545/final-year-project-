@@ -1072,6 +1072,76 @@ router.post('/:id/flagged-resolve', auth(), async (req, res) => {
   }
 });
 
+// Admin endpoint: merge a flagged person into an existing person record
+router.post('/:id/merge', auth(), async (req, res) => {
+  try {
+    if (!['admin', 'law_enforcement'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    const person = await store.getPersonById(req.params.id);
+    if (!person) return res.status(404).json({ msg: 'Not found' });
+
+    const matchedId = String(req.body.matchedPersonId || '').trim();
+    if (!matchedId) return res.status(400).json({ msg: 'matchedPersonId is required' });
+
+    const matched = await store.getPersonById(matchedId);
+    if (!matched) return res.status(404).json({ msg: 'Matched person not found' });
+
+    const reviewer = await store.getUserById(req.user.id);
+
+    // fields to merge: prefer existing matched values, fill empty from person
+    const mergeFields = ['fullName','description','city','region','lastSeenDate','contactPhone','status','classification','age','gender','height','weight','eyeColor','hairColor','race','distinguishingMarks','socialMediaAccounts','vehicleInformation'];
+    const patch = {};
+    mergeFields.forEach((f) => {
+      if ((!matched[f] || matched[f] === '') && person[f]) patch[f] = person[f];
+    });
+
+    // merge images
+    const matchedImages = Array.isArray(matched.images) ? matched.images.slice() : [];
+    const personImages = Array.isArray(person.images) ? person.images.slice() : [];
+    const existing = new Set(matchedImages.map((i) => i.url));
+    const additions = personImages.filter((i) => !existing.has(i.url));
+    patch.images = [...matchedImages, ...additions];
+
+    // merge changeHistory
+    patch.changeHistory = [...(Array.isArray(matched.changeHistory) ? matched.changeHistory : []), ...(Array.isArray(person.changeHistory) ? person.changeHistory : [])].slice(-100);
+
+    // merged metadata
+    patch.mergedFrom = [...(Array.isArray(matched.mergedFrom) ? matched.mergedFrom : []), person._id];
+    patch.mergedAt = new Date().toISOString();
+    patch.mergedBy = req.user.id;
+    patch.mergedByName = reviewer?.username || null;
+
+    const updatedMatched = await store.updatePerson(matchedId, patch);
+
+    // mark original as merged
+    const originalPatch = {
+      mergedInto: matchedId,
+      mergedAt: new Date().toISOString(),
+      mergedBy: req.user.id,
+      flaggedDuplicate: false
+    };
+    const updatedOriginal = await store.updatePerson(person._id, originalPatch);
+
+    // update AI index for matched person if embeddings available
+    try {
+      if (Array.isArray(updatedMatched.faceEmbeddings) && updatedMatched.faceEmbeddings.length) {
+        await axios.post(`${AI_SERVICE_URL}/index-add`, { id: matchedId, embedding: updatedMatched.faceEmbeddings }, { timeout: 8000 });
+      }
+    } catch (e) {
+      console.error('Index update after merge failed:', e.message || e);
+    }
+
+    await logActivity('records-merged', reviewer, { fromPersonId: person._id, toPersonId: matchedId }, {});
+
+    return res.json({ ok: true, mergedInto: updatedMatched, original: updatedOriginal });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 router.put('/:id/approve', auth(), async (req, res) => {
   try {
     if (!['law_enforcement', 'admin'].includes(req.user.role)) {
