@@ -288,8 +288,7 @@
     flex-shrink: 0;
 }
 
-/* Hide desktop theme toggle; show only on mobile (hamburger) */
-.theme-toggle-btn { display: none; }
+/* Desktop theme toggle is visible in the navbar */
 
 .theme-toggle-btn:hover {
     background: var(--bg-card-hover);

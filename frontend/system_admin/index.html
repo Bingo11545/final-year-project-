@@ -298,6 +298,69 @@
             border: 1px solid rgba(148,163,184,0.25);
         }
 
+        .admin-demo-card {
+            background: rgba(14,165,233,0.1);
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 16px 40px rgba(15,23,42,0.06);
+        }
+
+        .admin-demo-card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .admin-demo-status-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 18px;
+            font-size: 0.95rem;
+        }
+
+        .admin-demo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .admin-demo-json {
+            background: rgba(255,255,255,0.92);
+            color: #0f172a;
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid rgba(148,163,184,0.25);
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .admin-demo-history {
+            background: rgba(255,255,255,0.92);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(148,163,184,0.25);
+        }
+
+        .admin-demo-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 900px) {
+            .admin-demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .admin-activity-log {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -790,31 +853,40 @@
                         <div class="admin-section-head">
                             <h3 data-key="admin_reviewed_title">Reviewed Requests</h3>
                         </div>
-                        <div class="admin-case-log-card" style="margin-bottom: 24px; border: 2px solid #38bdf8;">
-                            <h4 style="color:#0ea5e9; margin-bottom: 0.75rem;">Case Approval Status Demo</h4>
-                            <div style="margin-bottom: 10px;">
+                        <div class="admin-case-log-card admin-demo-card" style="margin-bottom: 24px; border: 2px solid #38bdf8;">
+                            <div class="admin-demo-card-header">
+                                <h4 style="color:#0ea5e9; margin:0;">Case Approval Status Demo</h4>
+                                <p style="margin:0; color:var(--text-secondary);">This sample shows how a case moves from not approved to police-approved status, including update history and visible user payload.</p>
+                            </div>
+                            <div class="admin-demo-status-row">
                                 <strong>Status:</strong>
                                 <span class="admin-status-pill admin-status-pending">Not Approved</span>
                                 <span style="margin: 0 8px;">→</span>
                                 <span class="admin-status-pill admin-status-approved">Approved by Police Admin</span>
                             </div>
-                            <div style="margin-bottom: 10px;">
-                                <strong>Approval Update Log:</strong>
-                                <div class="admin-case-history-item" style="margin-top: 8px;">
-                                    <div><strong>Update Type:</strong> approve-report</div>
-                                    <div><strong>Updated By:</strong> police try (Law Enforcement) - haileyesustadilo@gmail.com</div>
-                                    <div><strong>Updated At:</strong> 5/24/2026, 9:15:03 AM</div>
-                                    <div><strong>Old File:</strong></div>
-                                    <pre>{ "isApproved": false }</pre>
-                                    <div><strong>Updated File:</strong></div>
-                                    <pre>{ "isApproved": true }</pre>
+                            <div class="admin-demo-grid">
+                                <div>
+                                    <strong>Approval Update Log</strong>
+                                    <div class="admin-case-history-item admin-demo-history" style="margin-top: 8px;">
+                                        <div><strong>Update Type:</strong> approve-report</div>
+                                        <div><strong>Updated By:</strong> police try (Law Enforcement) - haileyesustadilo@gmail.com</div>
+                                        <div><strong>Updated At:</strong> 5/24/2026, 9:15:03 AM</div>
+                                        <div style="margin-top: 10px;"><strong>Old File:</strong></div>
+                                        <pre>{ "isApproved": false }</pre>
+                                        <div style="margin-top: 10px;"><strong>Updated File:</strong></div>
+                                        <pre>{ "isApproved": true }</pre>
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>User View (Target JSON)</strong>
+                                    <pre class="admin-demo-json">{
+  "status": "missing",
+  "approvedBy": "police try",
+  "approvedAt": "2026-05-24T09:15:03.000Z"
+}</pre>
                                 </div>
                             </div>
-                            <div style="margin-bottom: 10px;">
-                                <strong>User View (Target JSON):</strong>
-                                <pre style="background:#f1f5f9; color:#0f172a; border-radius:8px; padding:8px;">{ "status": "missing", "approvedBy": "police try", "approvedAt": "2026-05-24T09:15:03.000Z" }</pre>
-                            </div>
-                            <div style="margin-bottom: 0;">
+                            <div class="admin-demo-footer">
                                 <strong>AI Image Analysis:</strong>
                                 <span>All images in the database are analyzed by AI to find visually similar matches across reviewed cases.</span>
                             </div>
