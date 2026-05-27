@@ -1260,13 +1260,21 @@
                         const newValsRaw = JSON.stringify(entry.newValues || {}, null, 2);
                         const oldValsAttr = encodeURIComponent(oldValsRaw);
                         const newValsAttr = encodeURIComponent(newValsRaw);
+                        const hasOldIsApproved = entry.oldValues && Object.prototype.hasOwnProperty.call(entry.oldValues, 'isApproved');
+                        const hasNewIsApproved = entry.newValues && Object.prototype.hasOwnProperty.call(entry.newValues, 'isApproved');
+                        const oldHtml = hasOldIsApproved
+                            ? `<span>${escapeHtml(String(entry.oldValues.isApproved === true || entry.oldValues.isApproved === 'true'))}</span>`
+                            : `<pre data-json="${oldValsAttr}"></pre>`;
+                        const newHtml = hasNewIsApproved
+                            ? `<span>${escapeHtml(String(entry.newValues.isApproved === true || entry.newValues.isApproved === 'true'))}</span>`
+                            : `<pre data-json="${newValsAttr}"></pre>`;
                         return `
                             <div class="admin-case-history-item">
                                 <div><strong>${getAdminText('admin_case_update_type', 'Update Type')}:</strong> ${highlightText(entry.changeType || 'edit')}</div>
                                 <div><strong>${getAdminText('admin_case_updated_by', 'Updated By')}:</strong> ${renderActorInline(actor, entry.changedByName)}</div>
                                 <div><strong>${getAdminText('admin_case_updated_at', 'Updated At')}:</strong> ${highlightText(formatDate(entry.changedAt))}</div>
-                                <div><strong>${getAdminText('admin_case_old_values', 'Old File')}:</strong><pre data-json="${oldValsAttr}"></pre></div>
-                                <div><strong>${getAdminText('admin_case_new_values', 'Updated File')}:</strong><pre data-json="${newValsAttr}"></pre></div>
+                                <div><strong>${getAdminText('admin_case_old_values', 'Old File')}:</strong>${oldHtml}</div>
+                                <div><strong>${getAdminText('admin_case_new_values', 'Updated File')}:</strong>${newHtml}</div>
                             </div>
                         `;
                     }).join('')}
