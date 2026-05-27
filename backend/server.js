@@ -7,10 +7,10 @@ dotenv.config();
 const app = express();
 
 // Middleware
-const frontendOrigin = process.env.FRONTEND_URL || 'https://missingpersonfinder.netlify.app';
+const frontendOrigin = process.env.FRONTEND_URL || 'https://missingpersonfinder-beryl.vercel.app/';
 const allowedOrigins = [
     frontendOrigin,
-    'https://missingpersonfinder.netlify.app'
+    'https://missingpersonfinder-beryl.vercel.app/'
 ].filter(Boolean);
 
 app.use(cors({
