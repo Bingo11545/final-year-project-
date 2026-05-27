@@ -36,6 +36,16 @@ try:
 except Exception:
     HAS_FAISS = False
 
+# Optional MediaPipe lightweight detector (fallback when insightface not available)
+HAS_MEDIAPIPE = False
+mp_face = None
+try:
+    import mediapipe as mp
+    HAS_MEDIAPIPE = True
+    mp_face = mp.solutions.face_detection
+except Exception:
+    HAS_MEDIAPIPE = False
+
 def _save_faiss():
     try:
         if HAS_FAISS and faiss_index is not None:
@@ -176,6 +186,27 @@ def _face_boxes_from_path(img_path):
             return img, boxes
     except Exception:
         # fall through to OpenCV fallback
+        traceback.print_exc()
+
+    # Try MediaPipe if available (lighter-weight, often more accurate than Haar cascades)
+    try:
+        if HAS_MEDIAPIPE and mp_face is not None:
+            with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.4) as detector:
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                results = detector.process(img_rgb)
+                boxes = []
+                if results.detections:
+                    h, w = img.shape[:2]
+                    for d in results.detections:
+                        loc = d.location_data.relative_bounding_box
+                        x = int(loc.xmin * w)
+                        y = int(loc.ymin * h)
+                        bw = int(loc.width * w)
+                        bh = int(loc.height * h)
+                        boxes.append((x, y, bw, bh))
+                if boxes:
+                    return img, boxes
+    except Exception:
         traceback.print_exc()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
