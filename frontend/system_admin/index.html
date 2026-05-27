@@ -1766,6 +1766,8 @@
                             <div style="margin-top:8px;"><strong>Flagged Match:</strong> ${escapeHtml(matched.matchedPersonId || 'N/A')} (Similarity: ${matched.similarity ? (matched.similarity * 100).toFixed(1) + '%' : 'N/A'})</div>
                             <div style="margin-top:8px;">
                                 <button class="btn btn-sm" onclick="openPersonDetail('${p._id}')">Open</button>
+                                <button class="btn btn-sm" style="margin-left:8px; background:#ef4444; color:#fff;" onclick="resolveFlagged('${p._id}','dismiss')">Dismiss</button>
+                                <button class="btn btn-sm" style="margin-left:8px; background:#10b981; color:#fff;" onclick="resolveFlagged('${p._id}','confirm','${escapeHtml(matched.matchedPersonId || '')}')">Confirm Duplicate</button>
                             </div>
                         </div>
                     </div>
@@ -1776,6 +1778,31 @@
 
         function openPersonDetail(id) {
             window.open(`${FRONTEND_ORIGIN}/user/case.html?id=${id}`, '_blank');
+        }
+
+        async function resolveFlagged(personId, action, matchedId) {
+            const btnBackup = document.activeElement;
+            try {
+                const payload = { action };
+                if (matchedId) payload.matchedPersonId = matchedId;
+                const res = await fetch(`${BACKEND_ORIGIN}/api/people/${personId}/flagged-resolve`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    return alert('Failed to resolve flagged duplicate: ' + (body.msg || res.statusText));
+                }
+                // refresh the flagged list
+                await fetchFlaggedDuplicates();
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred while resolving the flagged duplicate.');
+            } finally {
+                try { if (btnBackup && btnBackup.focus) btnBackup.focus(); } catch (e) {}
+            }
         }
 
         function renderActivityLog(items) {

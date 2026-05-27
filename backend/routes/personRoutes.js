@@ -1034,6 +1034,44 @@ router.get('/flagged-duplicates', auth(), async (req, res) => {
   }
 });
 
+// Admin endpoint: resolve a flagged duplicate (confirm or dismiss)
+router.post('/:id/flagged-resolve', auth(), async (req, res) => {
+  try {
+    if (!['admin', 'law_enforcement'].includes(req.user.role)) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    const person = await store.getPersonById(req.params.id);
+    if (!person) return res.status(404).json({ msg: 'Not found' });
+
+    const action = String(req.body.action || '').toLowerCase();
+    const reviewer = await store.getUserById(req.user.id);
+
+    const patch = {
+      flaggedDuplicate: false,
+      flaggedResolvedAt: new Date().toISOString(),
+      flaggedResolvedBy: req.user.id,
+      flaggedResolvedByName: reviewer?.username || null,
+      flaggedResolvedByRole: reviewer?.role || req.user.role
+    };
+
+    if (action === 'confirm' || action === 'confirm_duplicate' || action === 'confirm-duplicate') {
+      patch.duplicateConfirmed = true;
+      if (req.body.matchedPersonId) patch.duplicateMatchedPersonId = req.body.matchedPersonId;
+      await logActivity('flagged-duplicate-confirmed', reviewer, { personId: person._id }, { matchedPersonId: req.body.matchedPersonId || null });
+    } else {
+      patch.duplicateConfirmed = false;
+      await logActivity('flagged-duplicate-dismissed', reviewer, { personId: person._id }, {});
+    }
+
+    const updated = await store.updatePerson(req.params.id, patch);
+    return res.json({ ok: true, updated });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 router.put('/:id/approve', auth(), async (req, res) => {
   try {
     if (!['law_enforcement', 'admin'].includes(req.user.role)) {
