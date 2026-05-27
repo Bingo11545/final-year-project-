@@ -1278,9 +1278,14 @@
         function roleLabel(role) {
             if (role === 'law_enforcement') return 'Law Enforcement';
             if (role === 'authorized_org') return 'Authorized Organization';
-            if (role === 'user') return 'User';
+            if (role === 'user' || role === 'public_user') return 'User';
             if (role === 'admin') return 'Admin';
             return role || na();
+        }
+
+        function normalizeDirectoryRole(role) {
+            if (role === 'public_user') return 'user';
+            return role || '';
         }
 
         function formatDate(value) {
@@ -1668,7 +1673,8 @@
         function filterUsers(users, role, query) {
             const queryText = String(query || '').toLowerCase();
             return (users || []).filter((user) => {
-                const rolePass = role === 'all' || user.role === role;
+                const userRole = normalizeDirectoryRole(user.role);
+                const rolePass = role === 'all' || userRole === role;
                 const queryPass = !queryText || buildUserSearchBlob(user).includes(queryText);
                 return rolePass && queryPass;
             });
@@ -2162,7 +2168,8 @@
             currentUsersSearchQuery = query;
 
             const filtered = allUsersDirectoryItems.filter((user) => {
-                const rolePass = role === 'all' || user.role === role;
+                const userRole = normalizeDirectoryRole(user.role);
+                const rolePass = role === 'all' || userRole === role;
                 const queryPass = !query || buildUsersSearchBlob(user).includes(query);
                 return rolePass && queryPass;
             });
@@ -2188,9 +2195,9 @@
 
             if (countsEl) {
                 const totalUsers = allUsersDirectoryItems.length;
-                const policeAdmins = allUsersDirectoryItems.filter((u) => u.role === 'law_enforcement').length;
-                const authorizedOrgs = allUsersDirectoryItems.filter((u) => u.role === 'authorized_org').length;
-                const systemAdmins = allUsersDirectoryItems.filter((u) => u.role === 'admin').length;
+                const policeAdmins = allUsersDirectoryItems.filter((u) => normalizeDirectoryRole(u.role) === 'law_enforcement').length;
+                const authorizedOrgs = allUsersDirectoryItems.filter((u) => normalizeDirectoryRole(u.role) === 'authorized_org').length;
+                const systemAdmins = allUsersDirectoryItems.filter((u) => normalizeDirectoryRole(u.role) === 'admin').length;
 
                 countsEl.innerHTML = `
                     <div class="admin-user-count-card"><span class="admin-user-count-num">${totalUsers}</span><span class="admin-user-count-label">Total Users</span></div>
