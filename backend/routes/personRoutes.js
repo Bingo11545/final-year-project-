@@ -759,22 +759,36 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
           const norm = Math.sqrt(rawEmbedding.reduce((s, v) => s + (v * v), 0)) || 1;
           payload.faceEmbeddings = rawEmbedding.map((v) => v / norm);
 
-          // Global duplicate check using cosine similarity with safer thresholds
-          const allPeople = await store.listPeople(
-            (p) => Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length
-          );
-
-          for (const other of allPeople) {
-            const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
-            const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
-            const sim = cosineSimilarity(payload.faceEmbeddings, otherEmb);
-            if (sim >= DUPLICATE_HIGH) {
-              return res.status(400).json({
-                msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed.",
-                duplicate: true,
-                matchedPersonId: other._id,
-                similarity: sim
-              });
+          // Prefer fast index search via AI service if available
+          try {
+            const searchResp = await axios.post(`${AI_SERVICE_URL}/index-search`, { embedding: payload.faceEmbeddings, k: 6 }, { timeout: 10000 });
+            const results = (searchResp.data && searchResp.data.results) || [];
+            for (const r of results) {
+              const sim = Number(r.similarity || 0);
+              if (sim >= DUPLICATE_HIGH) {
+                return res.status(400).json({
+                  msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed.",
+                  duplicate: true,
+                  matchedPersonId: r.id,
+                  similarity: sim
+                });
+              }
+            }
+          } catch (e) {
+            // fallback to linear DB scan if index/search fails
+            const allPeople = await store.listPeople((p) => Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length);
+            for (const other of allPeople) {
+              const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
+              const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
+              const sim = cosineSimilarity(payload.faceEmbeddings, otherEmb);
+              if (sim >= DUPLICATE_HIGH) {
+                return res.status(400).json({
+                  msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed.",
+                  duplicate: true,
+                  matchedPersonId: other._id,
+                  similarity: sim
+                });
+              }
             }
           }
 
@@ -833,6 +847,15 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
     }
 
     const newPerson = await store.createPerson(payload);
+
+    // After saving, add embedding to AI service index for faster future searches
+    try {
+      if (Array.isArray(newPerson.faceEmbeddings) && newPerson.faceEmbeddings.length) {
+        await axios.post(`${AI_SERVICE_URL}/index-add`, { id: newPerson._id, embedding: newPerson.faceEmbeddings }, { timeout: 8000 });
+      }
+    } catch (e) {
+      console.error('Index add failed:', e.message || e);
+    }
 
     await logActivity(isApproved ? 'police-report-created' : 'user-report-created', reporter, { personId: newPerson._id }, {
       caseName: newPerson.fullName || null,
