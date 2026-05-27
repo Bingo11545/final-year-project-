@@ -1289,7 +1289,22 @@
                     const raw = pre.dataset.json || '';
                     try {
                         const parsed = JSON.parse(decodeURIComponent(raw || '%7B%7D'));
-                        pre.textContent = JSON.stringify(parsed, null, 2);
+                        // If this is a demo user-view JSON block, render as friendly lines instead of raw JSON
+                        if (pre.classList && pre.classList.contains('admin-demo-json') && parsed && typeof parsed === 'object' && (parsed.status || parsed.approvedBy || parsed.approvedAt)) {
+                            const parts = [];
+                            if (Object.prototype.hasOwnProperty.call(parsed, 'status')) {
+                                parts.push(`<div><strong>${getAdminText('admin_missing_status','Status')}:</strong> ${escapeHtml(parsed.status)}</div>`);
+                            }
+                            if (Object.prototype.hasOwnProperty.call(parsed, 'approvedBy')) {
+                                parts.push(`<div><strong>${getAdminText('admin_case_approved_by','Approved By')}:</strong> ${escapeHtml(parsed.approvedBy)}</div>`);
+                            }
+                            if (Object.prototype.hasOwnProperty.call(parsed, 'approvedAt')) {
+                                parts.push(`<div><strong>${getAdminText('admin_case_approved_at','Approved At')}:</strong> ${escapeHtml(formatDate(parsed.approvedAt))}</div>`);
+                            }
+                            pre.outerHTML = `<div class="admin-demo-user-view">${parts.join('')}</div>`;
+                        } else {
+                            pre.textContent = JSON.stringify(parsed, null, 2);
+                        }
                     } catch (e) {
                         pre.textContent = decodeURIComponent(raw || '%7B%7D');
                     }
