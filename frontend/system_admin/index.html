@@ -856,29 +856,33 @@
                         <div class="admin-case-log-card admin-demo-card" style="margin-bottom: 24px; border: 2px solid #38bdf8;">
                             <div class="admin-demo-card-header">
                                 <h4 style="color:#0ea5e9; margin:0;">Case Approval Status Demo</h4>
-                                <p style="margin:0; color:var(--text-secondary);">This sample shows how a case moves from not approved to police-approved status, including update history and visible user payload.</p>
+                                <p style="margin:0; color:var(--text-secondary);">This sample shows the police approval workflow: the case moves from unapproved to approved, with update history and final user payload.</p>
                             </div>
                             <div class="admin-demo-status-row">
-                                <strong>Status:</strong>
+                                <span><strong>Status:</strong></span>
                                 <span class="admin-status-pill admin-status-pending">Not Approved</span>
-                                <span style="margin: 0 8px;">→</span>
+                                <span>→</span>
                                 <span class="admin-status-pill admin-status-approved">Approved by Police Admin</span>
                             </div>
                             <div class="admin-demo-grid">
-                                <div>
-                                    <strong>Approval Update Log</strong>
-                                    <div class="admin-case-history-item admin-demo-history" style="margin-top: 8px;">
-                                        <div><strong>Update Type:</strong> approve-report</div>
-                                        <div><strong>Updated By:</strong> police try (Law Enforcement) - haileyesustadilo@gmail.com</div>
-                                        <div><strong>Updated At:</strong> 5/24/2026, 9:15:03 AM</div>
-                                        <div style="margin-top: 10px;"><strong>Old File:</strong></div>
-                                        <pre>{ "isApproved": false }</pre>
-                                        <div style="margin-top: 10px;"><strong>Updated File:</strong></div>
-                                        <pre>{ "isApproved": true }</pre>
+                                <div class="admin-demo-history">
+                                    <h5 style="margin:0 0 12px; color:var(--text-primary);">Approval Update Log</h5>
+                                    <dl style="display:grid; gap:6px; margin:0; color:var(--text-secondary);">
+                                        <div><dt style="font-weight:700; display:inline;">Update Type:</dt> <dd style="display:inline; margin:0;">approve-report</dd></div>
+                                        <div><dt style="font-weight:700; display:inline;">Updated By:</dt> <dd style="display:inline; margin:0;">police try (Law Enforcement) - haileyesustadilo@gmail.com</dd></div>
+                                        <div><dt style="font-weight:700; display:inline;">Updated At:</dt> <dd style="display:inline; margin:0;">5/24/2026, 9:15:03 AM</dd></div>
+                                    </dl>
+                                    <div style="margin-top: 14px;">
+                                        <div style="font-weight:700; margin-bottom:6px;">Old File</div>
+                                        <pre class="admin-demo-json">{ "isApproved": false }</pre>
+                                    </div>
+                                    <div style="margin-top: 14px;">
+                                        <div style="font-weight:700; margin-bottom:6px;">Updated File</div>
+                                        <pre class="admin-demo-json">{ "isApproved": true }</pre>
                                     </div>
                                 </div>
                                 <div>
-                                    <strong>User View (Target JSON)</strong>
+                                    <h5 style="margin:0 0 12px; color:var(--text-primary);">User View (Target JSON)</h5>
                                     <pre class="admin-demo-json">{
   "status": "missing",
   "approvedBy": "police try",
@@ -888,7 +892,7 @@
                             </div>
                             <div class="admin-demo-footer">
                                 <strong>AI Image Analysis:</strong>
-                                <span>All images in the database are analyzed by AI to find visually similar matches across reviewed cases.</span>
+                                <span>All images in the database are analyzed by AI to surface visually similar case matches.</span>
                             </div>
                         </div>
                         <div class="admin-section-head" style="margin-top: 16px;">

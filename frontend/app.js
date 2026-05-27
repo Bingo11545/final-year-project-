@@ -14,7 +14,8 @@ const PUBLIC_PATHS_FOR_GUEST = new Set([
     'register',
     'forgot_password',
     'reset_password',
-    'user/case'
+    'user/case',
+    'how-it-works'
 ]);
 
 let notificationPollTimer = null;
@@ -161,7 +162,7 @@ async function apiCall(endpoint, method = 'GET', body = null, isFormData = false
             const path = decodeURIComponent(window.location.pathname || '/').replace(/^\/+|\/+$/g, '');
             const currentPath = path || 'index';
             const canonicalPath = currentPath.endsWith('.html') ? currentPath.slice(0, -5) : currentPath;
-            const publicAuthPages = new Set(['index', 'login', 'register', 'forgot_password', 'reset_password', 'user/case']);
+            const publicAuthPages = new Set(['index', 'login', 'register', 'forgot_password', 'reset_password', 'user/case', 'how-it-works']);
 
             if (!publicAuthPages.has(canonicalPath)) {
                 window.location.href = '/login.html';
