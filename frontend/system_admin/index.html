@@ -1715,18 +1715,20 @@
                     ? `<div><strong>${escapeHtml(getAdminText('admin_case_new_values','Updated File'))}:</strong> ${escapeHtml(String(updatedFileObj.isApproved === true || updatedFileObj.isApproved === 'true'))}</div>`
                     : `<pre data-json="${encodeURIComponent(JSON.stringify(updatedFileObj || {}))}"></pre>`;
 
-                // target rendering
-                const targetHtml = (targetObj && targetObj.personId)
-                    ? `<div><strong>Person ID:</strong> ${escapeHtml(targetObj.personId)}</div>`
+                // target rendering (support personId and userId)
+                const targetHtml = (targetObj && (targetObj.personId || targetObj.userId))
+                    ? `<div><strong>${targetObj.personId ? 'Person ID' : 'User ID'}:</strong> ${escapeHtml(targetObj.personId || targetObj.userId)}</div>`
                     : `<pre data-json="${encodeURIComponent(JSON.stringify(targetObj || {}))}"></pre>`;
 
                 // details rendering - prefer friendly fields when available
                 let detailsHtml = '';
-                if (detailsObj && (detailsObj.approvedByRole || detailsObj.caseName || detailsObj.source || Object.keys(oldFileObj).length || Object.keys(updatedFileObj).length)) {
+                if (detailsObj && (detailsObj.approvedByRole || detailsObj.caseName || detailsObj.source || detailsObj.role || detailsObj.verificationStatus || Object.keys(oldFileObj).length || Object.keys(updatedFileObj).length)) {
                     const parts = [];
                     if (detailsObj.approvedByRole) parts.push(`<div><strong>Approver Role:</strong> ${escapeHtml(detailsObj.approvedByRole)}</div>`);
                     if (detailsObj.caseName) parts.push(`<div><strong>Case:</strong> ${escapeHtml(detailsObj.caseName)}</div>`);
                     if (detailsObj.source) parts.push(`<div><strong>Source:</strong> ${escapeHtml(detailsObj.source)}</div>`);
+                    if (detailsObj.role) parts.push(`<div><strong>Role:</strong> ${escapeHtml(detailsObj.role)}</div>`);
+                    if (detailsObj.verificationStatus) parts.push(`<div><strong>Verification Status:</strong> ${escapeHtml(detailsObj.verificationStatus)}</div>`);
                     if (Object.keys(oldFileObj).length) parts.push(`<div><strong>Old File:</strong> ${oldHtml}</div>`);
                     if (Object.keys(updatedFileObj).length) parts.push(`<div><strong>Updated File:</strong> ${newHtml}</div>`);
                     detailsHtml = parts.join('');
