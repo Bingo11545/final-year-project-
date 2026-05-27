@@ -444,7 +444,7 @@ router.post('/forgotpassword', async (req, res) => {
 
     await store.updateUser(user._id, { resetPasswordToken, resetPasswordExpire });
 
-    const frontendBase = process.env.FRONTEND_URL || 'https://missingpersonfinder.netlify.app';
+    const frontendBase = process.env.FRONTEND_URL || 'https://missingpersonfinder-beryl.vercel.app';
     const resetUrl = `${frontendBase}/reset_password.html?token=${resetToken}`;
 
     try {

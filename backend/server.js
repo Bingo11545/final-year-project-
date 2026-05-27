@@ -7,10 +7,10 @@ dotenv.config();
 const app = express();
 
 // Middleware
-const frontendOrigin = process.env.FRONTEND_URL || 'https://missingpersonfinder-beryl.vercel.app/';
+const frontendOrigin = process.env.FRONTEND_URL || 'https://missingpersonfinder-beryl.vercel.app';
 const allowedOrigins = [
     frontendOrigin,
-    'https://missingpersonfinder-beryl.vercel.app/'
+    'https://missingpersonfinder-beryl.vercel.app'
 ].filter(Boolean);
 
 app.use(cors({
@@ -27,7 +27,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Initializes Firebase Admin via service module env vars.
+// Initializes Firebase Admin via service module env vars. haile i have to do this here to avoid circular dependency with store which also imports admin
 require('./services/firebaseStore');
 
 // Routes
