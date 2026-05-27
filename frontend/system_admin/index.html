@@ -857,6 +857,10 @@
                         <i class="fas fa-users"></i>
                         <span>All Users and Police Admin</span>
                     </button>
+                    <button type="button" class="admin-nav-btn" id="admin-nav-flagged" onclick="switchAdminSection('flagged')">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Flagged Duplicates</span>
+                    </button>
                 </div>
             </aside>
 
@@ -957,6 +961,15 @@
                             <div class="loading-indicator loading-full">
                                 <div class="spinner"></div>
                                 <span data-key="admin_loading_history">Loading review history...</span>
+                            </div>
+                        </div>
+                        <div class="admin-section-head" style="margin-top: 16px;">
+                            <h3>Flagged Duplicate Reports</h3>
+                        </div>
+                        <div id="flagged-list" class="grid-container">
+                            <div class="loading-indicator loading-full">
+                                <div class="spinner"></div>
+                                <span>Loading flagged duplicates...</span>
                             </div>
                         </div>
                     </div>
@@ -1715,6 +1728,54 @@
             }).join('');
             // populate any JSON placeholders inside generated HTML
             populateDataJsonPre(logEl);
+        }
+
+        async function fetchFlaggedDuplicates() {
+            try {
+                const res = await fetch(`${BACKEND_ORIGIN}/api/people/flagged-duplicates`, { credentials: 'include' });
+                if (!res.ok) throw new Error('Failed to fetch');
+                const body = await res.json();
+                const items = body.items || [];
+                renderFlaggedList(items);
+            } catch (e) {
+                const el = document.getElementById('flagged-list');
+                if (el) el.innerHTML = `<div class="empty-state loading-full">Unable to load flagged duplicates.</div>`;
+            }
+        }
+
+        function renderFlaggedList(items) {
+            const listEl = document.getElementById('flagged-list');
+            if (!listEl) return;
+            if (!items.length) {
+                listEl.innerHTML = `<div class="empty-state loading-full">No flagged duplicates.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = '';
+            items.forEach((p) => {
+                const card = document.createElement('div');
+                card.className = 'admin-user-card';
+                const imgSrc = (p.images && p.images[0] && p.images[0].url) ? resolveMediaUrl(p.images[0].url) : 'https://via.placeholder.com/320x240?text=No+Photo';
+                const matched = p.flaggedDuplicateInfo || {};
+                card.innerHTML = `
+                    <div style="display:flex; gap:12px; align-items:flex-start;">
+                        <img src="${imgSrc}" alt="case photo" style="width:160px;height:120px;object-fit:cover;border-radius:8px;">
+                        <div style="flex:1;">
+                            <div style="font-weight:800; font-size:1rem; color:var(--text-primary);">${escapeHtml(p.fullName || 'Unnamed')}</div>
+                            <div style="color:var(--text-secondary); margin-top:6px;">${escapeHtml(p.description || '')}</div>
+                            <div style="margin-top:8px;"><strong>Flagged Match:</strong> ${escapeHtml(matched.matchedPersonId || 'N/A')} (Similarity: ${matched.similarity ? (matched.similarity * 100).toFixed(1) + '%' : 'N/A'})</div>
+                            <div style="margin-top:8px;">
+                                <button class="btn btn-sm" onclick="openPersonDetail('${p._id}')">Open</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function openPersonDetail(id) {
+            window.open(`${FRONTEND_ORIGIN}/user/case.html?id=${id}`, '_blank');
         }
 
         function renderActivityLog(items) {
