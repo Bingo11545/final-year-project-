@@ -26,7 +26,7 @@ def _is_blurry(face_img, threshold=75.0):
     return fm < threshold, fm
 
 
-def _is_low_contrast(face_img, threshold=35.0):
+def _is_low_contrast(face_img, threshold=20.0):
     if face_img is None or face_img.size == 0:
         return True, 0.0
     gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
@@ -51,9 +51,9 @@ def _validate_face_quality(img, x, y, w, h):
     if is_blurry_flag:
         return False, f"The face in the image is too blurry (sharpness score: {fm:.1f}, required: >= 75.0). Please upload a sharp, high-resolution photo."
 
-    is_low_c, std_dev = _is_low_contrast(face_img, threshold=35.0)
+    is_low_c, std_dev = _is_low_contrast(face_img, threshold=20.0)
     if is_low_c:
-        return False, f"The image contrast is too low (contrast score: {std_dev:.1f}, required: >= 35.0). Please upload a clear photo with good lighting and contrast."
+        return False, f"The image contrast is too low (contrast score: {std_dev:.1f}, required: >= {20.0:.1f}). Please upload a clear photo with good lighting and contrast."
 
     return True, None
 
