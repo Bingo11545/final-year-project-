@@ -1706,27 +1706,48 @@
                 const oldFileObj = normalizeObjectValue(detailsObj.oldFile);
                 const updatedFileObj = normalizeObjectValue(detailsObj.updatedFile);
                 const hasOldUpdated = item.type === 'case-approved' && (Object.keys(oldFileObj).length || Object.keys(updatedFileObj).length);
-                const isApprovedText = hasOldUpdated
-                    ? `Approval Change: ${String(oldFileObj.isApproved)} -> ${String(updatedFileObj.isApproved)} by Police Admin`
-                    : '';
+
+                const oldHtml = (oldFileObj && Object.prototype.hasOwnProperty.call(oldFileObj, 'isApproved'))
+                    ? `<div><strong>${escapeHtml(getAdminText('admin_case_old_values','Old File'))}:</strong> ${escapeHtml(String(oldFileObj.isApproved === true || oldFileObj.isApproved === 'true'))}</div>`
+                    : `<pre data-json="${encodeURIComponent(JSON.stringify(oldFileObj || {}))}"></pre>`;
+
+                const newHtml = (updatedFileObj && Object.prototype.hasOwnProperty.call(updatedFileObj, 'isApproved'))
+                    ? `<div><strong>${escapeHtml(getAdminText('admin_case_new_values','Updated File'))}:</strong> ${escapeHtml(String(updatedFileObj.isApproved === true || updatedFileObj.isApproved === 'true'))}</div>`
+                    : `<pre data-json="${encodeURIComponent(JSON.stringify(updatedFileObj || {}))}"></pre>`;
+
+                // target rendering
+                const targetHtml = (targetObj && targetObj.personId)
+                    ? `<div><strong>Person ID:</strong> ${escapeHtml(targetObj.personId)}</div>`
+                    : `<pre data-json="${encodeURIComponent(JSON.stringify(targetObj || {}))}"></pre>`;
+
+                // details rendering - prefer friendly fields when available
+                let detailsHtml = '';
+                if (detailsObj && (detailsObj.approvedByRole || detailsObj.caseName || detailsObj.source || Object.keys(oldFileObj).length || Object.keys(updatedFileObj).length)) {
+                    const parts = [];
+                    if (detailsObj.approvedByRole) parts.push(`<div><strong>Approver Role:</strong> ${escapeHtml(detailsObj.approvedByRole)}</div>`);
+                    if (detailsObj.caseName) parts.push(`<div><strong>Case:</strong> ${escapeHtml(detailsObj.caseName)}</div>`);
+                    if (detailsObj.source) parts.push(`<div><strong>Source:</strong> ${escapeHtml(detailsObj.source)}</div>`);
+                    if (Object.keys(oldFileObj).length) parts.push(`<div><strong>Old File:</strong> ${oldHtml}</div>`);
+                    if (Object.keys(updatedFileObj).length) parts.push(`<div><strong>Updated File:</strong> ${newHtml}</div>`);
+                    detailsHtml = parts.join('');
+                } else {
+                    detailsHtml = `<pre data-json="${encodeURIComponent(JSON.stringify(detailsObj || {}))}"></pre>`;
+                }
 
                 return `
                     <div class="admin-activity-card">
                         <span><strong>What They Did:</strong> ${action}</span>
                         <span><strong>Action Summary:</strong> ${escapeHtml(actionSummaryForAdminActivity(item.type, actor.username || item.actorName || na(), caseName))}</span>
-                        ${hasOldUpdated ? `<span><strong>${escapeHtml(isApprovedText)}</strong></span>` : ''}
                         <span><strong>Type:</strong> ${escapeHtml(item.type || na())}</span>
                         <span><strong>Actor:</strong> ${escapeHtml(actor.username || item.actorName || na())} (${escapeHtml(roleLabel(actor.role || item.actorRole || ''))})</span>
                         <span><strong>Email:</strong> ${escapeHtml(actor.email || item.actorEmail || na())}</span>
                         <span><strong>Time:</strong> ${escapeHtml(formatDate(item.createdAt))}</span>
-                        ${hasOldUpdated ? '<div class="admin-activity-json-title">Old File</div>' : ''}
-                        ${hasOldUpdated ? `<pre data-json="${encodeURIComponent(JSON.stringify(oldFileObj || {}))}"></pre>` : ''}
-                        ${hasOldUpdated ? '<div class="admin-activity-json-title">Updated File</div>' : ''}
-                        ${hasOldUpdated ? `<pre data-json="${encodeURIComponent(JSON.stringify(updatedFileObj || {}))}"></pre>` : ''}
-                        <div class="admin-activity-json-title">Target (JSON)</div>
-                        <pre data-json="${encodeURIComponent(JSON.stringify(targetObj || {}))}"></pre>
-                        <div class="admin-activity-json-title">Details (JSON)</div>
-                        <pre data-json="${encodeURIComponent(JSON.stringify(detailsObj || {}))}"></pre>
+                        ${hasOldUpdated ? oldHtml : ''}
+                        ${hasOldUpdated ? newHtml : ''}
+                        <div class="admin-activity-json-title">Target</div>
+                        ${targetHtml}
+                        <div class="admin-activity-json-title">Details</div>
+                        ${detailsHtml}
                         <button
                             class="btn btn-sm admin-activity-view"
                             type="button"
