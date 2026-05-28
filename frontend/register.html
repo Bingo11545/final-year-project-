@@ -742,6 +742,14 @@
                     </button>
                 </div>
 
+                <div class="google-auth-section" id="google-auth-section">
+                    <button type="button" id="google-register-btn" class="google-auth-btn">
+                        <i class="fab fa-google"></i>
+                        <span>Continue with Google</span>
+                    </button>
+                    <div class="google-auth-note">Public users only</div>
+                </div>
+
                 <!-- Error -->
                 <div id="error-msg" class="reg-error" aria-hidden="true"></div>
 
@@ -884,6 +892,9 @@
     <script src="translations.js"></script>
     <script src="app.js"></script>
     <script src="mobile-menu.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="public-google-auth.js"></script>
     <script>
         let idDocUploaded = false;
         let profilePhotoUploaded = false;
@@ -910,6 +921,11 @@
             const orgField = document.getElementById('org-field');
             const authorityFields = document.getElementById('authority-fields');
             const hint = document.getElementById('verify-hint');
+            const googleSection = document.getElementById('google-auth-section');
+
+            if (googleSection) {
+                googleSection.style.display = (role === 'public_user') ? 'block' : 'none';
+            }
 
             if (role === 'law_enforcement' || role === 'authorized_org') {
                 verifySection.style.display = 'block';
@@ -1003,6 +1019,8 @@
             el.style.display = 'flex';
             el.innerHTML = `<i class="fas ${isValid ? 'fa-check-circle' : 'fa-times-circle'}" style="flex-shrink:0;font-size:1rem;"></i><span>${message}</span>`;
         }
+
+        selectRole(currentRole);
 
         // Form submit
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -1103,6 +1121,13 @@
                 setFormDisabled(form, false);
             }
         });
+
+        if (typeof bindGoogleButton === 'function') {
+            bindGoogleButton('google-register-btn', {
+                loadingText: 'Continuing with Google...',
+                successText: 'Google account linked successfully!'
+            });
+        }
     </script>
 </body>
 </html>

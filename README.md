@@ -45,6 +45,7 @@ However, for better experience (and preventing CORS issues sometimes), use a sim
 
 ## Features Implemented
 - **Authentication**: JWT based Login/Register with Roles (Admin, Law Enforcement, Public).
+- **Google Sign-In**: Public users can continue with Google; police and organization accounts stay on the manual email/password flow.
 - **Reporting**: Upload missing person details + Photo.
 - **AI Integration**: Automatically extracts facial embeddings using `DeepFace` (FaceNet model).
 - **Auto-Matching**: When a new report is filed, it compares against existing database records and highlights matches > 60% similarity.
@@ -53,6 +54,8 @@ However, for better experience (and preventing CORS issues sometimes), use a sim
 ## Notes
 - Images are stored in Firebase Realtime Database as base64 file payloads.
 - The AI matching uses a simple cosine similarity check against stored embeddings.
+- Google sign-in for public users requires Firebase Web App config values in `frontend/public-google-auth.js` (`apiKey`, `authDomain`, `projectId`, `messagingSenderId`, `appId`).
+- The backend accepts Google sign-in only for public-user accounts.
 
 ## Production Deployment Guide
 

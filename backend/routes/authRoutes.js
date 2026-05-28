@@ -8,6 +8,7 @@ const path = require('path');
 const auth = require('../middleware/auth');
 const sendEmail = require('../utils/sendEmail');
 const store = require('../services/firebaseStore');
+const admin = require('firebase-admin');
 
 const SYSTEM_ADMIN_EMAIL = 'habtetadilo@gmail.com';
 const SYSTEM_ADMIN_PASSWORD = 'LaybreryA@2hailehshssbvs';
@@ -45,6 +46,10 @@ function isValidGmail(email) {
 
 function isStrongPassword(password) {
   return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''));
+}
+
+function isGoogleAuthEmailAllowed(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email));
 }
 
 async function ensureSystemAdminAccount() {
@@ -230,6 +235,97 @@ router.post(
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Server error: ' + err.message });
+  }
+});
+
+router.post('/google-public', async (req, res) => {
+  try {
+    await ensureSystemAdminAccount();
+
+    const idToken = String(req.body.idToken || '').trim();
+    if (!idToken) {
+      return res.status(400).json({ msg: 'Google sign-in token is required.' });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const provider = decoded.firebase?.sign_in_provider || '';
+    if (provider !== 'google.com') {
+      return res.status(400).json({ msg: 'Google sign-in is only available for public users.' });
+    }
+
+    const normalizedEmail = normalizeEmail(decoded.email);
+    if (!isGoogleAuthEmailAllowed(normalizedEmail)) {
+      return res.status(400).json({ msg: 'A valid email address is required from Google sign-in.' });
+    }
+
+    const existing = await store.findUserByEmail(normalizedEmail);
+    if (existing && ['law_enforcement', 'authorized_org', 'admin'].includes(existing.role)) {
+      return res.status(403).json({ msg: 'This email belongs to a restricted account. Google sign-in is only for public users.' });
+    }
+
+    let user = existing;
+    const googleProfile = {
+      authProvider: 'google',
+      googleUid: decoded.uid,
+      profilePhoto: existing?.profilePhoto || decoded.picture || '',
+      isVerified: true,
+      verificationStatus: 'approved',
+      verificationRejectionReason: '',
+      googleSignInAt: new Date().toISOString()
+    };
+
+    if (!user) {
+      const randomPasswordHash = await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10);
+      user = await store.createUser({
+        username: decoded.name || normalizedEmail.split('@')[0] || 'Public User',
+        email: normalizedEmail,
+        password: randomPasswordHash,
+        role: 'public_user',
+        organizationName: '',
+        station: '',
+        dateOfBirth: '',
+        idNumber: '',
+        profilePhoto: decoded.picture || '',
+        verificationDocument: '',
+        isVerified: true,
+        verificationStatus: 'approved',
+        verificationRejectionReason: '',
+        authProvider: 'google',
+        googleUid: decoded.uid,
+        googleSignInAt: new Date().toISOString()
+      });
+
+      await store.createActivityLog({
+        type: 'public-google-registration',
+        actorId: user._id,
+        actorName: user.username,
+        actorRole: user.role,
+        actorEmail: user.email,
+        actorProfilePhoto: user.profilePhoto || null,
+        target: { userId: user._id },
+        details: { authProvider: 'google' }
+      });
+
+      sendEmail({
+        email: user.email,
+        subject: 'Welcome to FindThem.AI',
+        message: `Hi ${user.username}, your public account has been created with Google sign-in. You can now log in with Google.`
+      }).catch((emailErr) => {
+        console.error('Google registration email failed:', emailErr);
+      });
+    } else {
+      user = await store.updateUser(user._id, googleProfile);
+    }
+
+    return res.json({
+      token: signToken(user),
+      role: user.role,
+      redirectPath: getRedirectPath(user.role),
+      email: user.email
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: err.message || 'Google sign-in failed' });
   }
 });
 

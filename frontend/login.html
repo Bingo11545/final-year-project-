@@ -113,6 +113,14 @@
                     <i class="fas fa-arrow-right-to-bracket" aria-hidden="true"></i>
                     <span data-key="login_title">Login</span>
                 </button>
+
+                <div class="google-auth-section" style="margin-top:1rem;">
+                    <button type="button" id="google-login-btn" class="google-auth-btn">
+                        <i class="fab fa-google"></i>
+                        <span>Continue with Google</span>
+                    </button>
+                    <div class="google-auth-note">Public users only</div>
+                </div>
             </form>
 
             <div class="form-link">
@@ -127,6 +135,9 @@
     <script src="translations.js"></script>
     <script src="app.js"></script>
     <script src="mobile-menu.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="public-google-auth.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -193,6 +204,13 @@
                 document.getElementById('password-error').style.display = 'none';
             }
         });
+
+        if (typeof bindGoogleButton === 'function') {
+            bindGoogleButton('google-login-btn', {
+                loadingText: 'Continuing with Google...',
+                successText: 'Google login successful!'
+            });
+        }
     </script>
 </body>
 </html>
