@@ -49,26 +49,17 @@
         const auth = firebaseApp.auth();
         const provider = new firebaseApp.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
+        if (firebaseApp.auth && firebaseApp.auth.Auth && firebaseApp.auth.Auth.Persistence) {
+            await auth.setPersistence(firebaseApp.auth.Auth.Persistence.LOCAL);
+        }
         sessionStorage.setItem('publicGoogleAuthPending', '1');
         await auth.signInWithRedirect(provider);
     }
 
-    async function completeGoogleRedirectSignIn() {
-        const pending = sessionStorage.getItem('publicGoogleAuthPending');
-        if (!pending) return null;
+    async function exchangeGoogleUserForBackendToken(user) {
+        if (!user) return null;
 
-        const firebaseApp = ensureFirebaseInitialized();
-        const auth = firebaseApp.auth();
-        const result = await auth.getRedirectResult();
-        const user = result && result.user;
-
-        sessionStorage.removeItem('publicGoogleAuthPending');
-
-        if (!user) {
-            return null;
-        }
-
-        const idToken = await user.getIdToken();
+        const idToken = await user.getIdToken(true);
         const response = await fetch(`${API_URL}/auth/google-public`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -94,6 +85,29 @@
         }
 
         return data;
+    }
+
+    async function completeGoogleRedirectSignIn() {
+        const pending = sessionStorage.getItem('publicGoogleAuthPending');
+        if (!pending) return null;
+
+        const firebaseApp = ensureFirebaseInitialized();
+        const auth = firebaseApp.auth();
+        const result = await auth.getRedirectResult();
+        const user = result && result.user;
+
+        sessionStorage.removeItem('publicGoogleAuthPending');
+
+        if (user) {
+            return exchangeGoogleUserForBackendToken(user);
+        }
+
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            return exchangeGoogleUserForBackendToken(currentUser);
+        }
+
+        return null;
     }
 
     function bindGoogleButton(buttonId, options = {}) {

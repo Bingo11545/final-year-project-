@@ -59,6 +59,23 @@ function isGoogleAuthEmailAllowed(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email));
 }
 
+function isRestrictedRole(role) {
+  return ['law_enforcement', 'authorized_org', 'admin'].includes(role);
+}
+
+async function findBestGoogleUser(normalizedEmail, googleUid) {
+  const matches = await store.listUsers((u) => normalizeEmail(u.email) === normalizedEmail);
+  if (!matches.length) return null;
+
+  const exactGoogleUid = matches.find((u) => String(u.googleUid || '') === String(googleUid || ''));
+  if (exactGoogleUid) return exactGoogleUid;
+
+  const publicCandidate = matches.find((u) => !isRestrictedRole(u.role));
+  if (publicCandidate) return publicCandidate;
+
+  return matches[0];
+}
+
 async function ensureSystemAdminAccount() {
   const adminEmail = SYSTEM_ADMIN_EMAIL.toLowerCase();
   const existing = await store.findUserByEmail(adminEmail);
@@ -262,8 +279,8 @@ router.post('/google-public', async (req, res) => {
       return res.status(400).json({ msg: 'A valid email address is required from Google sign-in.' });
     }
 
-    const existing = await store.findUserByEmail(normalizedEmail);
-    if (existing && ['law_enforcement', 'authorized_org', 'admin'].includes(existing.role)) {
+    const existing = await findBestGoogleUser(normalizedEmail, decoded.uid);
+    if (existing && isRestrictedRole(existing.role)) {
       return res.status(403).json({ msg: 'This email belongs to a restricted account. Google sign-in is only for public users.' });
     }
 
