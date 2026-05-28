@@ -755,6 +755,8 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
         });
       }
 
+      let flaggedDuplicateInfo = null;
+
       try {
         const formData = new FormData();
         formData.append('image', imageFile.buffer, {
@@ -779,12 +781,12 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
             for (const r of results) {
               const sim = Number(r.similarity || 0);
               if (sim >= DUPLICATE_HIGH) {
-                return res.status(400).json({
-                  msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed.",
-                  duplicate: true,
+                flaggedDuplicateInfo = {
                   matchedPersonId: r.id,
-                  similarity: sim
-                });
+                  similarity: sim,
+                  scope: 'registry'
+                };
+                break;
               }
             }
           } catch (e) {
@@ -795,12 +797,12 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
               const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
               const sim = cosineSimilarity(payload.faceEmbeddings, otherEmb);
               if (sim >= DUPLICATE_HIGH) {
-                return res.status(400).json({
-                  msg: "A report with this person's face photo already exists in the national registry. Duplicate submissions are not allowed.",
-                  duplicate: true,
+                flaggedDuplicateInfo = {
                   matchedPersonId: other._id,
-                  similarity: sim
-                });
+                  similarity: sim,
+                  scope: 'registry'
+                };
+                break;
               }
             }
           }
@@ -809,8 +811,6 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
             const existingMissing = await store.listPeople(
               (p) => p.status === 'Missing' && Array.isArray(p.faceEmbeddings) && p.faceEmbeddings.length
             );
-            // collect a flag if we encounter a borderline match
-            let flaggedDuplicateInfo = null;
             for (const other of existingMissing) {
               const otherNorm = Math.sqrt(other.faceEmbeddings.reduce((s, v) => s + (v * v), 0)) || 1;
               const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
