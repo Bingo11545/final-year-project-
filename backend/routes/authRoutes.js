@@ -19,6 +19,13 @@ function getRedirectPath(role) {
   return '/user/dashboard.html';
 }
 
+function getRoleLabel(role) {
+  if (role === 'law_enforcement') return 'Law Enforcement';
+  if (role === 'authorized_org') return 'Authorized Organization';
+  if (role === 'admin') return 'System Admin';
+  return 'Public User';
+}
+
 function signToken(user) {
   return jwt.sign(
     { user: { id: user._id, role: user.role } },
@@ -202,12 +209,13 @@ router.post(
     });
 
     // Send email asynchronously (non-blocking)
+    const roleLabel = getRoleLabel(user.role);
     sendEmail({
       email: user.email,
-      subject: needsApproval ? 'Registration Received - Pending Admin Approval' : 'Welcome to FindThem.AI',
+      subject: needsApproval ? `Registration Received - ${roleLabel} Review Pending` : `Welcome to FindThem.AI - ${roleLabel} Account Created`,
       message: needsApproval
-        ? `Hi ${user.username}, your registration has been submitted and is pending system admin ID verification. You will be notified after approval or rejection.`
-        : `Hi ${user.username}, thank you for registering. You can now report missing persons.`
+        ? `Hello ${user.username},\n\nYour ${roleLabel.toLowerCase()} registration has been submitted successfully and is currently pending system admin verification. You will receive another email once the review is completed.\n\nThank you for joining FindThem.AI.`
+        : `Hello ${user.username},\n\nYour ${roleLabel.toLowerCase()} account has been created successfully. You can now sign in and use the platform to report or track missing person cases.\n\nThank you for joining FindThem.AI.`
     }).catch(emailErr => {
       console.error('Background email send failed:', emailErr);
     });
@@ -305,8 +313,8 @@ router.post('/google-public', async (req, res) => {
 
       sendEmail({
         email: user.email,
-        subject: 'Welcome to FindThem.AI',
-        message: `Hi ${user.username}, your public account has been created with Google sign-in. You can now log in with Google.`
+        subject: 'Welcome to FindThem.AI - Public User Account Created',
+        message: `Hello ${user.username},\n\nYour public user account has been created successfully using Google sign-in. You can now continue signing in with Google and access your dashboard.\n\nThank you for joining FindThem.AI.`
       }).catch((emailErr) => {
         console.error('Google registration email failed:', emailErr);
       });
@@ -452,8 +460,8 @@ router.put('/registrations/:id/approve', auth(['admin']), async (req, res) => {
     // Send approval email asynchronously (non-blocking)
     sendEmail({
       email: user.email,
-      subject: 'Registration Approved',
-      message: `Hi ${user.username}, your registration was approved by system admin. You can now sign in.`
+      subject: `Registration Approved - ${getRoleLabel(user.role)} Account`,
+      message: `Hello ${user.username},\n\nYour ${getRoleLabel(user.role).toLowerCase()} registration has been approved by the system admin. You may now sign in and use your account.\n\nThank you for your patience.`
     }).catch(emailErr => {
       console.error('Approval email failed:', emailErr);
     });
@@ -508,8 +516,8 @@ router.put('/registrations/:id/reject', auth(['admin']), async (req, res) => {
     // Send rejection email asynchronously (non-blocking)
     sendEmail({
       email: user.email,
-      subject: 'Registration Needs Resubmission',
-      message: `Hi ${user.username}, your registration was not approved. Please resubmit your ID document.${reason ? ` Reason: ${reason}` : ''}`
+      subject: `Registration Needs Resubmission - ${getRoleLabel(user.role)} Account`,
+      message: `Hello ${user.username},\n\nYour ${getRoleLabel(user.role).toLowerCase()} registration was not approved at this time. Please resubmit your ID document or verification file and try again.${reason ? `\n\nReason: ${reason}` : ''}\n\nIf you have questions, please contact the system administrator.`
     }).catch(emailErr => {
       console.error('Rejection email failed:', emailErr);
     });
