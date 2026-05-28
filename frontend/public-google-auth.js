@@ -52,8 +52,13 @@
         if (firebaseApp.auth && firebaseApp.auth.Auth && firebaseApp.auth.Auth.Persistence) {
             await auth.setPersistence(firebaseApp.auth.Auth.Persistence.LOCAL);
         }
-        sessionStorage.setItem('publicGoogleAuthPending', '1');
-        await auth.signInWithRedirect(provider);
+        const result = await auth.signInWithPopup(provider);
+        const user = result && result.user;
+        if (!user) {
+            throw new Error('Google sign-in failed.');
+        }
+
+        return exchangeGoogleUserForBackendToken(user);
     }
 
     async function exchangeGoogleUserForBackendToken(user) {
@@ -88,25 +93,6 @@
     }
 
     async function completeGoogleRedirectSignIn() {
-        const pending = sessionStorage.getItem('publicGoogleAuthPending');
-        if (!pending) return null;
-
-        const firebaseApp = ensureFirebaseInitialized();
-        const auth = firebaseApp.auth();
-        const result = await auth.getRedirectResult();
-        const user = result && result.user;
-
-        sessionStorage.removeItem('publicGoogleAuthPending');
-
-        if (user) {
-            return exchangeGoogleUserForBackendToken(user);
-        }
-
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-            return exchangeGoogleUserForBackendToken(currentUser);
-        }
-
         return null;
     }
 
@@ -222,7 +208,6 @@
                 }, 700);
             }
         } catch (err) {
-            sessionStorage.removeItem('publicGoogleAuthPending');
             if (typeof window.showToast === 'function') {
                 window.showToast(err.message || 'Google sign-in failed', 'error');
             } else {
