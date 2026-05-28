@@ -247,11 +247,7 @@ router.post('/google-public', async (req, res) => {
       return res.status(400).json({ msg: 'Google sign-in token is required.' });
     }
 
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    const provider = decoded.firebase?.sign_in_provider || '';
-    if (provider !== 'google.com') {
-      return res.status(400).json({ msg: 'Google sign-in is only available for public users.' });
-    }
+    const decoded = await admin.auth().verifyIdToken(idToken, true);
 
     const normalizedEmail = normalizeEmail(decoded.email);
     if (!isGoogleAuthEmailAllowed(normalizedEmail)) {
@@ -271,7 +267,8 @@ router.post('/google-public', async (req, res) => {
       isVerified: true,
       verificationStatus: 'approved',
       verificationRejectionReason: '',
-      googleSignInAt: new Date().toISOString()
+      googleSignInAt: new Date().toISOString(),
+      role: existing?.role || 'public_user'
     };
 
     if (!user) {
@@ -325,6 +322,9 @@ router.post('/google-public', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (String(err && err.message || '').includes('Firebase ID token has expired')) {
+      return res.status(401).json({ msg: 'Google sign-in expired. Please try again.' });
+    }
     return res.status(500).json({ msg: err.message || 'Google sign-in failed' });
   }
 });

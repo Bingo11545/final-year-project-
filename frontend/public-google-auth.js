@@ -49,11 +49,23 @@
         const auth = firebaseApp.auth();
         const provider = new firebaseApp.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
+        sessionStorage.setItem('publicGoogleAuthPending', '1');
+        await auth.signInWithRedirect(provider);
+    }
 
-        const result = await auth.signInWithPopup(provider);
+    async function completeGoogleRedirectSignIn() {
+        const pending = sessionStorage.getItem('publicGoogleAuthPending');
+        if (!pending) return null;
+
+        const firebaseApp = ensureFirebaseInitialized();
+        const auth = firebaseApp.auth();
+        const result = await auth.getRedirectResult();
         const user = result && result.user;
+
+        sessionStorage.removeItem('publicGoogleAuthPending');
+
         if (!user) {
-            throw new Error('Google sign-in failed.');
+            return null;
         }
 
         const idToken = await user.getIdToken();
@@ -186,7 +198,27 @@
 
     injectStyles();
 
+    window.addEventListener('load', async () => {
+        try {
+            const result = await completeGoogleRedirectSignIn();
+            if (result && typeof window.showToast === 'function') {
+                window.showToast('Google sign-in successful!', 'success');
+                window.setTimeout(() => {
+                    window.location.href = result.redirectPath || '/user/dashboard.html';
+                }, 700);
+            }
+        } catch (err) {
+            sessionStorage.removeItem('publicGoogleAuthPending');
+            if (typeof window.showToast === 'function') {
+                window.showToast(err.message || 'Google sign-in failed', 'error');
+            } else {
+                window.alert(err.message || 'Google sign-in failed');
+            }
+        }
+    });
+
     window.FIREBASE_WEB_CONFIG = FIREBASE_WEB_CONFIG;
     window.signInPublicUserWithGoogle = signInPublicUserWithGoogle;
+    window.completeGoogleRedirectSignIn = completeGoogleRedirectSignIn;
     window.bindGoogleButton = bindGoogleButton;
 })();
