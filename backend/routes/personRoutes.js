@@ -816,17 +816,12 @@ router.post('/', [auth(), handleReportUploads], async (req, res) => {
               const otherEmb = other.faceEmbeddings.map((v) => v / otherNorm);
               const sim = cosineSimilarity(payload.faceEmbeddings, otherEmb);
               if (sim >= DUPLICATE_HIGH) {
-                if (String(other.reportedBy) === String(req.user.id)) {
-                  return res.status(400).json({
-                    msg: 'You have already reported this person. Please update the existing report or submit a sighting.'
-                  });
-                }
-
-                return res.status(400).json({
-                  msg: 'This person is already listed as missing. Please update the existing record or report a sighting.',
+                flaggedDuplicateInfo = {
                   matchedPersonId: other._id,
-                  similarity: sim
-                });
+                  similarity: sim,
+                  scope: String(other.reportedBy) === String(req.user.id) ? 'self-report' : 'existing-missing'
+                };
+                break;
               }
 
               if (sim >= DUPLICATE_REVIEW) {
